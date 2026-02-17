@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import ModelCard from "@/components/ModelCard";
-import HeroBackground3D from "@/components/HeroBackground3D";
+import OptimizedBackground from "@/components/OptimizedBackground";
 import LiveStatsTicker from "@/components/LiveStatsTicker";
 import FilterSidebar from "@/components/FilterSidebar";
 import CreatorLeaderboard from "@/components/CreatorLeaderboard";
@@ -15,6 +15,7 @@ import ErrorMessage from "@/components/ErrorMessage";
 import { useState } from "react";
 import { useModels } from "@/lib/api/hooks/useModels";
 import { Model } from "@/lib/api/types";
+import { usePerformanceMode } from "@/lib/hooks/usePerformanceMode";
 
 // Helper function to map API Model to ModelCard props
 const mapModelToCard = (model: Model) => ({
@@ -159,9 +160,9 @@ export default function Home() {
 
       {/* Hero Section with 3D Background */}
       <section className="relative h-screen w-full overflow-hidden bg-black">
-        {/* 3D Background - Fixed positioning */}
+        {/* Optimized Background - Fixed positioning */}
         <div className="absolute inset-0 z-0 w-full h-full overflow-hidden">
-          <HeroBackground3D />
+          <OptimizedBackground />
         </div>
         
         {/* Glassmorphism container for hero text */}
