@@ -3,9 +3,11 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Holo3DShapes from './Holo3DShapes';
+import { isMobile } from '@/lib/deviceDetection';
 
 export default function HeroBackground3D() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isMobileDevice = typeof window !== 'undefined' && isMobile();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -213,9 +215,10 @@ export default function HeroBackground3D() {
       }
     }
 
-    // Create shapes
+    // Create shapes - reduce count on mobile for better performance
+    const shapeCount = isMobileDevice ? 12 : 30;
     const shapes: Shape3D[] = [];
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < shapeCount; i++) {
       shapes.push(new Shape3D());
     }
 
@@ -239,7 +242,7 @@ export default function HeroBackground3D() {
       window.removeEventListener('resize', resizeCanvas);
       cancelAnimationFrame(animationId);
     };
-  }, []);
+  }, [isMobileDevice]);
 
   return (
     <div className="absolute inset-0 z-0 w-full h-full pointer-events-none">
@@ -267,9 +270,9 @@ export default function HeroBackground3D() {
         }} />
       </div>
 
-      {/* Floating particles */}
+      {/* Floating particles - reduce on mobile */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        {[...Array(50)].map((_, i) => (
+        {[...Array(isMobileDevice ? 20 : 50)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-orange-400 rounded-full pointer-events-none"
@@ -354,9 +357,9 @@ export default function HeroBackground3D() {
         }} />
       </div>
 
-      {/* Holographic light rays */}
+      {/* Holographic light rays - reduce on mobile */}
       <div className="absolute inset-0 overflow-hidden opacity-30 z-0 pointer-events-none">
-        {[...Array(5)].map((_, i) => (
+        {[...Array(isMobileDevice ? 2 : 5)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute h-full w-1 pointer-events-none"
