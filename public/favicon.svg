@@ -1,15 +1,65 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="32" height="32" rx="6" fill="url(#gradient)"/>
-  
-  <!-- SD Text -->
-  <text x="16" y="22" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">SD</text>
-  
-  <!-- Gradient Definition -->
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
   <defs>
-    <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#ff6b35"/>
-      <stop offset="100%" stop-color="#d62828"/>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b35;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d62828;stop-opacity:1" />
     </linearGradient>
+    <linearGradient id="cubeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffbe62;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
+  
+  <!-- Background -->
+  <rect width="64" height="64" rx="12" fill="url(#bgGradient)"/>
+  
+  <!-- 3D Cube wireframe - isometric view -->
+  <!-- Front face -->
+  <path d="M 32 18 L 46 26 L 46 42 L 32 50 L 18 42 L 18 26 Z" 
+        fill="none" 
+        stroke="url(#cubeGradient)" 
+        stroke-width="2.5" 
+        stroke-linejoin="round"
+        filter="url(#glow)"/>
+  
+  <!-- Top face -->
+  <path d="M 32 18 L 46 26 L 32 34 L 18 26 Z" 
+        fill="rgba(255,255,255,0.15)" 
+        stroke="url(#cubeGradient)" 
+        stroke-width="2.5" 
+        stroke-linejoin="round"
+        filter="url(#glow)"/>
+  
+  <!-- Right face -->
+  <path d="M 32 34 L 46 26 L 46 42 L 32 50 Z" 
+        fill="rgba(255,255,255,0.08)" 
+        stroke="url(#cubeGradient)" 
+        stroke-width="2.5" 
+        stroke-linejoin="round"
+        filter="url(#glow)"/>
+  
+  <!-- Vertices (glowing dots) -->
+  <circle cx="32" cy="18" r="2.5" fill="#ffffff" filter="url(#glow)"/>
+  <circle cx="46" cy="26" r="2.5" fill="#ffffff" filter="url(#glow)"/>
+  <circle cx="18" cy="26" r="2.5" fill="#ffffff" filter="url(#glow)"/>
+  <circle cx="32" cy="34" r="2.5" fill="#ffffff" filter="url(#glow)"/>
+  <circle cx="46" cy="42" r="2.5" fill="#ffffff" filter="url(#glow)"/>
+  <circle cx="18" cy="42" r="2.5" fill="#ffffff" filter="url(#glow)"/>
+  <circle cx="32" cy="50" r="2.5" fill="#ffffff" filter="url(#glow)"/>
+  
+  <!-- SD text overlay (subtle) -->
+  <text x="32" y="40" 
+        font-family="Arial, sans-serif" 
+        font-size="16" 
+        font-weight="bold" 
+        fill="rgba(255,255,255,0.3)" 
+        text-anchor="middle">SD</text>
 </svg>

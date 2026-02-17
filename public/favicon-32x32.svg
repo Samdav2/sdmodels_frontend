@@ -1,0 +1,35 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg32" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b35;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d62828;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow32">
+      <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="url(#bg32)"/>
+  <path d="M 16 8 L 24 13 L 24 22 L 16 27 L 8 22 L 8 13 Z" 
+        fill="none" 
+        stroke="#ffffff" 
+        stroke-width="1.5" 
+        filter="url(#glow32)"/>
+  <path d="M 16 8 L 24 13 L 16 18 L 8 13 Z" 
+        fill="rgba(255,255,255,0.15)" 
+        stroke="#ffffff" 
+        stroke-width="1.5" 
+        filter="url(#glow32)"/>
+  <path d="M 16 18 L 24 13 L 24 22 L 16 27 Z" 
+        fill="rgba(255,255,255,0.08)" 
+        stroke="#ffffff" 
+        stroke-width="1.5" 
+        filter="url(#glow32)"/>
+  <circle cx="16" cy="8" r="1.5" fill="#ffffff" filter="url(#glow32)"/>
+  <circle cx="24" cy="13" r="1.5" fill="#ffffff" filter="url(#glow32)"/>
+  <circle cx="8" cy="13" r="1.5" fill="#ffffff" filter="url(#glow32)"/>
+  <circle cx="16" cy="18" r="1.5" fill="#ffffff" filter="url(#glow32)"/>
+</svg>

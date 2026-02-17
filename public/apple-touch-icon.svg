@@ -1,0 +1,76 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgApple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b35;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ff8c42;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d62828;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cubeApple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffbe62;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glowApple">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="180" height="180" rx="40" fill="url(#bgApple)"/>
+  
+  <!-- Decorative grid pattern -->
+  <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/>
+  </pattern>
+  <rect width="180" height="180" fill="url(#grid)"/>
+  
+  <!-- Main 3D Cube -->
+  <g filter="url(#shadow)">
+    <!-- Front face -->
+    <path d="M 90 45 L 135 70 L 135 120 L 90 145 L 45 120 L 45 70 Z" 
+          fill="none" 
+          stroke="url(#cubeApple)" 
+          stroke-width="6" 
+          stroke-linejoin="round"
+          filter="url(#glowApple)"/>
+    
+    <!-- Top face -->
+    <path d="M 90 45 L 135 70 L 90 95 L 45 70 Z" 
+          fill="rgba(255,255,255,0.2)" 
+          stroke="url(#cubeApple)" 
+          stroke-width="6" 
+          stroke-linejoin="round"
+          filter="url(#glowApple)"/>
+    
+    <!-- Right face -->
+    <path d="M 90 95 L 135 70 L 135 120 L 90 145 Z" 
+          fill="rgba(255,255,255,0.1)" 
+          stroke="url(#cubeApple)" 
+          stroke-width="6" 
+          stroke-linejoin="round"
+          filter="url(#glowApple)"/>
+    
+    <!-- Vertices -->
+    <circle cx="90" cy="45" r="6" fill="#ffffff" filter="url(#glowApple)"/>
+    <circle cx="135" cy="70" r="6" fill="#ffffff" filter="url(#glowApple)"/>
+    <circle cx="45" cy="70" r="6" fill="#ffffff" filter="url(#glowApple)"/>
+    <circle cx="90" cy="95" r="6" fill="#ffffff" filter="url(#glowApple)"/>
+    <circle cx="135" cy="120" r="6" fill="#ffffff" filter="url(#glowApple)"/>
+    <circle cx="45" cy="120" r="6" fill="#ffffff" filter="url(#glowApple)"/>
+    <circle cx="90" cy="145" r="6" fill="#ffffff" filter="url(#glowApple)"/>
+  </g>
+  
+  <!-- SD text -->
+  <text x="90" y="110" 
+        font-family="Arial, sans-serif" 
+        font-size="42" 
+        font-weight="bold" 
+        fill="rgba(255,255,255,0.25)" 
+        text-anchor="middle">SD</text>
+</svg>
