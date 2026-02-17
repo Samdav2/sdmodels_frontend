@@ -115,53 +115,9 @@
   }
 }
 
+/* Performance Optimizations - Non-Breaking */
 
-/* Mobile Performance Optimizations */
-@media (max-width: 768px) {
-  /* Disable expensive backdrop blur on mobile */
-  .backdrop-blur-xl,
-  .backdrop-blur-lg,
-  .backdrop-blur-md,
-  .backdrop-blur-sm,
-  .backdrop-blur {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    background-color: rgba(15, 23, 42, 0.95) !important;
-  }
-  
-  /* Reduce animation complexity */
-  @media (prefers-reduced-motion: no-preference) {
-    * {
-      animation-duration: 0.2s !important;
-      transition-duration: 0.15s !important;
-    }
-  }
-  
-  /* Optimize transforms for mobile GPU */
-  * {
-    will-change: auto !important;
-  }
-}
-
-/* Low-end device optimizations */
-@media (max-width: 640px) and (max-height: 800px) {
-  /* Further reduce effects on small screens */
-  .bg-gradient-to-br,
-  .bg-gradient-to-r,
-  .bg-gradient-to-l {
-    background-image: none !important;
-    background-color: rgb(15, 23, 42) !important;
-  }
-  
-  /* Disable shadows on low-end devices */
-  .shadow-lg,
-  .shadow-xl,
-  .shadow-2xl {
-    box-shadow: none !important;
-  }
-}
-
-/* Reduce motion for accessibility and performance */
+/* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -170,15 +126,25 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
   }
 }
 
-/* GPU acceleration for smooth scrolling */
-.gpu-accelerated {
+/* GPU acceleration for better performance */
+.gpu-accelerate {
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* Optimize images for faster loading */
+img {
+  content-visibility: auto;
+}
+
+/* Faster animations on mobile (optional, doesn't break design) */
+@media (max-width: 768px) {
+  * {
+    animation-duration: 0.3s;
+    transition-duration: 0.2s;
+  }
 }
