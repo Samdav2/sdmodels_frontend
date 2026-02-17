@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import ModelCard from "@/components/ModelCard";
-import HeroBackground from "@/components/HeroBackground";
+import HeroBackground3D from "@/components/HeroBackground3D";
 import LiveStatsTicker from "@/components/LiveStatsTicker";
 import FilterSidebar from "@/components/FilterSidebar";
 import CreatorLeaderboard from "@/components/CreatorLeaderboard";
 import HoloCarousel from "@/components/HoloCarousel";
 import CredibilityNav from "@/components/CredibilityNav";
+import Footer from "@/components/Footer";
+import MobileNav from "@/components/MobileNav";
 import { useState } from "react";
 
 // Mock data - will be replaced with API calls
@@ -170,19 +172,19 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-x-hidden w-full">
       {/* Live Stats Ticker */}
       <LiveStatsTicker />
       
       {/* Navigation */}
-      <nav className="relative z-10 border-b border-orange-500/20 bg-slate-900/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+      <nav className="sticky top-0 z-[9999] border-b border-orange-500/20 bg-slate-900/95 backdrop-blur-xl shadow-lg w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center w-full">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/50">
-              <span className="text-white font-bold text-lg sm:text-xl">3D</span>
+              <span className="text-white font-bold text-sm sm:text-lg">SD</span>
             </div>
-            <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-              NEXUS MODELS
+            <h1 className="text-base sm:text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
+              SDModels
             </h1>
           </div>
           <div className="flex gap-2 sm:gap-4 items-center">
@@ -198,82 +200,114 @@ export default function Home() {
             <div className="hidden md:block">
               <CredibilityNav />
             </div>
-            <Link href="/browse" className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition">
+            <Link href="/browse" className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition hidden lg:block">
               Browse
             </Link>
-            <Link href="/upload" className="px-3 sm:px-6 py-1.5 sm:py-2 text-sm sm:text-base bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition font-semibold shadow-lg shadow-orange-500/50">
+            <Link href="/upload" className="px-3 sm:px-6 py-1.5 sm:py-2 text-sm sm:text-base bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition font-semibold shadow-lg shadow-orange-500/50 hidden lg:block">
               <span className="hidden sm:inline">Start Selling</span>
               <span className="sm:hidden">Sell</span>
             </Link>
+            <MobileNav />
           </div>
         </div>
       </nav>
 
       {/* Hero Section with 3D Background */}
-      <section className="relative min-h-[70vh] sm:h-[90vh] overflow-hidden">
-        <HeroBackground />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 h-full flex flex-col justify-center py-12 sm:py-0">
-          <div className="text-center space-y-4 sm:space-y-6">
-            <div className="inline-block">
-              <span className="px-3 sm:px-4 py-1.5 sm:py-2 bg-orange-500/20 border border-orange-500/50 rounded-full text-orange-400 text-xs sm:text-sm font-bold backdrop-blur-sm">
-                ⚡ NEXT-GEN 3D MARKETPLACE
-              </span>
-            </div>
-            <h2 className="text-4xl sm:text-6xl md:text-8xl font-black text-white leading-tight drop-shadow-2xl px-4">
-              The Next Dimension
-              <br />
-              <span className="bg-gradient-to-r from-orange-400 via-red-500 to-orange-600 bg-clip-text text-transparent">
-                of Digital Assets
-              </span>
-            </h2>
-            <p className="text-base sm:text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto font-medium drop-shadow-lg px-4">
-              Buy, Sell, and Preview 3D Models in Real-Time.
-              <br className="hidden sm:block" />
-              <span className="sm:inline block mt-1 sm:mt-0">Built for creators who demand excellence.</span>
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-4 sm:pt-6 px-4">
-              <button className="group px-6 sm:px-10 py-3 sm:py-5 bg-orange-500/20 backdrop-blur-md border-2 border-orange-500/50 text-white rounded-xl hover:bg-orange-500 transition-all font-bold text-base sm:text-lg shadow-2xl shadow-orange-500/50 hover:scale-105">
-                <span className="flex items-center justify-center gap-2">
-                  🎮 Explore Marketplace
-                </span>
-              </button>
-              <button className="px-6 sm:px-10 py-3 sm:py-5 bg-white/10 backdrop-blur-md border-2 border-white/30 text-white rounded-xl hover:bg-white/20 transition-all font-bold text-base sm:text-lg hover:scale-105">
-                Start Selling →
-              </button>
-            </div>
-          </div>
+      <section className="relative h-screen w-full overflow-hidden bg-black">
+        {/* 3D Background - Fixed positioning */}
+        <div className="absolute inset-0 z-0 w-full h-full overflow-hidden">
+          <HeroBackground3D />
+        </div>
+        
+        {/* Glassmorphism container for hero text */}
+        <div className="absolute inset-0 z-10 w-full h-full flex items-center justify-center py-16 px-4 sm:px-6">
+          <div className="max-w-7xl mx-auto w-full">
+            <div className="text-center space-y-4 lg:space-y-6">
+              {/* Glassmorphism background for text with glowing orange border */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-[95%] sm:w-full max-w-5xl h-auto min-h-[500px] lg:min-h-[550px] bg-gradient-to-br from-slate-900/25 via-slate-800/15 to-slate-900/25 backdrop-blur-lg rounded-3xl border-2 border-orange-500/40 shadow-[0_0_60px_rgba(255,107,53,0.4),inset_0_0_60px_rgba(255,107,53,0.1)]" />
+              </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 sm:gap-8 mt-8 sm:mt-16 max-w-4xl mx-auto px-4">
-            <div className="text-center bg-slate-900/50 backdrop-blur-md border border-orange-500/30 rounded-lg sm:rounded-xl p-3 sm:p-6">
-              <div className="text-2xl sm:text-5xl font-black bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">10K+</div>
-              <div className="text-gray-300 mt-1 sm:mt-2 font-semibold text-xs sm:text-base">Premium Assets</div>
-            </div>
-            <div className="text-center bg-slate-900/50 backdrop-blur-md border border-orange-500/30 rounded-lg sm:rounded-xl p-3 sm:p-6">
-              <div className="text-2xl sm:text-5xl font-black bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">5K+</div>
-              <div className="text-gray-300 mt-1 sm:mt-2 font-semibold text-xs sm:text-base">Active Creators</div>
-            </div>
-            <div className="text-center bg-slate-900/50 backdrop-blur-md border border-orange-500/30 rounded-lg sm:rounded-xl p-3 sm:p-6">
-              <div className="text-2xl sm:text-5xl font-black bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">99%</div>
-              <div className="text-gray-300 mt-1 sm:mt-2 font-semibold text-xs sm:text-base">Quality Certified</div>
+              <div className="relative z-10 space-y-4 lg:space-y-6">
+                {/* Badge */}
+                <div className="inline-block">
+                  <span className="px-4 sm:px-5 py-2 bg-gradient-to-r from-orange-500/20 to-red-500/20 border-2 border-orange-500/60 rounded-full text-orange-300 text-xs sm:text-sm font-bold backdrop-blur-md shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 transition-all">
+                    ⚡ NEXT-GEN 3D MARKETPLACE
+                  </span>
+                </div>
+
+                {/* Main Heading */}
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-tight drop-shadow-2xl px-4">
+                  <span className="block">The Next Dimension</span>
+                  <span className="block bg-gradient-to-r from-orange-400 via-red-500 to-orange-600 bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(255,107,53,0.6)]">
+                    of Digital Assets
+                  </span>
+                </h2>
+
+                {/* Subtitle */}
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-100 max-w-3xl mx-auto font-medium drop-shadow-lg px-6 leading-relaxed">
+                  Buy, Sell, and Preview 3D Models in Real-Time.
+                  <br className="hidden sm:block" />
+                  <span className="block sm:inline mt-1 sm:mt-0">Built for creators who demand excellence.</span>
+                </p>
+
+                {/* CTA Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-2 px-4 max-w-2xl mx-auto">
+                  <Link href="/marketplace">
+                    <button className="group w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 bg-gradient-to-r from-orange-500 to-red-600 backdrop-blur-md border-2 border-orange-400/60 text-white rounded-xl hover:shadow-[0_0_50px_rgba(255,107,53,0.7)] transition-all font-bold text-sm sm:text-base shadow-2xl shadow-orange-500/50 hover:scale-105 hover:border-orange-300">
+                      <span className="flex items-center justify-center gap-2">
+                        <span>🎮</span>
+                        <span>Explore Marketplace</span>
+                      </span>
+                    </button>
+                  </Link>
+                  <Link href="/upload">
+                    <button className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 bg-white/10 backdrop-blur-xl border-2 border-white/40 text-white rounded-xl hover:bg-white/20 hover:border-white/60 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all font-bold text-sm sm:text-base hover:scale-105 shadow-xl">
+                      Start Selling →
+                    </button>
+                  </Link>
+                </div>
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 pt-6 lg:pt-8 max-w-4xl mx-auto px-4">
+                  <div className="text-center bg-gradient-to-br from-slate-900/80 to-slate-800/80 backdrop-blur-xl border-2 border-orange-500/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-105 hover:border-orange-500/70 transition-all">
+                    <div className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-lg">10K+</div>
+                    <div className="text-gray-200 mt-1 sm:mt-2 font-bold text-[10px] sm:text-xs md:text-sm">Premium Assets</div>
+                  </div>
+                  <div className="text-center bg-gradient-to-br from-slate-900/80 to-slate-800/80 backdrop-blur-xl border-2 border-orange-500/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-105 hover:border-orange-500/70 transition-all">
+                    <div className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-lg">5K+</div>
+                    <div className="text-gray-200 mt-1 sm:mt-2 font-bold text-[10px] sm:text-xs md:text-sm">Active Creators</div>
+                  </div>
+                  <div className="text-center bg-gradient-to-br from-slate-900/80 to-slate-800/80 backdrop-blur-xl border-2 border-orange-500/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-105 hover:border-orange-500/70 transition-all">
+                    <div className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-lg">99%</div>
+                    <div className="text-gray-200 mt-1 sm:mt-2 font-bold text-[10px] sm:text-xs md:text-sm">Quality Certified</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Holo-Carousel Section */}
-      <section className="relative z-10 py-12 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-8 sm:mb-12">
+      {/* Holo-Carousel Section with creative background */}
+      <section className="relative z-10 py-12 sm:py-20 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-b-2 border-orange-500/30 overflow-hidden max-w-full">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-red-500/10 rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 mb-8 sm:mb-12">
           <div className="text-center">
             <div className="inline-block mb-3 sm:mb-4">
-              <span className="px-3 sm:px-4 py-1.5 sm:py-2 bg-orange-500/20 border border-orange-500/50 rounded-full text-orange-400 text-xs sm:text-sm font-bold backdrop-blur-sm">
+              <span className="px-3 sm:px-4 py-1.5 sm:py-2 bg-orange-500/30 border border-orange-500/60 rounded-full text-orange-300 text-xs sm:text-sm font-bold backdrop-blur-md shadow-lg shadow-orange-500/20">
                 ⚡ LIVE 3D PREVIEW
               </span>
             </div>
             <h3 className="text-3xl sm:text-5xl font-black text-white mb-3 sm:mb-4 px-4">
-              Experience the <span className="text-orange-500">Holo-Carousel</span>
+              Experience the <span className="text-orange-500 drop-shadow-[0_0_20px_rgba(255,107,53,0.5)]">Holo-Carousel</span>
             </h3>
-            <p className="text-base sm:text-xl text-gray-400 max-w-3xl mx-auto px-4">
+            <p className="text-base sm:text-xl text-gray-300 max-w-3xl mx-auto px-4">
               Interact with live 3D models in real-time. Rotate, zoom, and inspect every detail before you buy.
             </p>
           </div>
@@ -281,44 +315,50 @@ export default function Home() {
 
         <HoloCarousel models={featuredModels} autoSlideInterval={7000} />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8 sm:mt-12">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 mt-8 sm:mt-12">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-center">
-            <div className="bg-slate-900/50 border border-orange-500/30 rounded-xl p-4 sm:p-6 backdrop-blur">
+            <div className="bg-slate-900/70 border-2 border-orange-500/40 rounded-xl p-4 sm:p-6 backdrop-blur-xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:scale-105 transition-all">
               <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">🔄</div>
               <h4 className="text-white font-bold mb-1 sm:mb-2 text-sm sm:text-base">360° Rotation</h4>
-              <p className="text-gray-400 text-xs sm:text-sm">Click and drag to inspect from every angle</p>
+              <p className="text-gray-300 text-xs sm:text-sm">Click and drag to inspect from every angle</p>
             </div>
-            <div className="bg-slate-900/50 border border-orange-500/30 rounded-xl p-4 sm:p-6 backdrop-blur">
+            <div className="bg-slate-900/70 border-2 border-orange-500/40 rounded-xl p-4 sm:p-6 backdrop-blur-xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:scale-105 transition-all">
               <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">🔍</div>
               <h4 className="text-white font-bold mb-1 sm:mb-2 text-sm sm:text-base">Wireframe Mode</h4>
-              <p className="text-gray-400 text-xs sm:text-sm">View topology and mesh quality instantly</p>
+              <p className="text-gray-300 text-xs sm:text-sm">View topology and mesh quality instantly</p>
             </div>
-            <div className="bg-slate-900/50 border border-orange-500/30 rounded-xl p-4 sm:p-6 backdrop-blur">
+            <div className="bg-slate-900/70 border-2 border-orange-500/40 rounded-xl p-4 sm:p-6 backdrop-blur-xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:scale-105 transition-all">
               <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">📊</div>
               <h4 className="text-white font-bold mb-1 sm:mb-2 text-sm sm:text-base">Live Data</h4>
-              <p className="text-gray-400 text-xs sm:text-sm">Real-time poly count and mesh health</p>
+              <p className="text-gray-300 text-xs sm:text-sm">Real-time poly count and mesh health</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Featured Models with Sidebar */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 border-l-2 border-r-2 border-orange-500/20 shadow-[0_0_30px_rgba(255,107,53,0.1)]">
+        {/* Decorative corner accents */}
+        <div className="absolute top-0 left-0 w-20 h-20 border-t-2 border-l-2 border-orange-500/50 rounded-tl-3xl" />
+        <div className="absolute top-0 right-0 w-20 h-20 border-t-2 border-r-2 border-orange-500/50 rounded-tr-3xl" />
+        <div className="absolute bottom-0 left-0 w-20 h-20 border-b-2 border-l-2 border-orange-500/50 rounded-bl-3xl" />
+        <div className="absolute bottom-0 right-0 w-20 h-20 border-b-2 border-r-2 border-orange-500/50 rounded-br-3xl" />
+
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
           <div>
             <h3 className="text-2xl sm:text-4xl font-black text-white mb-1 sm:mb-2">
-              🔥 Featured <span className="text-orange-500">Assets</span>
+              🔥 Featured <span className="text-orange-500 drop-shadow-[0_0_20px_rgba(255,107,53,0.5)]">Assets</span>
             </h3>
-            <p className="text-gray-400 text-sm sm:text-lg">Handpicked by our community</p>
+            <p className="text-gray-300 text-sm sm:text-lg">Handpicked by our community</p>
           </div>
           <div className="flex gap-2 sm:gap-4 items-center w-full sm:w-auto">
             <button 
               onClick={() => setShowFilters(!showFilters)}
-              className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-orange-500/20 border border-orange-500/50 text-orange-400 rounded-lg hover:bg-orange-500/30 transition font-semibold backdrop-blur"
+              className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-orange-500/30 border-2 border-orange-500/60 text-orange-300 rounded-lg hover:bg-orange-500/40 hover:shadow-lg hover:shadow-orange-500/30 transition-all font-semibold backdrop-blur-md"
             >
               {showFilters ? "Hide" : "Show"} Filters
             </button>
-            <Link href="/browse" className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition font-semibold whitespace-nowrap">
+            <Link href="/browse" className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition font-semibold whitespace-nowrap hover:drop-shadow-[0_0_10px_rgba(255,107,53,0.5)]">
               View All →
             </Link>
           </div>
@@ -563,19 +603,38 @@ export default function Home() {
       </section>
 
       {/* Creator Leaderboard */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-        <CreatorLeaderboard creators={topCreators} />
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 bg-gradient-to-br from-slate-950/50 via-slate-900/50 to-slate-950/50 rounded-3xl border-2 border-orange-500/20 shadow-[0_0_50px_rgba(255,107,53,0.15)]">
+        {/* Decorative background */}
+        <div className="absolute inset-0 opacity-20 rounded-3xl overflow-hidden">
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-orange-500/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-red-500/20 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="relative z-10">
+          <CreatorLeaderboard creators={topCreators} />
+        </div>
       </section>
 
       {/* Trust & Social Proof */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-        <div className="text-center mb-8 sm:mb-12">
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 border-t-2 border-orange-500/30">
+        {/* Animated background grid */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `
+              linear-gradient(rgba(255, 107, 53, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255, 107, 53, 0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '40px 40px',
+          }} />
+        </div>
+
+        <div className="relative z-10 text-center mb-8 sm:mb-12">
           <h3 className="text-2xl sm:text-4xl font-black text-white mb-3 sm:mb-4">
-            Trusted by <span className="text-orange-500">Industry Leaders</span>
+            Trusted by <span className="text-orange-500 drop-shadow-[0_0_20px_rgba(255,107,53,0.5)]">Industry Leaders</span>
           </h3>
         </div>
 
-        <div className="flex justify-center gap-4 sm:gap-8 flex-wrap mb-12 sm:mb-16">
+        <div className="relative z-10 flex justify-center gap-4 sm:gap-8 flex-wrap mb-12 sm:mb-16">
           {trustedBy.map((company) => (
             <div key={company} className="px-4 sm:px-8 py-2 sm:py-4 bg-slate-800/50 border border-orange-500/20 rounded-lg sm:rounded-xl backdrop-blur">
               <span className="text-gray-300 font-semibold text-sm sm:text-lg">{company}</span>
@@ -624,76 +683,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-orange-500/20 bg-slate-900/80 backdrop-blur-xl mt-12 sm:mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12">
-            <div>
-              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/50">
-                  <span className="text-white font-bold text-lg sm:text-xl">3D</span>
-                </div>
-                <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-                  NEXUS MODELS
-                </h1>
-              </div>
-              <p className="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">The next dimension of digital assets.</p>
-              
-              {/* Newsletter */}
-              <div className="space-y-2 sm:space-y-3">
-                <h4 className="text-white font-bold text-sm sm:text-base">Weekly Free Assets</h4>
-                <input 
-                  type="email" 
-                  placeholder="your@email.com"
-                  className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-slate-800 border border-orange-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
-                />
-                <button className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition font-semibold">
-                  Subscribe
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-white font-bold mb-3 sm:mb-4 text-sm sm:text-base">About</h4>
-              <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
-                <li><Link href="/about" className="hover:text-orange-400 transition">About Us</Link></li>
-                <li><Link href="/mastery" className="hover:text-orange-400 transition">Our Team</Link></li>
-                <li><Link href="/roadmap" className="hover:text-orange-400 transition">Roadmap</Link></li>
-                <li><Link href="/testimonials" className="hover:text-orange-400 transition">Testimonials</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-white font-bold mb-3 sm:mb-4 text-sm sm:text-base">Creators</h4>
-              <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
-                <li><Link href="/upload" className="hover:text-orange-400 transition">Start Selling</Link></li>
-                <li><Link href="/process" className="hover:text-orange-400 transition">Process Vault</Link></li>
-                <li><Link href="/mastery" className="hover:text-orange-400 transition">Hall of Mastery</Link></li>
-                <li><Link href="/learn" className="hover:text-orange-400 transition">Learning Nexus</Link></li>
-                <li><Link href="/roadmap" className="hover:text-orange-400 transition">Roadmap</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-white font-bold mb-3 sm:mb-4 text-sm sm:text-base">Community</h4>
-              <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
-                <li><Link href="/bounties" className="hover:text-orange-400 transition">Bounty Board</Link></li>
-                <li><Link href="/leaderboard" className="hover:text-orange-400 transition">Leaderboard</Link></li>
-                <li><Link href="/testimonials" className="hover:text-orange-400 transition">Testimonials</Link></li>
-                <li><Link href="/learn" className="hover:text-orange-400 transition">Tutorials</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-orange-500/20 mt-8 sm:mt-12 pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-gray-400 text-sm sm:text-base text-center sm:text-left">© 2024 Nexus Models. All rights reserved.</p>
-            <div className="flex gap-4 sm:gap-6 text-gray-400 text-sm sm:text-base">
-              <Link href="/privacy" className="hover:text-orange-400 transition">Privacy</Link>
-              <Link href="/terms" className="hover:text-orange-400 transition">Terms</Link>
-              <Link href="/cookies" className="hover:text-orange-400 transition">Cookies</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

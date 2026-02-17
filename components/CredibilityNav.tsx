@@ -16,10 +16,13 @@ export default function CredibilityNav() {
   ];
 
   return (
-    <div className="relative">
+    <div 
+      className="relative z-[10000]"
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        onMouseEnter={() => setIsOpen(true)}
         className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition flex items-center gap-1"
       >
         More
@@ -28,22 +31,13 @@ export default function CredibilityNav() {
 
       <AnimatePresence>
         {isOpen && (
-          <>
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setIsOpen(false)}
-              onMouseEnter={() => setIsOpen(false)}
-            />
-            
-            {/* Dropdown */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute top-full right-0 mt-2 w-72 bg-slate-900/95 backdrop-blur-xl border-2 border-orange-500/50 rounded-xl shadow-2xl z-50"
-              onMouseLeave={() => setIsOpen(false)}
-            >
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-full right-0 mt-2 w-72 bg-slate-900 backdrop-blur-xl border-2 border-orange-500/50 rounded-xl shadow-2xl z-[10001] pointer-events-auto"
+          >
               <div className="p-2">
                 {credibilityPages.map((page) => (
                   <Link
@@ -60,7 +54,7 @@ export default function CredibilityNav() {
                         <div className="font-semibold text-white group-hover:text-orange-400 transition">
                           {page.name}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-gray-300">
                           {page.description}
                         </div>
                       </div>
@@ -75,7 +69,6 @@ export default function CredibilityNav() {
                 </div>
               </div>
             </motion.div>
-          </>
         )}
       </AnimatePresence>
     </div>

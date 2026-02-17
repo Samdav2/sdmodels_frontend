@@ -1,0 +1,53 @@
+# robots.txt for SDModels - Premium 3D Marketplace
+# Created by Dawodu David Imole (SD)
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://sdmodels.com/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Allow all major search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+# Disallow admin and private areas
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Disallow: /dashboard/settings/
+Disallow: /_next/
+Disallow: /private/
+
+# Allow public pages
+Allow: /marketplace
+Allow: /browse
+Allow: /blog
+Allow: /about
+Allow: /bounties
+Allow: /leaderboard
+Allow: /community
+Allow: /learn
+Allow: /testimonials
+Allow: /roadmap
+Allow: /pricing
+Allow: /help
+Allow: /support
