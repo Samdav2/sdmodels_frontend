@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { transactionsApi } from "@/lib/api/transactions";
-import LoadingSpinner from "@/components/LoadingSpinner";
 
-export default function PurchaseSuccessPage() {
+function PurchaseSuccessContent() {
   const searchParams = useSearchParams();
   const transactionId = searchParams.get('transaction_id');
   
@@ -36,7 +35,14 @@ export default function PurchaseSuccessPage() {
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-green-400 font-semibold">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -116,5 +122,20 @@ export default function PurchaseSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PurchaseSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-green-400 font-semibold">Loading purchase details...</p>
+        </div>
+      </div>
+    }>
+      <PurchaseSuccessContent />
+    </Suspense>
   );
 }

@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authApi } from "@/lib/api/auth";
 
-export default function AdminResetPasswordPage() {
+function AdminResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -197,5 +197,20 @@ export default function AdminResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AdminResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-yellow-400 font-semibold">Loading...</p>
+        </div>
+      </div>
+    }>
+      <AdminResetPasswordContent />
+    </Suspense>
   );
 }
