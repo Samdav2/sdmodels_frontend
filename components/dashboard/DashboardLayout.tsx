@@ -3,10 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
+}
+
+interface UserData {
+  name: string;
+  username: string;
+  email: string;
 }
 
 const navItems = [
@@ -22,6 +28,43 @@ const navItems = [
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userData, setUserData] = useState<UserData | null>(null);
+
+  // Fetch user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // Try to get user data from localStorage first (cached)
+        const cachedUser = localStorage.getItem('user_data');
+        if (cachedUser) {
+          setUserData(JSON.parse(cachedUser));
+        }
+
+        // Then fetch fresh data from API
+        const response = await fetch('/api/v1/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUserData(data);
+          localStorage.setItem('user_data', JSON.stringify(data));
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  // Get first name from full name
+  const getFirstName = (fullName?: string) => {
+    if (!fullName) return 'User';
+    return fullName.split(' ')[0];
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -45,12 +88,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </button>
 
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/50">
-              <span className="text-white font-bold text-lg sm:text-xl">3D</span>
+              <span className="text-white font-bold text-lg sm:text-xl">SD</span>
             </div>
-            <h1 className="text-base sm:text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-              <span className="hidden sm:inline">ARTIST COMMAND CENTER</span>
-              <span className="sm:hidden">COMMAND</span>
-            </h1>
+            <div>
+              <h1 className="text-base sm:text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
+                <span className="hidden sm:inline">ARTIST COMMAND CENTER</span>
+                <span className="sm:hidden">COMMAND</span>
+              </h1>
+              {userData && userData.name && (
+                <p className="text-xs sm:text-sm text-slate-400 hidden sm:block">
+                  Welcome back, <span className="text-orange-400 font-semibold">{getFirstName(userData.name)}</span>
+                </p>
+              )}
+            </div>
           </div>
           <div className="flex gap-2 sm:gap-4 items-center">
             <Link href="/" className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition">

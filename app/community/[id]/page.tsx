@@ -3,6 +3,9 @@
 import Link from "next/link";
 import NotificationModal, { NotificationType } from "@/components/NotificationModal";
 import { useState, useRef } from "react";
+import { useCommunity } from "@/lib/api/hooks/useCommunity";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorMessage from "@/components/ErrorMessage";
 
 export default function CommunityViewPage({ params }: { params: { id: string } }) {
   const [activeTab, setActiveTab] = useState<'feed' | 'members' | 'about'>('feed');
@@ -12,6 +15,9 @@ export default function CommunityViewPage({ params }: { params: { id: string } }
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modelInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch community from API
+  const { community: apiCommunity, loading, error } = useCommunity(params.id);
 
   const [notification, setNotification] = useState<{
     isOpen: boolean;
@@ -25,18 +31,21 @@ export default function CommunityViewPage({ params }: { params: { id: string } }
     message: "",
   });
 
-  // Mock community data
+  if (loading) return <LoadingSpinner />;
+  if (error || !apiCommunity) return <ErrorMessage error={error || "Community not found"} />;
+
+  // Map API community to display format
   const community = {
-    id: params.id,
-    name: "3D Game Assets",
-    description: "Share and discuss game-ready 3D models, textures, and assets",
-    icon: "🎮",
-    banner: "from-purple-600 via-pink-600 to-orange-600",
-    members: 15234,
-    posts: 8921,
-    isJoined: true,
-    category: "Gaming",
-    createdDate: "Jan 2024",
+    id: apiCommunity.id,
+    name: apiCommunity.name,
+    description: apiCommunity.description,
+    icon: apiCommunity.icon,
+    banner: apiCommunity.banner_gradient,
+    members: apiCommunity.member_count,
+    posts: apiCommunity.post_count,
+    isJoined: false, // Would need separate API call
+    category: apiCommunity.category,
+    createdDate: new Date(apiCommunity.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
   };
 
   const [posts, setPosts] = useState([

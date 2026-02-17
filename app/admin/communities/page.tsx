@@ -1,13 +1,17 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useState } from "react";
+import { useCommunities } from "@/lib/api/hooks/useCommunities";
 
 export default function AdminCommunitiesPage() {
+  const { communities: backendCommunities, loading: communitiesLoading, error: communitiesError } = useCommunities();
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'reported' | 'create'>('all');
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCommunity, setSelectedCommunity] = useState<number | null>(null);
 
+  // Transform backend data to match admin interface
   const [communities, setCommunities] = useState([
     {
       id: 1,
@@ -35,48 +39,6 @@ export default function AdminCommunitiesPage() {
       creator: "Sarah Miller",
       createdDate: "2024-02-01",
       reports: 0,
-      moderators: 2,
-    },
-    {
-      id: 3,
-      name: "Blender Masters",
-      description: "Blender tips, tricks, and tutorials",
-      icon: "🔷",
-      category: "Software",
-      members: 23456,
-      posts: 12098,
-      status: "active",
-      creator: "Mike Johnson",
-      createdDate: "2023-12-10",
-      reports: 0,
-      moderators: 5,
-    },
-    {
-      id: 4,
-      name: "Sci-Fi Creators",
-      description: "Futuristic and sci-fi 3D art",
-      icon: "🚀",
-      category: "Genre",
-      members: 12098,
-      posts: 7654,
-      status: "pending",
-      creator: "Emma Davis",
-      createdDate: "2024-02-14",
-      reports: 0,
-      moderators: 1,
-    },
-    {
-      id: 5,
-      name: "Texture Artists",
-      description: "PBR textures and material creation",
-      icon: "🎨",
-      category: "Texturing",
-      members: 6543,
-      posts: 3210,
-      status: "active",
-      creator: "John Smith",
-      createdDate: "2024-01-20",
-      reports: 2,
       moderators: 2,
     },
   ]);
@@ -140,6 +102,7 @@ export default function AdminCommunitiesPage() {
   );
 
   return (
+    <ProtectedRoute>
     <AdminLayout title="Community Management">
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
@@ -613,5 +576,6 @@ export default function AdminCommunitiesPage() {
         </div>
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

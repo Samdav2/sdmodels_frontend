@@ -1,25 +1,41 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdminCategories } from "@/lib/api/hooks/useAdminCategories";
 
 export default function CategoryManagementPage() {
-  const [categories, setCategories] = useState([
-    { id: 1, name: "Characters", icon: "🤖", count: 456, enabled: true },
-    { id: 2, name: "Vehicles", icon: "🚗", count: 234, enabled: true },
-    { id: 3, name: "Environments", icon: "🏰", count: 189, enabled: true },
-    { id: 4, name: "Weapons", icon: "⚔️", count: 167, enabled: true },
-    { id: 5, name: "Props", icon: "📦", count: 345, enabled: true },
-    { id: 6, name: "UI Elements", icon: "🎮", count: 123, enabled: false },
-  ]);
+  const { categories, loading, error, toggleEnabled } = useAdminCategories();
 
-  const toggleEnabled = (id: number) => {
-    setCategories(prev => prev.map(cat => 
-      cat.id === id ? { ...cat, enabled: !cat.enabled } : cat
-    ));
+  const handleToggleEnabled = async (id: number) => {
+    await toggleEnabled(id);
   };
 
+  if (loading) {
+    return (<AdminLayout title="Category Management">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading categories...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Category Management">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Categories</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
+    <ProtectedRoute>
     <AdminLayout title="Category Management">
       <div className="flex items-center justify-between mb-6">
         <p className="text-gray-400">Manage model categories and organization</p>
@@ -44,7 +60,7 @@ export default function CategoryManagementPage() {
                   <input
                     type="checkbox"
                     checked={category.enabled}
-                    onChange={() => toggleEnabled(category.id)}
+                    onChange={() => handleToggleEnabled(category.id)}
                     className="w-5 h-5"
                   />
                   <span className="text-gray-400 text-sm">Active</span>
@@ -58,5 +74,6 @@ export default function CategoryManagementPage() {
         ))}
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

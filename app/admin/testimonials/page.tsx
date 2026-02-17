@@ -1,28 +1,47 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdminTestimonials } from "@/lib/api/hooks/useAdminTestimonials";
 
 export default function TestimonialManagementPage() {
-  const [testimonials, setTestimonials] = useState([
-    { id: 1, author: "John Doe", company: "GameStudio Inc", text: "Amazing quality models!", rating: 5, verified: true, featured: true },
-    { id: 2, author: "Jane Smith", company: "VR Innovations", text: "Best marketplace for 3D assets", rating: 5, verified: true, featured: false },
-    { id: 3, author: "Mike Johnson", company: "Indie Games", text: "Great platform and support", rating: 4, verified: false, featured: false },
-  ]);
+  const { testimonials, loading, error, toggleFeatured, deleteTestimonial } = useAdminTestimonials();
 
-  const toggleFeatured = (id: number) => {
-    setTestimonials(prev => prev.map(t => 
-      t.id === id ? { ...t, featured: !t.featured } : t
-    ));
+  const handleToggleFeatured = async (id: number) => {
+    await toggleFeatured(id);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Delete this testimonial?")) {
-      setTestimonials(prev => prev.filter(t => t.id !== id));
+      await deleteTestimonial(id);
     }
   };
 
+  if (loading) {
+    return (<AdminLayout title="Testimonial Management">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading testimonials...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Testimonial Management">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Testimonials</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
+    <ProtectedRoute>
     <AdminLayout title="Testimonial Management">
       <div className="flex items-center justify-between mb-6">
         <p className="text-gray-400">Manage customer testimonials and reviews</p>
@@ -51,7 +70,7 @@ export default function TestimonialManagementPage() {
               </div>
               <div className="flex gap-2">
                 <button 
-                  onClick={() => toggleFeatured(testimonial.id)}
+                  onClick={() => handleToggleFeatured(testimonial.id)}
                   className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg text-sm font-semibold transition"
                 >
                   {testimonial.featured ? "Unfeature" : "Feature"}
@@ -71,5 +90,6 @@ export default function TestimonialManagementPage() {
         ))}
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

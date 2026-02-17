@@ -1,139 +1,38 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useState } from "react";
+import { useAdminSupport } from "@/lib/api/hooks/useAdminSupport";
 
 export default function AdminSupportPage() {
+  const { tickets, loading, error, updateTicketStatus, assignTicket } = useAdminSupport();
   const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'resolved' | 'all'>('active');
   const [selectedTicket, setSelectedTicket] = useState<number | null>(1);
   const [messageText, setMessageText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [tickets, setTickets] = useState([
-    {
-      id: 1,
-      user: "Alex Chen",
-      userAvatar: "🎨",
-      email: "alex@example.com",
-      subject: "Payment Issue - Transaction Failed",
-      status: "active",
-      priority: "high",
-      category: "Payment",
-      createdDate: "2024-02-16 10:30",
-      lastUpdate: "2 min ago",
-      assignedTo: "Admin Team",
-      messages: [
-        {
-          id: 1,
-          sender: "user",
-          text: "Hi, I tried to purchase a 3D model but my payment failed. The money was deducted from my account but I didn't receive the model.",
-          time: "10:30 AM",
-          attachments: ["screenshot.png"],
-        },
-        {
-          id: 2,
-          sender: "admin",
-          text: "Hello Alex! I'm sorry to hear about this issue. Let me check your transaction details. Can you provide the transaction ID?",
-          time: "10:35 AM",
-          attachments: [],
-        },
-        {
-          id: 3,
-          sender: "user",
-          text: "Sure, the transaction ID is TXN-2024-001234",
-          time: "10:37 AM",
-          attachments: [],
-        },
-      ],
-    },
-    {
-      id: 2,
-      user: "Sarah Miller",
-      userAvatar: "🚀",
-      email: "sarah@example.com",
-      subject: "Model Download Problem",
-      status: "pending",
-      priority: "medium",
-      category: "Technical",
-      createdDate: "2024-02-16 09:15",
-      lastUpdate: "1 hour ago",
-      assignedTo: "Unassigned",
-      messages: [
-        {
-          id: 1,
-          sender: "user",
-          text: "I purchased a model yesterday but the download link is not working. It shows 404 error.",
-          time: "09:15 AM",
-          attachments: [],
-        },
-      ],
-    },
-    {
-      id: 3,
-      user: "Mike Johnson",
-      userAvatar: "💎",
-      email: "mike@example.com",
-      subject: "Account Verification Request",
-      status: "active",
-      priority: "low",
-      category: "Account",
-      createdDate: "2024-02-16 08:00",
-      lastUpdate: "3 hours ago",
-      assignedTo: "Support Team",
-      messages: [
-        {
-          id: 1,
-          sender: "user",
-          text: "I want to become a verified creator. I have uploaded 5 models with good ratings. How do I apply?",
-          time: "08:00 AM",
-          attachments: [],
-        },
-        {
-          id: 2,
-          sender: "admin",
-          text: "Great to hear! I'll review your account and get back to you within 24 hours.",
-          time: "08:30 AM",
-          attachments: [],
-        },
-      ],
-    },
-    {
-      id: 4,
-      user: "Emma Davis",
-      userAvatar: "👩‍🎨",
-      email: "emma@example.com",
-      subject: "Refund Request",
-      status: "resolved",
-      priority: "high",
-      category: "Refund",
-      createdDate: "2024-02-15 14:20",
-      lastUpdate: "1 day ago",
-      assignedTo: "Finance Team",
-      messages: [
-        {
-          id: 1,
-          sender: "user",
-          text: "The model I purchased doesn't match the description. I'd like a refund.",
-          time: "02:20 PM",
-          attachments: [],
-        },
-        {
-          id: 2,
-          sender: "admin",
-          text: "I understand your concern. I've processed your refund. You should see it in 3-5 business days.",
-          time: "02:45 PM",
-          attachments: [],
-        },
-        {
-          id: 3,
-          sender: "user",
-          text: "Thank you for the quick response!",
-          time: "03:00 PM",
-          attachments: [],
-        },
-      ],
-    },
-  ]);
+  if (loading) {
+    return (<AdminLayout title="Support Management">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading support tickets...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Support Management">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Tickets</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   const stats = {
     totalTickets: tickets.length,
@@ -157,30 +56,16 @@ export default function AdminSupportPage() {
       attachments: [],
     };
 
-    setTickets(tickets.map(ticket => {
-      if (ticket.id === selectedTicket) {
-        return {
-          ...ticket,
-          messages: [...ticket.messages, newMessage],
-          lastUpdate: "Just now",
-        };
-      }
-      return ticket;
-    }));
-
+    // TODO: Send message via API
     setMessageText("");
   };
 
-  const handleStatusChange = (ticketId: number, newStatus: string) => {
-    setTickets(tickets.map(ticket => 
-      ticket.id === ticketId ? { ...ticket, status: newStatus } : ticket
-    ));
+  const handleStatusChange = async (ticketId: number, newStatus: string) => {
+    await updateTicketStatus(ticketId, newStatus);
   };
 
-  const handleAssign = (ticketId: number, assignee: string) => {
-    setTickets(tickets.map(ticket => 
-      ticket.id === ticketId ? { ...ticket, assignedTo: assignee } : ticket
-    ));
+  const handleAssign = async (ticketId: number, assignee: string) => {
+    await assignTicket(ticketId, assignee);
   };
 
   const filteredTickets = tickets.filter(t => {
@@ -193,6 +78,7 @@ export default function AdminSupportPage() {
   );
 
   return (
+    <ProtectedRoute>
     <AdminLayout title="Support Management">
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
@@ -520,5 +406,6 @@ export default function AdminSupportPage() {
         </div>
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

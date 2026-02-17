@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useCommunities } from "@/lib/api/hooks/useCommunities";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorMessage from "@/components/ErrorMessage";
 
 export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState<'discover' | 'my-communities' | 'create'>('discover');
@@ -9,62 +12,21 @@ export default function CommunityPage() {
   const [selectedCommunity, setSelectedCommunity] = useState<number | null>(null);
   const [messageText, setMessageText] = useState("");
 
-  const communities = [
-    {
-      id: 1,
-      name: "3D Game Assets",
-      description: "Share and discuss game-ready 3D models",
-      members: 15234,
-      icon: "🎮",
-      category: "Gaming",
-      isJoined: true,
-    },
-    {
-      id: 2,
-      name: "Character Artists",
-      description: "For character modelers and riggers",
-      members: 8921,
-      icon: "👤",
-      category: "Characters",
-      isJoined: true,
-    },
-    {
-      id: 3,
-      name: "Blender Masters",
-      description: "Blender tips, tricks, and tutorials",
-      members: 23456,
-      icon: "🔷",
-      category: "Software",
-      isJoined: false,
-    },
-    {
-      id: 4,
-      name: "Sci-Fi Creators",
-      description: "Futuristic and sci-fi 3D art",
-      members: 12098,
-      icon: "🚀",
-      category: "Genre",
-      isJoined: false,
-    },
-    {
-      id: 5,
-      name: "Texture Artists",
-      description: "PBR textures and material creation",
-      members: 6543,
-      icon: "🎨",
-      category: "Texturing",
-      isJoined: false,
-    },
-    {
-      id: 6,
-      name: "Animation Hub",
-      description: "Character animation and rigging",
-      members: 9876,
-      icon: "🎬",
-      category: "Animation",
-      isJoined: false,
-    },
-  ];
+  // Fetch communities from API
+  const { communities: apiCommunities, loading, error } = useCommunities({
+    search: searchQuery || undefined,
+    limit: 20,
+  });
+
+  const communities = apiCommunities.map(c => ({
+    id: c.id,
+    name: c.name,
+    description: c.description,
+    members: c.member_count,
+    icon: c.icon,
+    category: c.category,
+    isJoined: false, // Would need separate API call to check membership
+  }));
 
   const messages = [
     {

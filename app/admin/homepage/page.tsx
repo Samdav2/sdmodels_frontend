@@ -1,33 +1,51 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdminHomepage } from "@/lib/api/hooks/useAdminHomepage";
 
 export default function HomepageEditorPage() {
-  const [heroTitle, setHeroTitle] = useState("High-End Web Cinematic 3D Models");
-  const [heroSubtitle, setHeroSubtitle] = useState("Premium 3D assets for game developers, animators, and digital artists");
-  const [featuredCategories, setFeaturedCategories] = useState([
-    { id: 1, name: "Characters", icon: "🤖", enabled: true },
-    { id: 2, name: "Vehicles", icon: "🚗", enabled: true },
-    { id: 3, name: "Environments", icon: "🏰", enabled: true },
-    { id: 4, name: "Weapons", icon: "⚔️", enabled: true },
-  ]);
-  const [stats, setStats] = useState({
-    totalModels: 1834,
-    activeCreators: 247,
-    downloadsToday: 1523,
-  });
-  const [ctas, setCtas] = useState({
-    primaryText: "Browse Models",
-    primaryLink: "/marketplace",
-    secondaryText: "Start Selling",
-    secondaryLink: "/upload",
-  });
+  const { homepage, loading, error, updateHomepage } = useAdminHomepage();
+  
+  const [heroTitle, setHeroTitle] = useState(homepage.heroTitle);
+  const [heroSubtitle, setHeroSubtitle] = useState(homepage.heroSubtitle);
+  const [featuredCategories, setFeaturedCategories] = useState(homepage.featuredCategories);
+  const [stats, setStats] = useState(homepage.stats);
+  const [ctas, setCtas] = useState(homepage.ctas);
 
-  const handlePublish = () => {
-    // TODO: Call API to update homepage
+  const handlePublish = async () => {
+    await updateHomepage({
+      heroTitle,
+      heroSubtitle,
+      featuredCategories,
+      stats,
+      ctas,
+    });
     alert("Homepage changes published!");
   };
+
+  if (loading) {
+    return (<AdminLayout title="Homepage Dynamic Editor">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading homepage settings...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Homepage Dynamic Editor">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Settings</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   const toggleCategory = (id: number) => {
     setFeaturedCategories(prev =>
@@ -36,6 +54,7 @@ export default function HomepageEditorPage() {
   };
 
   return (
+    <ProtectedRoute>
     <AdminLayout title="Homepage Dynamic Editor">
       {/* Hero Section Editor */}
       <div className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-2xl p-6">
@@ -176,5 +195,6 @@ export default function HomepageEditorPage() {
         </button>
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

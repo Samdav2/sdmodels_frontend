@@ -3,10 +3,20 @@
 import Link from "next/link";
 import { useState } from "react";
 import Image from "next/image";
+import { useBlogPosts } from "@/lib/api/hooks/useBlogPosts";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorMessage from "@/components/ErrorMessage";
 
 export default function BlogPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Fetch blog posts from API
+  const { posts, loading, error } = useBlogPosts({
+    category: selectedCategory === "all" ? undefined : selectedCategory,
+    search: searchQuery || undefined,
+    limit: 20,
+  });
 
   const categories = [
     { id: "all", name: "All Posts", icon: "📚", count: 24 },
@@ -16,127 +26,10 @@ export default function BlogPage() {
     { id: "showcase", name: "Showcase", icon: "🎨", count: 5 },
   ];
 
-  const posts = [
-    {
-      id: 1,
-      title: "Mastering PBR Textures: A Complete Guide for 3D Artists",
-      excerpt: "Learn how to create photorealistic materials using Physically Based Rendering techniques. This comprehensive guide covers everything from theory to practice.",
-      author: {
-        name: "Alex Chen",
-        avatar: "🎨",
-        role: "Senior 3D Artist",
-        verified: true,
-      },
-      category: "tutorials",
-      featuredImage: "https://images.unsplash.com/photo-1633356122544-f134324a6cee",
-      readTime: "12 min read",
-      publishedDate: "2024-02-15",
-      likes: 234,
-      comments: 45,
-      views: 3421,
-      tags: ["PBR", "Texturing", "Materials"],
-    },
-    {
-      id: 2,
-      title: "Top 10 Blender Add-ons Every Professional Should Use in 2024",
-      excerpt: "Boost your productivity with these essential Blender add-ons. From modeling to rendering, we've got you covered with the best tools available.",
-      author: {
-        name: "Sarah Miller",
-        avatar: "🚀",
-        role: "Blender Expert",
-        verified: true,
-      },
-      category: "tips",
-      featuredImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe",
-      readTime: "8 min read",
-      publishedDate: "2024-02-14",
-      likes: 189,
-      comments: 32,
-      views: 2876,
-      tags: ["Blender", "Add-ons", "Productivity"],
-    },
-    {
-      id: 3,
-      title: "The Future of 3D: AI-Powered Model Generation",
-      excerpt: "Artificial Intelligence is revolutionizing 3D modeling. Discover how AI tools are changing the game and what it means for artists.",
-      author: {
-        name: "Mike Johnson",
-        avatar: "💎",
-        role: "Tech Analyst",
-        verified: true,
-      },
-      category: "news",
-      featuredImage: "https://images.unsplash.com/photo-1677442136019-21780ecad995",
-      readTime: "10 min read",
-      publishedDate: "2024-02-13",
-      likes: 312,
-      comments: 67,
-      views: 4532,
-      tags: ["AI", "Future", "Technology"],
-    },
-    {
-      id: 4,
-      title: "Creating Game-Ready Assets: Optimization Techniques",
-      excerpt: "Learn professional techniques for optimizing 3D models for real-time rendering in games. Reduce poly count without sacrificing quality.",
-      author: {
-        name: "Emma Davis",
-        avatar: "👩‍🎨",
-        role: "Game Artist",
-        verified: false,
-      },
-      category: "tutorials",
-      featuredImage: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc",
-      readTime: "15 min read",
-      publishedDate: "2024-02-12",
-      likes: 156,
-      comments: 28,
-      views: 2134,
-      tags: ["Game Dev", "Optimization", "Performance"],
-    },
-    {
-      id: 5,
-      title: "Community Spotlight: Amazing Cyberpunk Character Pack",
-      excerpt: "This week's featured creator shares their incredible cyberpunk character collection. Get inspired by their creative process and techniques.",
-      author: {
-        name: "SDModels Team",
-        avatar: "👑",
-        role: "Editorial",
-        verified: true,
-      },
-      category: "showcase",
-      featuredImage: "https://images.unsplash.com/photo-1614732414444-096e5f1122d5",
-      readTime: "6 min read",
-      publishedDate: "2024-02-11",
-      likes: 421,
-      comments: 89,
-      views: 5678,
-      tags: ["Showcase", "Community", "Cyberpunk"],
-    },
-    {
-      id: 6,
-      title: "UV Unwrapping Made Easy: Best Practices and Common Mistakes",
-      excerpt: "Master the art of UV unwrapping with these proven techniques. Avoid common pitfalls and create perfect texture maps every time.",
-      author: {
-        name: "John Smith",
-        avatar: "🎯",
-        role: "Technical Artist",
-        verified: true,
-      },
-      category: "tutorials",
-      featuredImage: "https://images.unsplash.com/photo-1550745165-9bc0b252726f",
-      readTime: "11 min read",
-      publishedDate: "2024-02-10",
-      likes: 198,
-      comments: 41,
-      views: 2987,
-      tags: ["UV Mapping", "Texturing", "Workflow"],
-    },
-  ];
-
   const filteredPosts = posts.filter(post => {
     const matchesCategory = selectedCategory === "all" || post.category === selectedCategory;
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+                         post.excerpt?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -248,100 +141,124 @@ export default function BlogPage() {
 
           {/* Center - Blog Posts */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Featured Post */}
-            <Link href={`/blog/${featuredPost.id}`}>
-              <div className="bg-slate-900/50 border border-orange-500/20 rounded-xl overflow-hidden hover:border-orange-500/50 transition cursor-pointer group">
-                <div className="relative h-96 bg-gradient-to-br from-orange-500/20 to-red-500/20">
-                  <div className="absolute inset-0 flex items-center justify-center text-8xl">
-                    🎨
-                  </div>
-                  <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 bg-orange-500 text-white rounded-full text-xs font-bold">
-                      ⭐ Featured
-                    </span>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center text-xl">
-                      {featuredPost.author.avatar}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-white font-semibold text-sm">{featuredPost.author.name}</span>
-                        {featuredPost.author.verified && <span className="text-orange-400 text-xs">✓</span>}
-                      </div>
-                      <span className="text-gray-400 text-xs">{featuredPost.author.role}</span>
-                    </div>
-                  </div>
-                  
-                  <h2 className="text-2xl font-black text-white mb-3 group-hover:text-orange-400 transition">
-                    {featuredPost.title}
-                  </h2>
-                  <p className="text-gray-400 mb-4">{featuredPost.excerpt}</p>
-                  
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                    <span>📅 {new Date(featuredPost.publishedDate).toLocaleDateString()}</span>
-                    <span>⏱️ {featuredPost.readTime}</span>
-                    <span>👁️ {featuredPost.views.toLocaleString()} views</span>
-                    <span>❤️ {featuredPost.likes} likes</span>
-                    <span>💬 {featuredPost.comments} comments</span>
-                  </div>
-                </div>
-              </div>
-            </Link>
+            {/* Loading State */}
+            {loading && <LoadingSpinner />}
 
-            {/* Blog Posts Grid */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {filteredPosts.slice(1).map((post) => (
-                <Link key={post.id} href={`/blog/${post.id}`}>
-                  <div className="bg-slate-900/50 border border-orange-500/20 rounded-xl overflow-hidden hover:border-orange-500/50 transition cursor-pointer group h-full flex flex-col">
-                    <div className="relative h-48 bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-                      <div className="absolute inset-0 flex items-center justify-center text-6xl">
-                        {post.category === 'tutorials' ? '🎓' : 
-                         post.category === 'news' ? '📰' :
-                         post.category === 'tips' ? '💡' : '🎨'}
-                      </div>
-                    </div>
-                    
-                    <div className="p-5 flex-1 flex flex-col">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center text-lg">
-                          {post.author.avatar}
+            {/* Error State */}
+            {error && <ErrorMessage error={error} />}
+
+            {/* Content */}
+            {!loading && !error && (
+              <>
+                {/* Featured Post */}
+                {filteredPosts.length > 0 && (
+                  <Link href={`/blog/${filteredPosts[0].id}`}>
+                    <div className="bg-slate-900/50 border border-orange-500/20 rounded-xl overflow-hidden hover:border-orange-500/50 transition cursor-pointer group">
+                      <div className="relative h-96 bg-gradient-to-br from-orange-500/20 to-red-500/20">
+                        <div className="absolute inset-0 flex items-center justify-center text-8xl">
+                          🎨
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1">
-                            <span className="text-white font-semibold text-xs truncate">{post.author.name}</span>
-                            {post.author.verified && <span className="text-orange-400 text-xs">✓</span>}
+                        <div className="absolute top-4 left-4">
+                          <span className="px-3 py-1 bg-orange-500 text-white rounded-full text-xs font-bold">
+                            ⭐ Featured
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-6">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center text-xl">
+                            {filteredPosts[0].author.avatar_url || "🎨"}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1">
+                              <span className="text-white font-semibold text-sm">{filteredPosts[0].author.username}</span>
+                              {filteredPosts[0].author.is_verified && <span className="text-orange-400 text-xs">✓</span>}
+                            </div>
+                            <span className="text-gray-400 text-xs">Author</span>
                           </div>
                         </div>
-                        <span className="px-2 py-1 bg-orange-500/20 border border-orange-500/30 text-orange-400 rounded-full text-xs font-bold">
-                          {categories.find(c => c.id === post.category)?.icon}
-                        </span>
-                      </div>
-                      
-                      <h3 className="text-lg font-black text-white mb-2 group-hover:text-orange-400 transition line-clamp-2">
-                        {post.title}
-                      </h3>
-                      <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-1">{post.excerpt}</p>
-                      
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 pt-3 border-t border-slate-700">
-                        <span>⏱️ {post.readTime}</span>
-                        <span>❤️ {post.likes}</span>
-                        <span>💬 {post.comments}</span>
+                        
+                        <h2 className="text-2xl font-black text-white mb-3 group-hover:text-orange-400 transition">
+                          {filteredPosts[0].title}
+                        </h2>
+                        <p className="text-gray-400 mb-4">{filteredPosts[0].excerpt}</p>
+                        
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                          <span>📅 {new Date(filteredPosts[0].published_at || filteredPosts[0].created_at).toLocaleDateString()}</span>
+                          <span>⏱️ {filteredPosts[0].read_time} min read</span>
+                          <span>👁️ {filteredPosts[0].views.toLocaleString()} views</span>
+                          <span>❤️ {filteredPosts[0].likes} likes</span>
+                          <span>💬 {filteredPosts[0].comment_count} comments</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                )}
 
-            {/* Load More */}
-            <div className="text-center pt-6">
-              <button className="px-8 py-3 bg-slate-800 border border-orange-500/30 text-white rounded-xl font-semibold hover:bg-slate-700 hover:border-orange-500/50 transition">
-                Load More Articles
-              </button>
-            </div>
+                {/* Blog Posts Grid */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  {filteredPosts.slice(1).map((post) => (
+                    <Link key={post.id} href={`/blog/${post.id}`}>
+                      <div className="bg-slate-900/50 border border-orange-500/20 rounded-xl overflow-hidden hover:border-orange-500/50 transition cursor-pointer group h-full flex flex-col">
+                        <div className="relative h-48 bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+                          <div className="absolute inset-0 flex items-center justify-center text-6xl">
+                            {post.category === 'tutorials' ? '🎓' : 
+                             post.category === 'news' ? '📰' :
+                             post.category === 'tips' ? '💡' : '🎨'}
+                          </div>
+                        </div>
+                        
+                        <div className="p-5 flex-1 flex flex-col">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center text-lg">
+                              {post.author.avatar_url || "🎨"}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1">
+                                <span className="text-white font-semibold text-xs truncate">{post.author.username}</span>
+                                {post.author.is_verified && <span className="text-orange-400 text-xs">✓</span>}
+                              </div>
+                            </div>
+                            <span className="px-2 py-1 bg-orange-500/20 border border-orange-500/30 text-orange-400 rounded-full text-xs font-bold">
+                              {categories.find(c => c.id === post.category)?.icon}
+                            </span>
+                          </div>
+                          
+                          <h3 className="text-lg font-black text-white mb-2 group-hover:text-orange-400 transition line-clamp-2">
+                            {post.title}
+                          </h3>
+                          <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-1">{post.excerpt}</p>
+                          
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 pt-3 border-t border-slate-700">
+                            <span>⏱️ {post.read_time} min</span>
+                            <span>❤️ {post.likes}</span>
+                            <span>💬 {post.comment_count}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Empty State */}
+                {filteredPosts.length === 0 && (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">📝</div>
+                    <h3 className="text-xl font-bold text-white mb-2">No posts found</h3>
+                    <p className="text-gray-400">Try adjusting your filters or search query</p>
+                  </div>
+                )}
+
+                {/* Load More */}
+                {filteredPosts.length > 0 && (
+                  <div className="text-center pt-6">
+                    <button className="px-8 py-3 bg-slate-800 border border-orange-500/30 text-white rounded-xl font-semibold hover:bg-slate-700 hover:border-orange-500/50 transition">
+                      Load More Articles
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -1,22 +1,39 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdminAnalytics } from "@/lib/api/hooks/useAdminAnalytics";
 
 export default function AnalyticsPage() {
-  const [topModels] = useState([
-    { name: "Cyberpunk Mech", sales: 145, revenue: 21750 },
-    { name: "Dragon Animated", sales: 98, revenue: 14700 },
-    { name: "Sci-Fi Vehicle", sales: 87, revenue: 13050 },
-  ]);
+  const { analytics, loading, error } = useAdminAnalytics();
 
-  const [topCreators] = useState([
-    { name: "PixelForge", models: 45, revenue: 67500 },
-    { name: "3D_Wizard", models: 32, revenue: 48000 },
-    { name: "MeshMaster", models: 28, revenue: 42000 },
-  ]);
+  if (loading) {
+    return (<AdminLayout title="Advanced Analytics">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading analytics...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Advanced Analytics">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Analytics</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  const { topModels, topCreators } = analytics;
 
   return (
+    <ProtectedRoute>
     <AdminLayout title="Advanced Analytics">
       <div className="grid md:grid-cols-2 gap-6 mb-6">
         <div className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-2xl p-6">
@@ -66,5 +83,6 @@ export default function AnalyticsPage() {
         </div>
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

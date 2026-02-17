@@ -33,6 +33,16 @@ const nextConfig = {
     optimizePackageImports: ['framer-motion', 'three', '@react-three/fiber', '@react-three/drei'],
   },
 
+  // API Proxy for development (bypasses CORS)
+  async rewrites() {
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: 'http://localhost:8000/api/v1/:path*',
+      },
+    ];
+  },
+
   // Headers for security and performance
   async headers() {
     return [

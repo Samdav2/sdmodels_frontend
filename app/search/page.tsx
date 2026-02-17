@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useModels } from "@/lib/api/hooks/useModels";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -12,23 +13,25 @@ export default function SearchPage() {
   const [activeTab, setActiveTab] = useState<'models' | 'users' | 'communities' | 'courses'>('models');
   const [sortBy, setSortBy] = useState<'relevant' | 'recent' | 'popular'>('relevant');
 
+  // Fetch search results from API
+  const { models, loading, error } = useModels({
+    search: searchQuery,
+    limit: 20,
+    sort: sortBy === 'recent' ? 'newest' : 'popular',
+  });
+
   const results = {
-    models: [
-      { id: 1, title: "Cyberpunk Character", creator: "Alex Chen", thumbnail: "🎨", price: 29.99, likes: 234 },
-      { id: 2, title: "Sci-Fi Weapon Pack", creator: "Sarah Miller", thumbnail: "🚀", price: 19.99, likes: 189 },
-    ],
-    users: [
-      { id: 1, username: "alex_chen", name: "Alex Chen", avatar: "🎨", verified: true, followers: 15234 },
-      { id: 2, username: "sarah_miller", name: "Sarah Miller", avatar: "🚀", verified: true, followers: 8921 },
-    ],
-    communities: [
-      { id: 1, name: "3D Game Assets", icon: "🎮", members: 15234, posts: 8921 },
-      { id: 2, name: "Blender Masters", icon: "🔷", members: 23456, posts: 12098 },
-    ],
-    courses: [
-      { id: 1, title: "PBR Texturing Masterclass", instructor: "Alex Chen", thumbnail: "🎓", students: 1234 },
-      { id: 2, title: "Character Modeling 101", instructor: "Sarah Miller", thumbnail: "👤", students: 892 },
-    ],
+    models: models.map(m => ({
+      id: m.id,
+      title: m.title,
+      creator: m.creator.username,
+      thumbnail: m.thumbnail_url,
+      price: m.price,
+      likes: m.likes,
+    })),
+    users: [] as any[],
+    communities: [] as any[],
+    courses: [] as any[],
   };
 
   return (

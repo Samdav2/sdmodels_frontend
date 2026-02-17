@@ -1,17 +1,22 @@
 "use client";
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { useState } from "react";
+import { useSettings } from "@/lib/api/hooks/useDashboard";
 
 export default function SettingsPage() {
+  const { settings, loading, error, updateProfile, updateSecurity, updateNotifications } = useSettings();
+  
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "notifications" | "billing">("profile");
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
-  const [biometricEnabled, setBiometricEnabled] = useState(true);
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(settings?.security?.two_factor_enabled || true);
+  const [biometricEnabled, setBiometricEnabled] = useState(settings?.security?.biometric_enabled || true);
+  const [emailNotifications, setEmailNotifications] = useState(settings?.notifications?.email_enabled || true);
+  const [pushNotifications, setPushNotifications] = useState(settings?.notifications?.push_enabled || false);
 
   return (
-    <DashboardLayout>
+    <ProtectedRoute>
+      <DashboardLayout>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -21,6 +26,16 @@ export default function SettingsPage() {
           <p className="text-sm sm:text-base text-slate-400">Manage your account, security, and preferences</p>
         </div>
 
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="text-center py-12 text-slate-400">Loading settings...</div>
+        ) : (
+          <>
         {/* Tab Navigation */}
         <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-2 scrollbar-hide">
           {[
@@ -501,7 +516,10 @@ export default function SettingsPage() {
             </div>
           </div>
         )}
+        </>
+        )}
       </div>
     </DashboardLayout>
+    </ProtectedRoute>
   );
 }

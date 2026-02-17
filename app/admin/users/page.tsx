@@ -1,37 +1,52 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdminUsers } from "@/lib/api/hooks/useAdminUsers";
 
 export default function UserManagementPage() {
-  const [users, setUsers] = useState([
-    { id: 1, name: "PixelForge", email: "pixel@example.com", role: "Verified", models: 45, revenue: 12500, joined: "2023-01-15" },
-    { id: 2, name: "3D_Wizard", email: "wizard@example.com", role: "Creator", models: 32, revenue: 8900, joined: "2023-03-22" },
-    { id: 3, name: "NewUser123", email: "new@example.com", role: "Creator", models: 3, revenue: 450, joined: "2024-01-10" },
-  ]);
-
   const [searchQuery, setSearchQuery] = useState("");
+  const { users, loading, error, verifyUser, banUser } = useAdminUsers(searchQuery);
 
-  const handleVerify = (id: number) => {
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, role: "Verified" } : u));
-    // TODO: Call API
+  const handleVerify = async (id: number) => {
+    await verifyUser(id);
     alert("User verified!");
   };
 
-  const handleBan = (id: number) => {
+  const handleBan = async (id: number) => {
     if (confirm("Are you sure you want to ban this user?")) {
-      setUsers(prev => prev.filter(u => u.id !== id));
-      // TODO: Call API
+      await banUser(id);
       alert("User banned!");
     }
   };
 
-  const filteredUsers = users.filter(u => 
-    u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  if (loading) {
+    return (<AdminLayout title="User Authority Panel">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading users...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="User Authority Panel">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Users</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  const filteredUsers = users;
 
   return (
+    <ProtectedRoute>
     <AdminLayout title="User Authority Panel">
       <div className="flex items-center justify-between mb-6">
         <div className="flex gap-3 flex-1 max-w-2xl">
@@ -61,7 +76,7 @@ export default function UserManagementPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((user) => (
+            {filteredUsers.map((user: any) => (
               <tr key={user.id} className="border-t border-slate-800 hover:bg-slate-800/30 transition">
                 <td className="p-4">
                   <div>
@@ -105,5 +120,6 @@ export default function UserManagementPage() {
         </table>
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

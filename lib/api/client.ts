@@ -6,7 +6,10 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// In development, use relative URL to leverage Next.js proxy (bypasses CORS)
+// In production, use full URL from environment variable
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 
+  (process.env.NODE_ENV === 'development' ? '/api/v1' : 'http://localhost:8000/api/v1');
 const API_TIMEOUT = 30000; // 30 seconds
 
 // Create axios instance

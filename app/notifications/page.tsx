@@ -2,18 +2,30 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useNotifications } from "@/lib/api/hooks/useNotifications";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorMessage from "@/components/ErrorMessage";
 
 export default function NotificationsPage() {
   const [filter, setFilter] = useState<'all' | 'likes' | 'comments' | 'purchases' | 'follows'>('all');
   
-  const notifications = [
-    { id: 1, type: 'like', user: "Sarah Miller", avatar: "🚀", text: "liked your model", model: "Cyberpunk Character", time: "5 min ago", read: false },
-    { id: 2, type: 'comment', user: "Mike Johnson", avatar: "💎", text: "commented on", model: "Sci-Fi Weapon Pack", time: "1 hour ago", read: false },
-    { id: 3, type: 'purchase', user: "Emma Davis", avatar: "👩‍🎨", text: "purchased your model", model: "Fantasy Environment", time: "2 hours ago", read: true },
-    { id: 4, type: 'follow', user: "John Smith", avatar: "🎯", text: "started following you", time: "1 day ago", read: true },
-  ];
+  const { notifications: apiNotifications, loading, error, markAllAsRead } = useNotifications();
+  
+  const notifications = apiNotifications.map(n => ({
+    id: n.id,
+    type: n.type,
+    user: "User",
+    avatar: "🔔",
+    text: n.message,
+    model: n.title,
+    time: new Date(n.created_at).toLocaleString(),
+    read: n.is_read,
+  }));
 
   const filtered = filter === 'all' ? notifications : notifications.filter(n => n.type === filter);
+
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage error={error} />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">

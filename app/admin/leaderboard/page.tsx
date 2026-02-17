@@ -1,28 +1,17 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdminLeaderboard } from "@/lib/api/hooks/useAdminLeaderboard";
 
 export default function LeaderboardManagementPage() {
-  const [leaderboard, setLeaderboard] = useState([
-    { rank: 1, name: "PixelForge", points: 15420, badge: "🥇", verified: true },
-    { rank: 2, name: "3D_Wizard", points: 12890, badge: "🥈", verified: true },
-    { rank: 3, name: "MeshMaster", points: 10560, badge: "🥉", verified: true },
-    { rank: 4, name: "PolyPro", points: 8340, badge: "", verified: false },
-  ]);
-  const [seasonSettings, setSeasonSettings] = useState({
-    name: "Season 1: Genesis",
-    endDate: "2024-12-31",
-    pointsPerUpload: 100,
-    pointsPerSale: 50,
-  });
+  const { leaderboard, seasonSettings, loading, error, adjustPoints, setLeaderboard, setSeasonSettings } = useAdminLeaderboard();
 
-  const handleAdjustPoints = (rank: number) => {
+  const handleAdjustPoints = async (rank: number) => {
     const points = prompt("Enter new points:");
     if (points) {
-      setLeaderboard(prev => prev.map(u => 
-        u.rank === rank ? { ...u, points: parseInt(points) } : u
-      ));
+      await adjustPoints(rank, parseInt(points));
     }
   };
 
@@ -34,7 +23,30 @@ export default function LeaderboardManagementPage() {
     }
   };
 
+  if (loading) {
+    return (<AdminLayout title="Leaderboard Management">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading leaderboard...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Leaderboard Management">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Leaderboard</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
+    <ProtectedRoute>
     <AdminLayout title="Leaderboard Management">
       {/* Current Rankings */}
       <div className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-2xl p-6 mb-6">
@@ -122,5 +134,6 @@ export default function LeaderboardManagementPage() {
         </div>
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

@@ -1,33 +1,44 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdminSettings } from "@/lib/api/hooks/useAdminSettings";
 
 export default function SettingsPage() {
-  const [general, setGeneral] = useState({
-    platformName: "Nexus Models",
-    platformFee: 7.5,
-    maintenanceMode: false,
-  });
+  const { general, security, notifications, loading, error, setGeneral, setSecurity, setNotifications, saveSettings } = useAdminSettings();
 
-  const [security, setSecurity] = useState({
-    require2FA: true,
-    apiRateLimit: 100,
-  });
-
-  const [notifications, setNotifications] = useState({
-    newModels: true,
-    userRegistrations: true,
-    payments: true,
-    securityAlerts: true,
-  });
-
-  const handleSave = () => {
-    // TODO: Call API
-    alert("Settings saved!");
+  const handleSave = async () => {
+    const success = await saveSettings();
+    if (success) {
+      alert("Settings saved!");
+    }
   };
 
+  if (loading) {
+    return (<AdminLayout title="Platform Settings">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading settings...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Platform Settings">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Settings</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
+    <ProtectedRoute>
     <AdminLayout title="Platform Settings">
       <div className="grid md:grid-cols-2 gap-6">
         {/* General Settings */}
@@ -144,5 +155,6 @@ export default function SettingsPage() {
         </button>
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

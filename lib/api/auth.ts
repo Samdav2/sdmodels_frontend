@@ -84,4 +84,26 @@ export const authApi = {
     });
     return response.data;
   },
+
+  // Admin login
+  adminLogin: async (data: LoginData): Promise<AuthResponse> => {
+    const response = await apiClient.post<AuthResponse>('/auth/admin/login', data);
+    setTokens(response.data.access_token, response.data.refresh_token);
+    return response.data;
+  },
+
+  // Admin forgot password
+  adminForgotPassword: async (email: string): Promise<ApiResponse<void>> => {
+    const response = await apiClient.post<ApiResponse<void>>('/auth/admin/forgot-password', { email });
+    return response.data;
+  },
+
+  // Admin reset password
+  adminResetPassword: async (token: string, newPassword: string): Promise<ApiResponse<void>> => {
+    const response = await apiClient.post<ApiResponse<void>>('/auth/admin/reset-password', {
+      token,
+      new_password: newPassword,
+    });
+    return response.data;
+  },
 };

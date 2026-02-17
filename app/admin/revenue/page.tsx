@@ -1,24 +1,39 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdminRevenue } from "@/lib/api/hooks/useAdminRevenue";
 
 export default function RevenueVaultPage() {
-  const [stats] = useState({
-    totalRevenue: 125430,
-    platformFees: 9407,
-    monthlyRevenue: 3245,
-    avgTransaction: 125,
-  });
+  const { revenue, loading, error } = useAdminRevenue();
 
-  const [transactions] = useState([
-    { id: 1, model: "Cyberpunk Mech", buyer: "GameDev Studios", amount: 150, fee: 11.25, date: "2024-02-16 14:30" },
-    { id: 2, model: "Dragon Animated", buyer: "IndieCreator", amount: 89, fee: 6.68, date: "2024-02-16 12:15" },
-    { id: 3, model: "Sci-Fi Vehicle", buyer: "VR Company", amount: 200, fee: 15.00, date: "2024-02-16 09:45" },
-    { id: 4, model: "Fantasy Castle", buyer: "Mobile Games", amount: 120, fee: 9.00, date: "2024-02-15 18:20" },
-  ]);
+  if (loading) {
+    return (<AdminLayout title="The 7.5% Vault Tracker">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading revenue data...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="The 7.5% Vault Tracker">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Revenue</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  const { stats, transactions } = revenue;
 
   return (
+    <ProtectedRoute>
     <AdminLayout title="The 7.5% Vault Tracker">
       {/* Vault Stats */}
       <div className="grid md:grid-cols-3 gap-6 mb-6">
@@ -81,5 +96,6 @@ export default function RevenueVaultPage() {
         </div>
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

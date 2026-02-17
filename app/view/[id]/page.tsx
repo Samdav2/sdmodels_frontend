@@ -4,8 +4,14 @@ import Link from "next/link";
 import AdvancedModelViewer from "@/components/AdvancedModelViewer";
 import NotificationModal, { NotificationType } from "@/components/NotificationModal";
 import { useState } from "react";
+import { useModel } from "@/lib/api/hooks/useModel";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorMessage from "@/components/ErrorMessage";
 
 export default function PublicViewPage({ params }: { params: { id: string } }) {
+  // Fetch model from API
+  const { model: apiModel, loading, error: apiError } = useModel(params.id);
+  
   const [viewerSettings, setViewerSettings] = useState({
     autoRotate: true,
     wireframe: false,
@@ -14,34 +20,9 @@ export default function PublicViewPage({ params }: { params: { id: string } }) {
   });
 
   const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(1247);
+  const [likeCount, setLikeCount] = useState(0);
   const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      user: "Alex Chen",
-      avatar: "🎨",
-      text: "Absolutely stunning work! The detail on this model is incredible.",
-      time: "2 hours ago",
-      likes: 24,
-    },
-    {
-      id: 2,
-      user: "Sarah Miller",
-      avatar: "🚀",
-      text: "Perfect for my game project. The topology is clean and the textures are top-notch!",
-      time: "5 hours ago",
-      likes: 18,
-    },
-    {
-      id: 3,
-      user: "Mike Johnson",
-      avatar: "💎",
-      text: "How did you achieve such smooth edges? This is professional quality!",
-      time: "1 day ago",
-      likes: 31,
-    },
-  ]);
+  const [comments, setComments] = useState<any[]>([]);
 
   const [notification, setNotification] = useState<{
     isOpen: boolean;
@@ -55,16 +36,39 @@ export default function PublicViewPage({ params }: { params: { id: string } }) {
     message: "",
   });
 
-  // Mock model data
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  // Show error state
+  if (apiError || !apiModel) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <ErrorMessage error={apiError || "Model not found"} />
+      </div>
+    );
+  }
+
+  // Map API model to component format
   const model = {
-    id: params.id,
-    name: "Cyberpunk Mech Warrior",
-    artist: "PixelForge Studio",
-    artistVerified: true,
-    views: 15234,
-    downloads: 892,
-    modelUrl: "/models/sample.glb",
+    id: apiModel.id.toString(),
+    name: apiModel.title,
+    artist: apiModel.creator.username,
+    artistVerified: apiModel.creator.is_verified,
+    views: apiModel.views,
+    downloads: apiModel.downloads,
+    modelUrl: apiModel.file_url,
   };
+
+  // Initialize like count from API
+  if (likeCount === 0 && apiModel.likes > 0) {
+    setLikeCount(apiModel.likes);
+  }
 
   const handleLike = () => {
     setLiked(!liked);

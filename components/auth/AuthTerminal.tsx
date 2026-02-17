@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import ModeToggle from './ModeToggle';
 import AuthForm from './AuthForm';
 import SocialAuthButtons from './SocialAuthButtons';
 import UserPathSelector from './UserPathSelector';
+import { useAuth } from '@/lib/api/hooks/useAuth';
 import type { 
   AuthMode, 
   AuthState, 
@@ -19,6 +21,9 @@ interface AuthTerminalProps {
 }
 
 export default function AuthTerminal({ initialMode = 'login' }: AuthTerminalProps) {
+  const router = useRouter();
+  const { login, register, loading: authLoading, error: authError } = useAuth();
+  
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [authState, setAuthState] = useState<AuthState>('idle');
   const [selectedPath, setSelectedPath] = useState<UserPath | undefined>();
@@ -53,27 +58,45 @@ export default function AuthTerminal({ initialMode = 'login' }: AuthTerminalProp
       setPreservedName(formData.name);
     }
 
-    // Simulate authentication (frontend only - no actual backend)
-    console.log('Form submitted:', { 
-      mode, 
-      formData, 
-      selectedPath,
-      modellerProfile,
-      buyerProfile 
-    });
-
-    // Simulate success after a delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // In a real app, this would redirect to dashboard or 2FA page
-    // For now, just show success state
-    setAuthState('success');
+    try {
+      if (mode === 'login') {
+        // Login with backend API
+        await login(formData.email, formData.password);
+        setAuthState('success');
+        
+        // Redirect to dashboard after successful login
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1000);
+      } else {
+        // Register with backend API
+        // Generate username from email if not provided
+        const username = formData.email.split('@')[0];
+        
+        await register(
+          formData.email,
+          username,
+          formData.password,
+          formData.name || ''
+        );
+        setAuthState('success');
+        
+        // Redirect to dashboard after successful registration
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1000);
+      }
+    } catch (err: any) {
+      setAuthState('error');
+      // Error is already handled by useAuth hook
+      throw err;
+    }
   };
 
   // Handle social auth provider clicks
   const handleProviderClick = (provider: 'google' | 'github' | 'metamask') => {
     console.log('OAuth provider clicked:', provider);
-    // In a real app, this would initiate OAuth flow
+    // TODO: Implement OAuth flow with backend
     // For now, just emit event as per requirements
   };
 

@@ -130,13 +130,16 @@ export default function MobileNav() {
 
             {/* CTA Button */}
             <div className="p-4 border-t border-orange-500/30">
-              <Link
-                href="/upload"
-                onClick={() => setIsOpen(false)}
+              <button
+                onClick={() => {
+                  const isAuthenticated = localStorage.getItem('access_token');
+                  window.location.href = isAuthenticated ? '/upload' : '/auth';
+                  setIsOpen(false);
+                }}
                 className="block w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition-all font-semibold text-center shadow-lg shadow-orange-500/50"
               >
                 Start Selling
-              </Link>
+              </button>
             </div>
 
             {/* Footer Info */}

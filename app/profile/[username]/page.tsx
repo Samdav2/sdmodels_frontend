@@ -3,10 +3,18 @@
 import Link from "next/link";
 import { useState } from "react";
 import NotificationModal, { NotificationType } from "@/components/NotificationModal";
+import { useProfile } from "@/lib/api/hooks/useProfile";
+import { useModels } from "@/lib/api/hooks/useModels";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorMessage from "@/components/ErrorMessage";
 
 export default function ProfilePage({ params }: { params: { username: string } }) {
   const [activeTab, setActiveTab] = useState<'models' | 'collections' | 'about'>('models');
   const [following, setFollowing] = useState(false);
+
+  // Fetch user profile and their models
+  const { user: apiUser, loading: userLoading, error: userError } = useProfile(params.username);
+  const { models: apiModels, loading: modelsLoading } = useModels({ limit: 20 });
 
   const [notification, setNotification] = useState<{
     isOpen: boolean;
@@ -20,38 +28,41 @@ export default function ProfilePage({ params }: { params: { username: string } }
     message: "",
   });
 
+  if (userLoading) return <LoadingSpinner />;
+  if (userError || !apiUser) return <ErrorMessage error={userError || "Profile not found"} />;
+
   const user = {
-    username: params.username,
-    name: "Alex Chen",
-    avatar: "🎨",
-    bio: "Senior 3D Artist specializing in game-ready assets. 10+ years of experience in AAA game development.",
-    verified: true,
+    username: apiUser.username,
+    name: apiUser.full_name,
+    avatar: apiUser.avatar_url || "🎨",
+    bio: apiUser.bio || "No bio available",
+    verified: apiUser.is_verified_creator,
     stats: {
-      followers: 15234,
-      following: 892,
-      models: 89,
-      totalSales: 5420.50,
-      rating: 4.9,
-      reviews: 1234,
+      followers: 0, // Would need separate API
+      following: 0,
+      models: apiUser.total_models,
+      totalSales: apiUser.total_sales,
+      rating: apiUser.rating,
+      reviews: 0,
     },
     social: {
-      website: "alexchen3d.com",
-      twitter: "@alexchen3d",
-      instagram: "@alexchen3d",
-      artstation: "alexchen",
+      website: "",
+      twitter: "",
+      instagram: "",
+      artstation: "",
     },
-    skills: ["Blender", "Substance Painter", "ZBrush", "Maya", "Unreal Engine"],
-    joinedDate: "January 2023",
+    skills: [],
+    joinedDate: new Date(apiUser.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
   };
 
-  const models = [
-    { id: 1, title: "Cyberpunk Character", thumbnail: "🎨", price: 29.99, likes: 234, downloads: 89 },
-    { id: 2, title: "Sci-Fi Weapon Pack", thumbnail: "🚀", price: 19.99, likes: 189, downloads: 67 },
-    { id: 3, title: "Fantasy Environment", thumbnail: "🏰", price: 39.99, likes: 312, downloads: 123 },
-    { id: 4, title: "Modern Furniture Set", thumbnail: "🪑", price: 24.99, likes: 156, downloads: 45 },
-    { id: 5, title: "Vehicle Collection", thumbnail: "🚗", price: 49.99, likes: 421, downloads: 178 },
-    { id: 6, title: "Character Animations", thumbnail: "🎬", price: 34.99, likes: 267, downloads: 92 },
-  ];
+  const models = apiModels.map(m => ({
+    id: m.id,
+    title: m.title,
+    thumbnail: m.thumbnail_url,
+    price: m.price,
+    likes: m.likes,
+    downloads: m.downloads,
+  }));
 
   const collections = [
     { id: 1, name: "Game Assets", count: 24, thumbnail: "🎮" },

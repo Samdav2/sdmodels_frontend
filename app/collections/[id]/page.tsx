@@ -3,8 +3,16 @@
 import Link from "next/link";
 import { useState } from "react";
 import NotificationModal, { NotificationType } from "@/components/NotificationModal";
+import { useCollection } from "@/lib/api/hooks/useCollection";
+import { useModels } from "@/lib/api/hooks/useModels";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorMessage from "@/components/ErrorMessage";
 
 export default function CollectionDetailPage({ params }: { params: { id: string } }) {
+  // Fetch collection and its models
+  const { collection: apiCollection, loading: collectionLoading, error: collectionError } = useCollection(params.id);
+  const { models: apiModels, loading: modelsLoading } = useModels({ limit: 50 });
+
   const [notification, setNotification] = useState<{
     isOpen: boolean;
     type: NotificationType;
@@ -17,36 +25,40 @@ export default function CollectionDetailPage({ params }: { params: { id: string 
     message: "",
   });
 
-  // Mock collection data
+  if (collectionLoading) return <LoadingSpinner />;
+  if (collectionError || !apiCollection) return <ErrorMessage error={collectionError || "Collection not found"} />;
+
+  // Map API collection to display format
   const collection = {
-    id: params.id,
-    name: "Cyberpunk Assets",
-    description: "A curated collection of high-quality cyberpunk-themed 3D models perfect for game development and sci-fi projects.",
+    id: apiCollection.id,
+    name: apiCollection.name,
+    description: apiCollection.description || "No description",
     owner: {
-      name: "Alex Chen",
-      username: "alexchen",
-      avatar: "🎨",
-      verified: true,
+      name: apiCollection.owner.full_name,
+      username: apiCollection.owner.username,
+      avatar: apiCollection.owner.avatar_url || "🎨",
+      verified: apiCollection.owner.is_verified_creator,
     },
-    modelCount: 24,
-    totalViews: 15234,
-    followers: 892,
-    isPublic: true,
-    createdAt: "2024-01-15",
-    updatedAt: "2024-02-10",
+    modelCount: apiCollection.model_count,
+    totalViews: apiCollection.views,
+    followers: apiCollection.followers,
+    isPublic: apiCollection.is_public,
+    createdAt: apiCollection.created_at,
+    updatedAt: apiCollection.updated_at,
   };
 
-  const models = [
-    {
-      id: 1,
-      title: "Cyberpunk Character",
-      thumbnail: "🤖",
-      price: 29.99,
-      isFree: false,
-      creator: "Alex Chen",
-      rating: 4.8,
-      downloads: 234,
-    },
+  const models = apiModels.map(m => ({
+    id: m.id,
+    title: m.title,
+    thumbnail: m.thumbnail_url,
+    price: m.price,
+    isFree: m.is_free,
+    creator: m.creator.username,
+    rating: m.rating,
+    downloads: m.downloads,
+  }));
+
+  const modelsData = [
     {
       id: 2,
       title: "Neon Sign Pack",

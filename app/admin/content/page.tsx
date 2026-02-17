@@ -1,34 +1,56 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdminContent } from "@/lib/api/hooks/useAdminContent";
 
 export default function ContentCMSPage() {
-  const [posts, setPosts] = useState([
-    { id: 1, title: "Platform Update: New Features", status: "Published", date: "2024-02-15", views: 1234 },
-    { id: 2, title: "Creator Spotlight: PixelForge", status: "Draft", date: "2024-02-16", views: 0 },
-  ]);
+  const { posts, loading, error, publishPost, deletePost } = useAdminContent();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!title || !content) {
       alert("Please fill in title and content");
       return;
     }
-    // TODO: Call API
+    await publishPost(title, content);
     alert("Post published!");
     setTitle("");
     setContent("");
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Delete this post?")) {
-      setPosts(prev => prev.filter(p => p.id !== id));
+      await deletePost(id);
     }
   };
 
+  if (loading) {
+    return (<AdminLayout title="Content Management System">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading content...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Content Management System">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Content</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
+    <ProtectedRoute>
     <AdminLayout title="Content Management System">
       <div className="flex items-center justify-between mb-6">
         <p className="text-gray-400">Create and manage platform updates and announcements</p>
@@ -112,5 +134,6 @@ export default function ContentCMSPage() {
         </div>
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

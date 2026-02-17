@@ -1,33 +1,49 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdminEmails } from "@/lib/api/hooks/useAdminEmails";
 
 export default function EmailSystemPage() {
-  const [emailTemplates] = useState([
-    { id: 1, name: "Welcome Email", subject: "Welcome to Nexus Models!", status: "Active", sent: 1247 },
-    { id: 2, name: "Model Approved", subject: "Your model has been approved!", status: "Active", sent: 456 },
-    { id: 3, name: "Sale Notification", subject: "You made a sale!", status: "Active", sent: 2340 },
-    { id: 4, name: "Password Reset", subject: "Reset your password", status: "Active", sent: 89 },
-  ]);
-
-  const [campaigns] = useState([
-    { id: 1, name: "New Features Announcement", recipients: 1247, sent: "2024-02-15", opens: 856, clicks: 234 },
-    { id: 2, name: "Creator Spotlight", recipients: 500, sent: "2024-02-10", opens: 345, clicks: 123 },
-  ]);
-
+  const { emailTemplates, campaigns, loading, error, sendEmail } = useAdminEmails();
   const [recipientType, setRecipientType] = useState("all");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
 
-  const handleSendEmail = () => {
-    // TODO: Call API
-    alert(`Email sent to ${recipientType} users!`);
-    setSubject("");
-    setBody("");
+  const handleSendEmail = async () => {
+    const success = await sendEmail(recipientType, subject, body);
+    if (success) {
+      alert(`Email sent to ${recipientType} users!`);
+      setSubject("");
+      setBody("");
+    }
   };
 
+  if (loading) {
+    return (<AdminLayout title="Email System Management">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading email settings...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Email System Management">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Email Settings</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
+    <ProtectedRoute>
     <AdminLayout title="Email System Management">
       {/* Quick Send */}
       <div className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-2xl p-6">
@@ -208,5 +224,6 @@ export default function EmailSystemPage() {
         </button>
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

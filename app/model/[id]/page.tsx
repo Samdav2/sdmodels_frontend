@@ -17,9 +17,14 @@ import EnvironmentPrototyper from "@/components/EnvironmentPrototyper";
 import AITextureGenerator from "@/components/AITextureGenerator";
 import EngineCompatibility from "@/components/EngineCompatibility";
 import NotificationModal, { NotificationType } from "@/components/NotificationModal";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorMessage from "@/components/ErrorMessage";
 import { useState, useEffect } from "react";
+import { useModel } from "@/lib/api/hooks/useModel";
 
 export default function ModelPage({ params }: { params: { id: string } }) {
+  // Fetch model data from API
+  const { model: apiModel, loading, error } = useModel(params.id);
   const [viewerSettings, setViewerSettings] = useState({
     autoRotate: false,
     wireframe: false,
@@ -444,26 +449,66 @@ Connections:  {
     };
   }, []);
 
-  // Mock data - will be replaced with API call
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <nav className="relative z-50 border-b border-orange-500/20 bg-slate-900/80 backdrop-blur-xl">
+          <div className="max-w-[2000px] mx-auto px-4 sm:px-6 py-3 sm:py-4">
+            <Link 
+              href="/" 
+              className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition group"
+            >
+              <span className="text-lg sm:text-xl group-hover:-translate-x-1 transition-transform">←</span>
+              <span className="font-semibold text-sm sm:text-base">Back to Marketplace</span>
+            </Link>
+          </div>
+        </nav>
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error || !apiModel) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <nav className="relative z-50 border-b border-orange-500/20 bg-slate-900/80 backdrop-blur-xl">
+          <div className="max-w-[2000px] mx-auto px-4 sm:px-6 py-3 sm:py-4">
+            <Link 
+              href="/" 
+              className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition group"
+            >
+              <span className="text-lg sm:text-xl group-hover:-translate-x-1 transition-transform">←</span>
+              <span className="font-semibold text-sm sm:text-base">Back to Marketplace</span>
+            </Link>
+          </div>
+        </nav>
+        <ErrorMessage error={error || "Model not found"} />
+      </div>
+    );
+  }
+
+  // Map API model to component format
   const model = {
-    id: params.id,
-    name: "Cyberpunk Mech Warrior",
-    artist: "PixelForge Studio",
-    artistVerified: true,
-    price: 59.99,
-    platformFee: 4.49, // 7.5%
-    description: "High-quality rigged character with multiple animation sets. Perfect for sci-fi games and cinematics.",
-    polyCount: 45200,
-    triangles: 45200,
-    formats: ["glb", "fbx", "obj", "blend"],
-    textureResolution: "4K",
-    textureSets: ["Diffuse", "Normal", "Roughness", "Metallic", "AO"],
-    isRigged: true,
-    animations: ["Idle", "Walk Cycle", "Run", "Jump", "Attack", "Death"],
-    modelUrl: "/models/sample.glb",
-    dimensions: { width: 2, height: 4, depth: 1 }, // in meters
+    id: apiModel.id.toString(),
+    name: apiModel.title,
+    artist: apiModel.creator.username,
+    artistVerified: apiModel.creator.is_verified_creator,
+    price: apiModel.price,
+    platformFee: apiModel.price * 0.075, // 7.5%
+    description: apiModel.description,
+    polyCount: apiModel.poly_count,
+    triangles: apiModel.poly_count,
+    formats: apiModel.file_formats,
+    textureResolution: apiModel.texture_resolution || "4K",
+    textureSets: ["Diffuse", "Normal", "Roughness", "Metallic", "AO"], // Default texture sets
+    isRigged: apiModel.has_rigging,
+    animations: apiModel.has_animations ? ["Idle", "Walk Cycle", "Run", "Jump", "Attack", "Death"] : [],
+    modelUrl: apiModel.file_url,
+    dimensions: { width: 2, height: 4, depth: 1 }, // Default dimensions
     
-    // Quality checks
+    // Quality checks - default to true for now
     qualityChecks: {
       nonManifold: true,
       overlappingUVs: true,
@@ -472,12 +517,8 @@ Connections:  {
       properNormals: true,
     },
     
-    // Related assets
-    relatedAssets: [
-      { id: "2", name: "Sci-Fi Weapon Pack", price: 29.99, thumbnail: "/api/placeholder/200/200" },
-      { id: "3", name: "Cyberpunk Props", price: 39.99, thumbnail: "/api/placeholder/200/200" },
-      { id: "4", name: "Mech Armor Set", price: 49.99, thumbnail: "/api/placeholder/200/200" },
-    ],
+    // Related assets - empty for now, can be fetched separately
+    relatedAssets: [],
   };
 
   return (

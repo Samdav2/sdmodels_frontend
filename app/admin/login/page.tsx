@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { authApi } from "@/lib/api/auth";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -22,35 +23,36 @@ export default function AdminLoginPage() {
 
     try {
       if (!showOTP) {
-        // First step: validate credentials
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/auth/admin/login', {
-        //   method: 'POST',
-        //   body: JSON.stringify({ email: formData.email, password: formData.password })
-        // });
-        
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        if (formData.email && formData.password) {
-          setShowOTP(true);
-        } else {
+        // First step: validate credentials with backend
+        if (!formData.email || !formData.password) {
           setError("Please enter email and password");
+          setLoading(false);
+          return;
+        }
+
+        const response = await authApi.adminLogin({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        // If 2FA is required, show OTP input
+        // For now, redirect directly to admin dashboard
+        if (response.access_token) {
+          router.push("/admin");
+        } else {
+          setShowOTP(true);
         }
       } else {
-        // Second step: verify OTP
-        // TODO: Replace with actual API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        // Second step: verify OTP (if implemented)
         if (formData.otpCode.length === 6) {
-          // Success - redirect to admin dashboard
+          // TODO: Verify OTP with backend
           router.push("/admin");
         } else {
           setError("Invalid OTP code");
         }
       }
-    } catch (err) {
-      setError("Login failed. Please try again.");
+    } catch (err: any) {
+      setError(err.response?.data?.detail || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { authApi } from "@/lib/api/auth";
 
 export default function AdminForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -15,16 +16,10 @@ export default function AdminForgotPasswordPage() {
     setLoading(true);
 
     try {
-      // TODO: Replace with actual API call
-      // await fetch('/api/auth/admin/forgot-password', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ email })
-      // });
-      
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await authApi.adminForgotPassword(email);
       setSubmitted(true);
-    } catch (err) {
-      setError("Failed to send reset email. Please try again.");
+    } catch (err: any) {
+      setError(err.response?.data?.detail || "Failed to send reset email. Please try again.");
     } finally {
       setLoading(false);
     }

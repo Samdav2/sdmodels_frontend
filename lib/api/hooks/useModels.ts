@@ -1,83 +1,56 @@
-/**
- * Models hooks
- */
-
 import { useState, useEffect } from 'react';
-import { modelsApi, ModelFilters } from '../models';
-import { Model, PaginatedResponse } from '../types';
+import { api } from '../index';
+import { Model } from '../types';
 
-export const useModels = (filters: ModelFilters = {}) => {
+interface UseModelsOptions {
+  featured?: boolean;
+  category?: string;
+  limit?: number;
+  page?: number;
+  sort?: 'newest' | 'popular' | 'price_low' | 'price_high';
+  search?: string;
+}
+
+export function useModels(options: UseModelsOptions = {}) {
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState({
-    total: 0,
-    page: 1,
-    limit: 20,
-    pages: 0,
-  });
+  const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(0);
 
   useEffect(() => {
     const fetchModels = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await modelsApi.getModels(filters);
-        setModels(response.items);
-        setPagination({
-          total: response.total,
-          page: response.page,
-          limit: response.limit,
-          pages: response.pages,
-        });
+        
+        // Build filters for API call
+        const filters: any = {
+          page: options.page || 1,
+          limit: options.limit || 20,
+        };
+        
+        if (options.category) filters.category = options.category;
+        if (options.search) filters.search = options.search;
+        if (options.sort) filters.sort = options.sort;
+        if (options.featured !== undefined) filters.is_featured = options.featured;
+        
+        // Make actual API call
+        const data = await api.models.getModels(filters);
+        
+        setModels(data.items || []);
+        setTotal(data.total || 0);
+        setPages(data.pages || 0);
       } catch (err: any) {
-        setError(err.response?.data?.detail || 'Failed to fetch models');
+        setError(err.message || 'Failed to fetch models');
+        setModels([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchModels();
-  }, [JSON.stringify(filters)]);
+  }, [JSON.stringify(options)]);
 
-  return {
-    models,
-    loading,
-    error,
-    pagination,
-  };
-};
-
-export const useModel = (id: number) => {
-  const [model, setModel] = useState<Model | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchModel = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await modelsApi.getModel(id);
-        setModel(data);
-        
-        // Increment view count
-        await modelsApi.incrementView(id);
-      } catch (err: any) {
-        setError(err.response?.data?.detail || 'Failed to fetch model');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchModel();
-    }
-  }, [id]);
-
-  return {
-    model,
-    loading,
-    error,
-  };
-};
+  return { models, loading, error, total, pages };
+}

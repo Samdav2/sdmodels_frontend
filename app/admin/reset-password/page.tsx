@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { authApi } from "@/lib/api/auth";
 
 export default function AdminResetPasswordPage() {
   const router = useRouter();
@@ -45,23 +46,22 @@ export default function AdminResetPasswordPage() {
       return;
     }
 
+    if (!token) {
+      setError("Invalid reset token");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // TODO: Replace with actual API call
-      // await fetch('/api/auth/admin/reset-password', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ token, new_password: formData.password })
-      // });
-      
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await authApi.adminResetPassword(token, formData.password);
       setSuccess(true);
       
       setTimeout(() => {
         router.push('/admin/login');
       }, 2000);
-    } catch (err) {
-      setError("Failed to reset password. The link may have expired.");
+    } catch (err: any) {
+      setError(err.response?.data?.detail || "Failed to reset password. The link may have expired.");
     } finally {
       setLoading(false);
     }

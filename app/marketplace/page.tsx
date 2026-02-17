@@ -3,6 +3,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useModels } from "@/lib/api/hooks/useModels";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorMessage from "@/components/ErrorMessage";
+import { Model as ApiModel } from "@/lib/api/types";
 
 interface Model {
   id: string;
@@ -29,6 +33,32 @@ interface Model {
   uploadDate: string;
 }
 
+// Helper to map API model to display format
+const mapApiModel = (apiModel: ApiModel): Model => ({
+  id: apiModel.id.toString(),
+  name: apiModel.title,
+  price: apiModel.price,
+  polyCount: apiModel.poly_count,
+  category: apiModel.category,
+  subcategory: "Sci-Fi",
+  trending: apiModel.is_featured,
+  downloads: apiModel.downloads,
+  likes: apiModel.likes,
+  rating: apiModel.rating,
+  author: {
+    name: apiModel.creator.username,
+    avatar: apiModel.creator.avatar_url || "🎨",
+    verified: apiModel.creator.is_verified_creator,
+    level: "Gold",
+  },
+  tags: apiModel.tags,
+  formats: apiModel.file_formats,
+  isRigged: apiModel.has_rigging,
+  isAnimated: apiModel.has_animations,
+  textureResolution: apiModel.texture_resolution || "4K",
+  uploadDate: apiModel.created_at,
+});
+
 export default function MarketplacePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchExpanded, setSearchExpanded] = useState(false);
@@ -38,6 +68,21 @@ export default function MarketplacePage() {
   const [liveSales, setLiveSales] = useState<any[]>([]);
   const [forgeModel, setForgeModel] = useState<Model | null>(null);
   const [viewMode, setViewMode] = useState<"void" | "grid">("void");
+  const [page, setPage] = useState(1);
+  const [category, setCategory] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'price_low' | 'price_high'>('popular');
+
+  // Fetch models from API
+  const { models: apiModels, loading, error, total, pages } = useModels({
+    page,
+    limit: 50,
+    category: category === "all" ? undefined : category,
+    sort: sortBy,
+    search: searchQuery || undefined,
+  });
+
+  // Map API models to display format
+  const allModels = apiModels.map(mapApiModel);
   
   // Track mouse for HUD glow effect
   useEffect(() => {
@@ -71,37 +116,6 @@ export default function MarketplacePage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Comprehensive mock data - 50+ models (fixed values to prevent hydration errors)
-  const allModels: Model[] = Array.from({ length: 50 }, (_, i) => ({
-    id: `model-${i + 1}`,
-    name: [
-      "Cyberpunk Mech Warrior", "Sci-Fi Vehicle", "Dragon Animated", "Neon City Props",
-      "Weapon Pack", "Holographic UI", "Fantasy Castle", "Space Station",
-      "Character Rig", "Low Poly Tree", "Futuristic Building", "Robot Companion",
-      "Medieval Sword", "Alien Creature", "Racing Car", "Military Tank"
-    ][i % 16],
-    price: 10 + (i * 7) % 150,
-    polyCount: 5000 + (i * 1500) % 80000,
-    category: ["Characters", "Vehicles", "Environments", "Props", "Weapons", "UI"][Math.floor(i / 8) % 6],
-    subcategory: ["Sci-Fi", "Fantasy", "Modern", "Historical"][i % 4],
-    trending: i < 10,
-    downloads: 100 + (i * 50),
-    likes: 50 + (i * 15),
-    rating: 4 + (i % 10) / 10,
-    author: {
-      name: ["PixelForge", "3D_Wizard", "MeshMaster", "PolyPro", "VoxelVerse"][i % 5],
-      avatar: ["🎨", "🧙", "⚡", "💎", "🌟"][i % 5],
-      verified: i % 3 === 0,
-      level: ["Gold", "Silver", "Bronze", "Platinum"][i % 4],
-    },
-    tags: ["#GameReady", "#PBR", "#Rigged", "#Animated"][i % 4] ? [["#GameReady", "#PBR", "#Rigged", "#Animated"][i % 4]] : [],
-    formats: [["glb", "fbx"], ["obj", "blend"], ["fbx", "ma"]][i % 3],
-    isRigged: i % 3 === 0,
-    isAnimated: i % 4 === 0,
-    textureResolution: ["2K", "4K", "8K"][i % 3],
-    uploadDate: `${(i % 30) + 1} days ago`,
-  }));
-
   const tags3D = [
     { name: "#Character", color: "from-orange-500 to-red-500", x: 20, y: 30, z: 0 },
     { name: "#Architecture", color: "from-cyan-500 to-blue-500", x: 70, y: 20, z: 20 },
@@ -120,6 +134,20 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen bg-black relative overflow-x-hidden">
+      {/* Loading State */}
+      {loading && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm">
+          <LoadingSpinner />
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm">
+          <ErrorMessage error={error} />
+        </div>
+      )}
+
       {/* Animated Background Grid */}
       <div className="fixed inset-0 bg-[linear-gradient(rgba(255,107,53,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,107,53,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
       

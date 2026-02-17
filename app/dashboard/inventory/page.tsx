@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Link from "next/link";
+import { useModels } from "@/lib/api/hooks/useModels";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorMessage from "@/components/ErrorMessage";
 
 interface Model {
   id: string;
@@ -19,49 +23,31 @@ interface Model {
   uploadDate: string;
 }
 
-const mockModels: Model[] = [
-  {
-    id: "1",
-    name: "Cyberpunk Vehicle",
-    thumbnail: "/api/placeholder/200/200",
-    price: 29.99,
-    polyCount: 5420,
-    status: "public",
-    sales: 45,
-    downloads: 45,
-    views: 1240,
-    revenue: 1349.55,
-    uploadDate: "2024-01-15",
-  },
-  {
-    id: "2",
-    name: "Sci-Fi Character Rig",
-    thumbnail: "/api/placeholder/200/200",
-    price: 49.99,
-    polyCount: 12500,
-    status: "public",
-    sales: 32,
-    downloads: 32,
-    views: 890,
-    revenue: 1599.68,
-    uploadDate: "2024-01-10",
-  },
-  {
-    id: "3",
-    name: "Futuristic Weapon",
-    thumbnail: "/api/placeholder/200/200",
-    price: 19.99,
-    polyCount: 8200,
-    status: "draft",
-    sales: 0,
-    downloads: 0,
-    views: 0,
-    revenue: 0,
-    uploadDate: "2024-02-01",
-  },
-];
-
 export default function InventoryPage() {
+  const [filterStatus, setFilterStatus] = useState<"all" | "public" | "private" | "draft">("all");
+  const [sortBy, setSortBy] = useState<"recent" | "sales" | "revenue">("recent");
+
+  // Fetch user's models from API
+  const { models: apiModels, loading, error } = useModels({
+    limit: 50,
+    sort: sortBy === 'recent' ? 'newest' : 'popular',
+  });
+
+  // Map API models to dashboard format
+  const mockModels: Model[] = apiModels.map(m => ({
+    id: m.id.toString(),
+    name: m.title,
+    thumbnail: m.thumbnail_url,
+    price: m.price,
+    polyCount: m.poly_count,
+    status: m.status === 'approved' ? 'public' : 'draft',
+    sales: m.downloads,
+    downloads: m.downloads,
+    views: m.views,
+    revenue: m.price * m.downloads * 0.925, // After 7.5% fee
+    uploadDate: m.created_at,
+  }));
+
   const [models, setModels] = useState<Model[]>(mockModels);
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -99,7 +85,8 @@ export default function InventoryPage() {
   };
 
   return (
-    <DashboardLayout>
+    <ProtectedRoute>
+      <DashboardLayout>
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
         <div>
@@ -384,5 +371,6 @@ export default function InventoryPage() {
         )}
       </AnimatePresence>
     </DashboardLayout>
+    </ProtectedRoute>
   );
 }

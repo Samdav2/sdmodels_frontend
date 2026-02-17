@@ -194,7 +194,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={`${inter.className} smooth-scroll`}>{children}</body>
     </html>
   );
 }

@@ -2,63 +2,24 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useSupport, useFAQs } from "@/lib/api/hooks/useSupport";
 
 export default function SupportPage() {
+  const { tickets, loading: ticketsLoading, createTicket } = useSupport();
+  const { faqs, loading: faqsLoading } = useFAQs();
+  
   const [activeChat, setActiveChat] = useState<'user' | 'admin'>('user');
   const [messageText, setMessageText] = useState("");
   const [messages, setMessages] = useState([
     {
       id: 1,
       sender: "support",
-      text: "Hello! Welcome to HWC3D Support. How can I help you today?",
+      text: "Hello! Welcome to SDModels Support. How can I help you today?",
       time: "10:30 AM",
     },
   ]);
 
-  const [tickets, setTickets] = useState([
-    {
-      id: 1,
-      title: "Payment Issue",
-      status: "open",
-      priority: "high",
-      lastUpdate: "2 hours ago",
-    },
-    {
-      id: 2,
-      title: "Model Download Problem",
-      status: "in-progress",
-      priority: "medium",
-      lastUpdate: "1 day ago",
-    },
-    {
-      id: 3,
-      title: "Account Verification",
-      status: "resolved",
-      priority: "low",
-      lastUpdate: "3 days ago",
-    },
-  ]);
-
-  const faqs = [
-    {
-      question: "How do I download my purchased models?",
-      answer: "Go to your Dashboard > Inventory, find the model, and click the download button. You'll get all formats included in your purchase.",
-    },
-    {
-      question: "What payment methods do you accept?",
-      answer: "We accept all major credit cards, PayPal, and cryptocurrency payments through our secure payment gateway.",
-    },
-    {
-      question: "Can I get a refund?",
-      answer: "Yes! We offer a 30-day money-back guarantee if the model doesn't meet your expectations. Contact support for refund requests.",
-    },
-    {
-      question: "How do I become a verified creator?",
-      answer: "Upload at least 5 high-quality models, maintain a 4.5+ star rating, and apply through your Creator Dashboard.",
-    },
-  ];
-
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!messageText.trim()) return;
     
     const newMessage = {
@@ -71,7 +32,8 @@ export default function SupportPage() {
     setMessages([...messages, newMessage]);
     setMessageText("");
     
-    // Simulate support response
+    // TODO: Send message to backend via API
+    // For now, simulate support response
     setTimeout(() => {
       const response = {
         id: messages.length + 2,
@@ -93,7 +55,7 @@ export default function SupportPage() {
             className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition group"
           >
             <span className="text-xl group-hover:-translate-x-1 transition-transform">←</span>
-            <span className="font-semibold">HWC3D Support</span>
+            <span className="font-semibold">SDModels Support</span>
           </Link>
           
           <div className="flex items-center gap-3">
@@ -213,7 +175,7 @@ export default function SupportPage() {
                       type="text"
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                       placeholder="Type your message..."
                       className="flex-1 px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
                     />
@@ -248,7 +210,12 @@ export default function SupportPage() {
                   ➕ Create New Ticket
                 </button>
                 
-                {tickets.map((ticket) => (
+                {ticketsLoading ? (
+                  <div className="text-center py-8 text-slate-400">Loading tickets...</div>
+                ) : tickets.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400">No tickets yet</div>
+                ) : (
+                  tickets.map((ticket) => (
                   <div
                     key={ticket.id}
                     className="bg-slate-900/50 border border-orange-500/20 rounded-xl p-6 hover:border-blue-500/50 transition"
@@ -256,7 +223,7 @@ export default function SupportPage() {
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="text-white font-bold text-lg mb-1">{ticket.title}</h3>
-                        <p className="text-gray-400 text-sm">Last updated: {ticket.lastUpdate}</p>
+                        <p className="text-gray-400 text-sm">Last updated: {new Date(ticket.updated_at || ticket.created_at).toLocaleDateString()}</p>
                       </div>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                         ticket.status === 'open'
@@ -285,7 +252,8 @@ export default function SupportPage() {
                       </button>
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -300,7 +268,12 @@ export default function SupportPage() {
               </h3>
               
               <div className="space-y-3">
-                {faqs.map((faq, index) => (
+                {faqsLoading ? (
+                  <div className="text-center py-4 text-slate-400">Loading FAQs...</div>
+                ) : faqs.length === 0 ? (
+                  <div className="text-center py-4 text-slate-400">No FAQs available</div>
+                ) : (
+                  faqs.map((faq, index) => (
                   <details
                     key={index}
                     className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 cursor-pointer hover:border-blue-500/50 transition"
@@ -312,7 +285,8 @@ export default function SupportPage() {
                       {faq.answer}
                     </p>
                   </details>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -325,7 +299,7 @@ export default function SupportPage() {
                   <span className="text-2xl">📧</span>
                   <div>
                     <div className="text-gray-400">Email</div>
-                    <div className="text-white font-semibold">support@hwc3d.com</div>
+                    <div className="text-white font-semibold">support@sdmodels.com</div>
                   </div>
                 </div>
                 

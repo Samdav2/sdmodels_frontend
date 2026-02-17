@@ -2,13 +2,8 @@
 
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-
-const followers = [
-  { id: 1, name: "Alex Chen", avatar: "👨‍💻", following: 245, models: 12, joined: "2 months ago" },
-  { id: 2, name: "Sarah Martinez", avatar: "👩‍🎨", following: 189, models: 8, joined: "3 months ago" },
-  { id: 3, name: "Mike Johnson", avatar: "🧑‍💼", following: 156, models: 5, joined: "1 month ago" },
-  { id: 4, name: "Emma Wilson", avatar: "👩‍🔬", following: 134, models: 15, joined: "4 months ago" },
-];
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { useSocial } from "@/lib/api/hooks/useDashboard";
 
 const ranks = [
   { name: "Bronze Modeller", minSales: 0, fee: 7.5, color: "text-orange-600", icon: "🥉" },
@@ -19,14 +14,30 @@ const ranks = [
 ];
 
 export default function SocialPage() {
+  const { followers: apiFollowers, stats, activity: apiActivity, loading, error } = useSocial();
+  
+  // Use API data or fallback to empty arrays
+  const followers = apiFollowers || [];
+  const activity = apiActivity || [];
+  
   const currentRank = ranks.find((r) => r.current);
   const nextRank = ranks[ranks.findIndex((r) => r.current) + 1];
-  const currentSales = 342;
+  const currentSales = stats?.total_sales || 342;
 
   return (
-    <DashboardLayout>
+    <ProtectedRoute>
+      <DashboardLayout>
       <h1 className="text-2xl sm:text-3xl font-black text-white mb-6 sm:mb-8">Social & Reputation HUD</h1>
 
+      {error && (
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="text-center py-12 text-slate-400">Loading social data...</div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column - Rank and Progress */}
         <div className="lg:col-span-2 space-y-4 sm:space-y-6">
@@ -114,29 +125,28 @@ export default function SocialPage() {
               Recent Follower Activity
             </h2>
             <div className="space-y-3">
-              {[
-                { user: "Alex Chen", action: "liked", model: "Cyberpunk Vehicle", time: "2 hours ago" },
-                { user: "Sarah Martinez", action: "purchased", model: "Sci-Fi Character", time: "5 hours ago" },
-                { user: "Mike Johnson", action: "followed you", model: null, time: "1 day ago" },
-                { user: "Emma Wilson", action: "liked", model: "Futuristic Weapon", time: "2 days ago" },
-              ].map((activity, index) => (
+              {activity.length === 0 ? (
+                <div className="text-center py-4 text-slate-400">No recent activity</div>
+              ) : (
+                activity.map((act: any, index: number) => (
                 <div
                   key={index}
                   className="flex items-center gap-3 p-3 bg-slate-950/50 border border-slate-700/50 rounded-lg hover:border-orange-500/50 transition"
                 >
                   <span className="text-2xl">
-                    {activity.action === "liked" ? "❤️" : activity.action === "purchased" ? "💰" : "👤"}
+                    {act.action === "liked" ? "❤️" : act.action === "purchased" ? "💰" : "👤"}
                   </span>
                   <div className="flex-1">
                     <div className="text-sm text-white">
-                      <span className="font-semibold">{activity.user}</span>{" "}
-                      <span className="text-slate-400">{activity.action}</span>
-                      {activity.model && <span className="text-orange-400"> {activity.model}</span>}
+                      <span className="font-semibold">{act.user}</span>{" "}
+                      <span className="text-slate-400">{act.action}</span>
+                      {act.model && <span className="text-orange-400"> {act.model}</span>}
                     </div>
-                    <div className="text-xs text-slate-500">{activity.time}</div>
+                    <div className="text-xs text-slate-500">{act.time}</div>
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -149,15 +159,15 @@ export default function SocialPage() {
             <div className="space-y-4">
               <div>
                 <div className="text-sm text-slate-400 mb-1">Total Followers</div>
-                <div className="text-3xl font-black text-orange-400">1,240</div>
+                <div className="text-3xl font-black text-orange-400">{stats?.total_followers || 0}</div>
               </div>
               <div>
                 <div className="text-sm text-slate-400 mb-1">This Month</div>
-                <div className="text-2xl font-bold text-green-400">+156</div>
+                <div className="text-2xl font-bold text-green-400">+{stats?.monthly_followers || 0}</div>
               </div>
               <div>
                 <div className="text-sm text-slate-400 mb-1">Engagement Rate</div>
-                <div className="text-2xl font-bold text-white">8.4%</div>
+                <div className="text-2xl font-bold text-white">{stats?.engagement_rate || 0}%</div>
               </div>
             </div>
           </div>
@@ -166,7 +176,10 @@ export default function SocialPage() {
           <div className="bg-slate-900/50 border border-orange-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 backdrop-blur">
             <h3 className="text-base sm:text-lg font-bold text-white mb-4">Top Followers</h3>
             <div className="space-y-3">
-              {followers.map((follower) => (
+              {followers.length === 0 ? (
+                <div className="text-center py-4 text-slate-400">No followers yet</div>
+              ) : (
+                followers.map((follower: any) => (
                 <div
                   key={follower.id}
                   className="flex items-center gap-3 p-3 bg-slate-950/50 border border-slate-700/50 rounded-lg hover:border-orange-500/50 transition cursor-pointer"
@@ -181,7 +194,8 @@ export default function SocialPage() {
                     </div>
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
             <button className="w-full mt-4 py-2 bg-slate-800/50 border border-slate-700/50 text-slate-400 rounded-lg hover:border-orange-500/50 hover:text-white transition text-sm">
               View All Followers
@@ -208,6 +222,8 @@ export default function SocialPage() {
           </div>
         </div>
       </div>
+      )}
     </DashboardLayout>
+    </ProtectedRoute>
   );
 }

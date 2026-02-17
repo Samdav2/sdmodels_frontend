@@ -1,24 +1,44 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdminBounties } from "@/lib/api/hooks/useAdminBounties";
 
 export default function BountyManagementPage() {
-  const [bounties, setBounties] = useState([
-    { id: 1, title: "Sci-Fi Character Rig", budget: 500, creator: "GameStudio", status: "Open", applicants: 5 },
-    { id: 2, title: "Medieval Weapon Pack", budget: 300, creator: "IndieGame", status: "In Progress", applicants: 1 },
-    { id: 3, title: "Futuristic Vehicle", budget: 750, creator: "VRCompany", status: "Completed", applicants: 8 },
-  ]);
-  const [settings, setSettings] = useState({ minAmount: 50, platformFee: 10 });
+  const { bounties, settings, loading, error, closeBounty, setSettings } = useAdminBounties();
 
-  const handleClose = (id: number) => {
+  const handleClose = async (id: number) => {
     if (confirm("Close this bounty?")) {
-      setBounties(prev => prev.filter(b => b.id !== id));
+      await closeBounty(id);
       alert("Bounty closed!");
     }
   };
 
+  if (loading) {
+    return (<AdminLayout title="Bounty Board Management">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading bounties...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Bounty Board Management">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Bounties</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
+    <ProtectedRoute>
     <AdminLayout title="Bounty Board Management">
       <div className="flex items-center justify-between mb-6">
         <p className="text-gray-400">Manage all bounties and configure settings</p>
@@ -91,5 +111,6 @@ export default function BountyManagementPage() {
         </button>
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

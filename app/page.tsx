@@ -10,95 +10,25 @@ import HoloCarousel from "@/components/HoloCarousel";
 import CredibilityNav from "@/components/CredibilityNav";
 import Footer from "@/components/Footer";
 import MobileNav from "@/components/MobileNav";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorMessage from "@/components/ErrorMessage";
 import { useState } from "react";
+import { useModels } from "@/lib/api/hooks/useModels";
+import { Model } from "@/lib/api/types";
 
-// Mock data - will be replaced with API calls
-const mockModels = [
-  {
-    id: "1",
-    name: "Cyberpunk Vehicle",
-    price: 29.99,
-    polyCount: 5420,
-    thumbnail: "/api/placeholder/300/300",
-    formats: ["glb", "fbx", "obj"],
-    isRigged: true,
-    isNew: true,
-    category: "Vehicles",
-  },
-  {
-    id: "2",
-    name: "Sci-Fi Character Rig",
-    price: 49.99,
-    polyCount: 12500,
-    thumbnail: "/api/placeholder/300/300",
-    formats: ["glb", "fbx"],
-    isRigged: true,
-    isHot: true,
-    category: "Characters",
-  },
-  {
-    id: "3",
-    name: "Futuristic Weapon",
-    price: 19.99,
-    polyCount: 8200,
-    thumbnail: "/api/placeholder/300/300",
-    formats: ["glb", "obj"],
-    isRigged: false,
-    category: "Weapons",
-  },
-  {
-    id: "4",
-    name: "Neon City Props",
-    price: 39.99,
-    polyCount: 15000,
-    thumbnail: "/api/placeholder/300/300",
-    formats: ["glb", "fbx", "obj"],
-    isRigged: false,
-    isNew: true,
-    category: "Environments",
-  },
-  {
-    id: "5",
-    name: "Stylized Character",
-    price: 34.99,
-    polyCount: 9800,
-    thumbnail: "/api/placeholder/300/300",
-    formats: ["glb", "fbx"],
-    isRigged: true,
-    category: "Characters",
-  },
-  {
-    id: "6",
-    name: "Low Poly Tree Pack",
-    price: 14.99,
-    polyCount: 2400,
-    thumbnail: "/api/placeholder/300/300",
-    formats: ["glb", "obj"],
-    isRigged: false,
-    category: "Environments",
-  },
-  {
-    id: "7",
-    name: "Mech Warrior",
-    price: 59.99,
-    polyCount: 18500,
-    thumbnail: "/api/placeholder/300/300",
-    formats: ["glb", "fbx"],
-    isRigged: true,
-    isHot: true,
-    category: "Characters",
-  },
-  {
-    id: "8",
-    name: "Sci-Fi Props Bundle",
-    price: 44.99,
-    polyCount: 11200,
-    thumbnail: "/api/placeholder/300/300",
-    formats: ["glb", "fbx", "obj"],
-    isRigged: false,
-    category: "Props",
-  },
-];
+// Helper function to map API Model to ModelCard props
+const mapModelToCard = (model: Model) => ({
+  id: model.id.toString(),
+  name: model.title,
+  price: model.price,
+  polyCount: model.poly_count,
+  thumbnail: model.thumbnail_url,
+  formats: model.file_formats,
+  isRigged: model.has_rigging,
+  isNew: false, // Can be calculated based on created_at
+  isHot: model.is_featured,
+  category: model.category,
+});
 
 const topCreators = [
   { id: 1, name: "PixelForge", avatar: "🎨", sales: 1240, badge: "🏆" },
@@ -171,6 +101,15 @@ export default function Home() {
     animationReady: false,
   });
 
+  // Fetch featured models from API
+  const { models, loading, error } = useModels({ 
+    limit: 8,
+    sort: 'popular'
+  });
+
+  // Map API models to card format
+  const displayModels = models.map(mapModelToCard);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-x-hidden w-full">
       {/* Live Stats Ticker */}
@@ -203,10 +142,16 @@ export default function Home() {
             <Link href="/browse" className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition hidden lg:block">
               Browse
             </Link>
-            <Link href="/upload" className="px-3 sm:px-6 py-1.5 sm:py-2 text-sm sm:text-base bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition font-semibold shadow-lg shadow-orange-500/50 hidden lg:block">
+            <button
+              onClick={() => {
+                const isAuthenticated = localStorage.getItem('access_token');
+                window.location.href = isAuthenticated ? '/upload' : '/auth';
+              }}
+              className="px-3 sm:px-6 py-1.5 sm:py-2 text-sm sm:text-base bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition font-semibold shadow-lg shadow-orange-500/50 hidden lg:block"
+            >
               <span className="hidden sm:inline">Start Selling</span>
               <span className="sm:hidden">Sell</span>
-            </Link>
+            </button>
             <MobileNav />
           </div>
         </div>
@@ -261,11 +206,15 @@ export default function Home() {
                       </span>
                     </button>
                   </Link>
-                  <Link href="/upload">
-                    <button className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 bg-white/10 backdrop-blur-xl border-2 border-white/40 text-white rounded-xl hover:bg-white/20 hover:border-white/60 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all font-bold text-sm sm:text-base hover:scale-105 shadow-xl">
-                      Start Selling →
-                    </button>
-                  </Link>
+                  <button
+                    onClick={() => {
+                      const isAuthenticated = localStorage.getItem('access_token');
+                      window.location.href = isAuthenticated ? '/upload' : '/auth';
+                    }}
+                    className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 bg-white/10 backdrop-blur-xl border-2 border-white/40 text-white rounded-xl hover:bg-white/20 hover:border-white/60 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all font-bold text-sm sm:text-base hover:scale-105 shadow-xl"
+                  >
+                    Start Selling →
+                  </button>
                 </div>
 
                 {/* Stats Cards */}
@@ -386,11 +335,29 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-              {mockModels.map((model) => (
-                <ModelCard key={model.id} model={model} />
-              ))}
-            </div>
+            {/* Loading State */}
+            {loading && <LoadingSpinner />}
+
+            {/* Error State */}
+            {error && <ErrorMessage error={error} />}
+
+            {/* Models Grid */}
+            {!loading && !error && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                {displayModels.map((model) => (
+                  <ModelCard key={model.id} model={model} />
+                ))}
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!loading && !error && displayModels.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">📦</div>
+                <h3 className="text-xl font-bold text-white mb-2">No models found</h3>
+                <p className="text-gray-400">Check back soon for new content!</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

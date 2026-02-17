@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FileDropZone from "@/components/upload/FileDropZone";
 import MeshSafetyScanner from "@/components/upload/MeshSafetyScanner";
 import AITagSuggestions from "@/components/upload/AITagSuggestions";
+import MobileNav from "@/components/MobileNav";
+import CredibilityNav from "@/components/CredibilityNav";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUpload } from "@/lib/api/hooks/useUpload";
+import { useRouter } from "next/navigation";
 
 interface UploadedFile {
   file: File;
@@ -27,16 +31,30 @@ interface UploadedFile {
 }
 
 export default function UploadPage() {
+  const router = useRouter();
+  const { uploadModel, uploading, progress, error } = useUpload();
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [currentStep, setCurrentStep] = useState<"upload" | "scan" | "details" | "complete">("upload");
   const [optimizeMesh, setOptimizeMesh] = useState(false);
   const [generateThumbnail, setGenerateThumbnail] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     price: "",
     description: "",
     tags: [] as string[],
   });
+
+  // Check authentication status
+  useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    setIsAuthenticated(!!token);
+    
+    // If not authenticated, redirect to auth page
+    if (!token) {
+      router.push('/auth?redirect=/upload');
+    }
+  }, [router]);
 
   const handleFilesAdded = (newFiles: File[]) => {
     const uploadedFiles: UploadedFile[] = newFiles.map((file) => ({
@@ -102,33 +120,86 @@ export default function UploadPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentStep("complete");
-    console.log("Uploading:", { files, formData, optimizeMesh, generateThumbnail });
+    
+    if (files.length === 0) return;
+    
+    // Upload to backend API
+    const metadata = {
+      ...formData,
+      optimizeMesh,
+      generateThumbnail,
+      meshData: files[0].meshData,
+    };
+    
+    const result = await uploadModel(files[0].file, metadata);
+    
+    if (result.success) {
+      setCurrentStep("complete");
+    } else {
+      console.error("Upload failed:", error);
+      // Show error notification
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Navigation */}
-      <nav className="relative z-10 border-b border-orange-500/20 bg-slate-900/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/50">
-              <span className="text-white font-bold text-xl">3D</span>
+      {/* Navigation - Use homepage style when not authenticated */}
+      {isAuthenticated ? (
+        <nav className="relative z-10 border-b border-orange-500/20 bg-slate-900/80 backdrop-blur-xl">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/50">
+                <span className="text-white font-bold text-xl">SD</span>
+              </div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
+                UPLOAD TERMINAL
+              </h1>
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-              UPLOAD TERMINAL
-            </h1>
+            <div className="flex gap-4 items-center">
+              <Link href="/dashboard" className="text-orange-400 hover:text-orange-300 transition">
+                Dashboard
+              </Link>
+              <Link href="/" className="text-slate-400 hover:text-slate-300 transition">
+                Home
+              </Link>
+            </div>
           </div>
-          <div className="flex gap-4 items-center">
-            <Link href="/dashboard" className="text-orange-400 hover:text-orange-300 transition">
-              Dashboard
-            </Link>
-            <Link href="/" className="text-slate-400 hover:text-slate-300 transition">
-              Home
-            </Link>
+        </nav>
+      ) : (
+        <nav className="sticky top-0 z-[9999] border-b border-orange-500/20 bg-slate-900/95 backdrop-blur-xl shadow-lg w-full">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center w-full">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/50">
+                <span className="text-white font-bold text-sm sm:text-lg">SD</span>
+              </div>
+              <h1 className="text-base sm:text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
+                SDModels
+              </h1>
+            </div>
+            <div className="flex gap-2 sm:gap-4 items-center">
+              <Link href="/about" className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition hidden xl:block">
+                About
+              </Link>
+              <Link href="/bounties" className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition hidden lg:block">
+                Bounties
+              </Link>
+              <Link href="/leaderboard" className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition hidden lg:block">
+                Leaderboard
+              </Link>
+              <div className="hidden md:block">
+                <CredibilityNav />
+              </div>
+              <Link href="/browse" className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition hidden lg:block">
+                Browse
+              </Link>
+              <Link href="/auth" className="px-3 sm:px-6 py-1.5 sm:py-2 text-sm sm:text-base bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition font-semibold shadow-lg shadow-orange-500/50 hidden lg:block">
+                Sign In
+              </Link>
+              <MobileNav />
+            </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      )}
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">

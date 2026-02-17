@@ -2,13 +2,24 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useCollections } from "@/lib/api/hooks/useCollections";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorMessage from "@/components/ErrorMessage";
 
 export default function CollectionsPage() {
-  const collections = [
-    { id: 1, name: "Game Assets", description: "My favorite game-ready models", count: 24, thumbnail: "🎮", isPublic: true },
-    { id: 2, name: "Favorites", description: "Models I love", count: 15, thumbnail: "⭐", isPublic: false },
-    { id: 3, name: "Inspiration", description: "For future projects", count: 32, thumbnail: "💡", isPublic: true },
-  ];
+  const { collections: apiCollections, loading, error } = useCollections({ limit: 50 });
+
+  const collections = apiCollections.map(c => ({
+    id: c.id,
+    name: c.name,
+    description: c.description || "No description",
+    count: c.model_count,
+    thumbnail: "📦",
+    isPublic: c.is_public,
+  }));
+
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage error={error} />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">

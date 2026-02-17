@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { useFinancials } from "@/lib/api/hooks/useDashboard";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -19,20 +21,21 @@ import {
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 export default function FinancialsPage() {
+  const { balance, transactions, earnings, loading, error, requestWithdrawal } = useFinancials();
   const [withdrawAmount, setWithdrawAmount] = useState("");
 
-  const availableBalance = 11512.63; // After 7.5% fee
-  const pendingBalance = 937.92;
-  const totalEarnings = 12450.55;
-  const platformFees = 937.92;
+  const availableBalance = balance?.available || 0;
+  const pendingBalance = balance?.pending || 0;
+  const totalEarnings = balance?.total || 0;
+  const platformFees = balance?.fees || 0;
 
-  // Mock earnings data for chart
+  // Mock earnings data for chart - use API data when available
   const chartData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    labels: earnings.length > 0 ? earnings.map((e: any) => e.month) : ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
     datasets: [
       {
         label: "Earnings",
-        data: [2100, 3200, 2800, 4100, 3600, 4200],
+        data: earnings.length > 0 ? earnings.map((e: any) => e.amount) : [2100, 3200, 2800, 4100, 3600, 4200],
         borderColor: "#ff6b35",
         backgroundColor: "rgba(255, 107, 53, 0.1)",
         fill: true,
@@ -89,15 +92,33 @@ export default function FinancialsPage() {
     },
   };
 
-  const handleWithdraw = () => {
-    console.log("Withdrawing:", withdrawAmount);
-    // Handle withdrawal logic
+  const handleWithdraw = async () => {
+    if (!withdrawAmount || parseFloat(withdrawAmount) > availableBalance) return;
+    
+    try {
+      await requestWithdrawal(parseFloat(withdrawAmount), 'bank_account');
+      setWithdrawAmount("");
+      // Show success message
+    } catch (err) {
+      console.error('Withdrawal failed:', err);
+    }
   };
 
   return (
-    <DashboardLayout>
+    <ProtectedRoute>
+      <DashboardLayout>
       <h1 className="text-2xl sm:text-3xl font-black text-white mb-6 sm:mb-8">Revenue Vault</h1>
 
+      {error && (
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="text-center py-12 text-slate-400">Loading financial data...</div>
+      ) : (
+        <>
       {/* Balance Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <div className="bg-slate-900/50 border border-green-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 backdrop-blur">
@@ -181,12 +202,10 @@ export default function FinancialsPage() {
               Recent Transactions
             </h2>
             <div className="space-y-2">
-              {[
-                { type: "sale", model: "Cyberpunk Vehicle", amount: 29.99, date: "2 hours ago" },
-                { type: "sale", model: "Sci-Fi Character", amount: 49.99, date: "5 hours ago" },
-                { type: "withdrawal", model: "Bank Transfer", amount: -500.0, date: "2 days ago" },
-                { type: "sale", model: "Futuristic Weapon", amount: 19.99, date: "3 days ago" },
-              ].map((tx, index) => (
+              {transactions.length === 0 ? (
+                <div className="text-center py-4 text-slate-400">No transactions yet</div>
+              ) : (
+                transactions.map((tx: any, index: number) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-3 bg-slate-950/50 border border-slate-700/50 rounded-lg hover:border-orange-500/50 transition"
@@ -194,8 +213,8 @@ export default function FinancialsPage() {
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{tx.type === "sale" ? "💰" : "🏦"}</span>
                     <div>
-                      <div className="text-sm font-medium text-white">{tx.model}</div>
-                      <div className="text-xs text-slate-400">{tx.date}</div>
+                      <div className="text-sm font-medium text-white">{tx.description || tx.model}</div>
+                      <div className="text-xs text-slate-400">{tx.created_at || tx.date}</div>
                     </div>
                   </div>
                   <div
@@ -206,7 +225,8 @@ export default function FinancialsPage() {
                     {tx.amount > 0 ? "+" : ""}${Math.abs(tx.amount).toFixed(2)}
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -298,6 +318,9 @@ export default function FinancialsPage() {
           </div>
         </div>
       </div>
+      </>
+      )}
     </DashboardLayout>
+    </ProtectedRoute>
   );
 }

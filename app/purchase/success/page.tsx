@@ -1,18 +1,43 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { transactionsApi } from "@/lib/api/transactions";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 export default function PurchaseSuccessPage() {
+  const searchParams = useSearchParams();
+  const transactionId = searchParams.get('transaction_id');
+  
+  const [purchases, setPurchases] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPurchases = async () => {
+      try {
+        const response = await transactionsApi.getPurchases(1, 10);
+        setPurchases(response.purchases || []);
+      } catch (error) {
+        console.error('Failed to fetch purchases:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPurchases();
+  }, []);
+
   const orderDetails = {
-    orderId: "ORD-2024-001234",
+    orderId: transactionId || "ORD-2024-001234",
     date: new Date().toLocaleDateString(),
-    items: [
-      { title: "Cyberpunk Character Pack", price: 29.99, downloadUrl: "/downloads/model1" },
-      { title: "Sci-Fi Weapon Collection", price: 19.99, downloadUrl: "/downloads/model2" },
-      { title: "Fantasy Environment Assets", price: 39.99, downloadUrl: "/downloads/model3" },
-    ],
-    total: 96.72,
+    items: purchases.slice(0, 3),
+    total: purchases.reduce((sum, p) => sum + (p.amount || 0), 0),
   };
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">

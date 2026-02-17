@@ -1,31 +1,50 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdminModels } from "@/lib/api/hooks/useAdminModels";
 
 export default function ModelReviewPage() {
-  const [pendingModels, setPendingModels] = useState([
-    { id: 1, name: "Futuristic Drone", author: "NewCreator", polyCount: 45000, uploaded: "2 hours ago", image: "🚁", status: "pending" },
-    { id: 2, name: "Ancient Temple", author: "ArchMaster", polyCount: 120000, uploaded: "5 hours ago", image: "🏛️", status: "pending" },
-    { id: 3, name: "Sci-Fi Weapon", author: "GunSmith3D", polyCount: 32000, uploaded: "1 day ago", image: "🔫", status: "pending" },
-  ]);
+  const { models: pendingModels, loading, error, approveModel, rejectModel } = useAdminModels();
 
-  const handleApprove = (id: number) => {
-    setPendingModels(prev => prev.filter(m => m.id !== id));
-    // TODO: Call API to approve model
+  const handleApprove = async (id: number) => {
+    await approveModel(id);
     alert("Model approved!");
   };
 
-  const handleReject = (id: number) => {
-    setPendingModels(prev => prev.filter(m => m.id !== id));
-    // TODO: Call API to reject model
+  const handleReject = async (id: number) => {
+    await rejectModel(id, "Does not meet quality standards");
     alert("Model rejected!");
   };
 
+  if (loading) {
+    return (<AdminLayout title="Model Validator Queue">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading pending models...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Model Validator Queue">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Models</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
+    <ProtectedRoute>
     <AdminLayout title="Model Validator Queue">
       <div className="grid gap-6">
-        {pendingModels.map((model) => (
+        {pendingModels.map((model: any) => (
           <div key={model.id} className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-2xl p-6">
             <div className="grid lg:grid-cols-3 gap-6">
               {/* Model Preview */}
@@ -99,5 +118,6 @@ export default function ModelReviewPage() {
         )}
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

@@ -1,28 +1,47 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdminLearning } from "@/lib/api/hooks/useAdminLearning";
 
 export default function LearningCenterManagementPage() {
-  const [tutorials, setTutorials] = useState([
-    { id: 1, title: "Getting Started with 3D Modeling", category: "Beginner", views: 2340, published: true },
-    { id: 2, title: "Advanced Rigging Techniques", category: "Advanced", views: 1560, published: true },
-    { id: 3, title: "PBR Texturing Masterclass", category: "Intermediate", views: 890, published: false },
-  ]);
+  const { tutorials, loading, error, togglePublish, deleteTutorial } = useAdminLearning();
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Delete this tutorial?")) {
-      setTutorials(prev => prev.filter(t => t.id !== id));
+      await deleteTutorial(id);
     }
   };
 
-  const togglePublish = (id: number) => {
-    setTutorials(prev => prev.map(t => 
-      t.id === id ? { ...t, published: !t.published } : t
-    ));
+  const handleTogglePublish = async (id: number) => {
+    await togglePublish(id);
   };
 
+  if (loading) {
+    return (<AdminLayout title="Learning Center Management">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading tutorials...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Learning Center Management">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Tutorials</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
+    <ProtectedRoute>
     <AdminLayout title="Learning Center Management">
       <div className="flex items-center justify-between mb-6">
         <p className="text-gray-400">Manage tutorials and educational content</p>
@@ -53,7 +72,7 @@ export default function LearningCenterManagementPage() {
               </div>
               <div className="flex gap-2">
                 <button 
-                  onClick={() => togglePublish(tutorial.id)}
+                  onClick={() => handleTogglePublish(tutorial.id)}
                   className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-semibold transition"
                 >
                   {tutorial.published ? "Unpublish" : "Publish"}
@@ -73,5 +92,6 @@ export default function LearningCenterManagementPage() {
         ))}
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

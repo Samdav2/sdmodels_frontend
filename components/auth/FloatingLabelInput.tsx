@@ -78,7 +78,7 @@ export default function FloatingLabelInput({
         <motion.label
           htmlFor={inputId}
           animate={{
-            y: isFloating ? -12 : 8,
+            y: isFloating ? -24 : 8,
             scale: isFloating ? 0.85 : 1,
             x: isFloating ? -4 : 0,
           }}
@@ -88,11 +88,13 @@ export default function FloatingLabelInput({
             damping: 25,
           }}
           className={`
-            absolute left-4 top-0
+            absolute left-4 top-2
             pointer-events-none
             origin-left
             transition-colors duration-300
             font-medium
+            px-1
+            ${isFloating ? 'bg-slate-900/80 backdrop-blur-sm' : ''}
             ${error
               ? 'text-red-400'
               : isFocused

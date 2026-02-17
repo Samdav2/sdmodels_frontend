@@ -3,8 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import NotificationModal, { NotificationType } from "@/components/NotificationModal";
+import { useCart } from "@/lib/api/hooks/useCart";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorMessage from "@/components/ErrorMessage";
 
 export default function CartPage() {
+  const { items: apiItems, loading, error, removeItem } = useCart();
+  
   const [notification, setNotification] = useState<{
     isOpen: boolean;
     type: NotificationType;
@@ -20,38 +25,17 @@ export default function CartPage() {
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      modelId: 123,
-      title: "Cyberpunk Character Pack",
-      creator: "Alex Chen",
-      thumbnail: "🎨",
-      price: 29.99,
-      formats: ["GLB", "FBX", "OBJ"],
-      polyCount: 45000,
-    },
-    {
-      id: 2,
-      modelId: 456,
-      title: "Sci-Fi Weapon Collection",
-      creator: "Sarah Miller",
-      thumbnail: "🚀",
-      price: 19.99,
-      formats: ["GLB", "FBX"],
-      polyCount: 32000,
-    },
-    {
-      id: 3,
-      modelId: 789,
-      title: "Fantasy Environment Assets",
-      creator: "Mike Johnson",
-      thumbnail: "🏰",
-      price: 39.99,
-      formats: ["GLB", "FBX", "OBJ", "BLEND"],
-      polyCount: 78000,
-    },
-  ]);
+  // Map API cart items to display format
+  const [cartItems, setCartItems] = useState(apiItems.map(item => ({
+    id: item.id,
+    modelId: item.model.id,
+    title: item.model.title,
+    creator: item.model.creator.username,
+    thumbnail: item.model.thumbnail_url,
+    price: item.model.price,
+    formats: item.model.file_formats,
+    polyCount: item.model.poly_count,
+  })));
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
   const platformFee = subtotal * 0.075; // 7.5%

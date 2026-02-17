@@ -3,49 +3,16 @@
 import Link from "next/link";
 import NotificationModal, { NotificationType } from "@/components/NotificationModal";
 import { useState } from "react";
+import { useBlogPost } from "@/lib/api/hooks/useBlogPost";
 
 export default function BlogPostPage({ params }: { params: { id: string } }) {
+  // Fetch blog post from API
+  const { post: apiPost, loading, error } = useBlogPost(params.id);
+
   const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(234);
+  const [likeCount, setLikeCount] = useState(0);
   const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      author: "Emma Davis",
-      avatar: "👩‍🎨",
-      text: "This is exactly what I needed! The PBR workflow explanation is crystal clear.",
-      time: "2 hours ago",
-      likes: 12,
-      replies: [
-        {
-          id: 2,
-          author: "Alex Chen",
-          avatar: "🎨",
-          text: "Thanks Emma! Glad it helped. Let me know if you have any questions.",
-          time: "1 hour ago",
-          likes: 5,
-        },
-      ],
-    },
-    {
-      id: 3,
-      author: "John Smith",
-      avatar: "🎯",
-      text: "Great tutorial! Could you do one on advanced normal mapping next?",
-      time: "5 hours ago",
-      likes: 8,
-      replies: [],
-    },
-    {
-      id: 4,
-      author: "Sarah Miller",
-      avatar: "🚀",
-      text: "Bookmarked for later. The examples are really helpful!",
-      time: "1 day ago",
-      likes: 15,
-      replies: [],
-    },
-  ]);
+  const [comments, setComments] = useState<any[]>([]);
 
   const [notification, setNotification] = useState<{
     isOpen: boolean;
@@ -59,134 +26,60 @@ export default function BlogPostPage({ params }: { params: { id: string } }) {
     message: "",
   });
 
-  // Mock post data
-  const post = {
-    id: params.id,
-    title: "Mastering PBR Textures: A Complete Guide for 3D Artists",
-    content: `
-# Introduction to PBR
-
-Physically Based Rendering (PBR) has revolutionized the way we create materials in 3D. This comprehensive guide will walk you through everything you need to know to create stunning, photorealistic materials.
-
-## What is PBR?
-
-PBR is a rendering approach that aims to simulate the way light interacts with surfaces in the real world. Unlike traditional rendering methods, PBR uses physically accurate calculations to determine how light bounces off surfaces.
-
-### Key Principles
-
-1. **Energy Conservation** - Light reflected cannot exceed the amount received
-2. **Fresnel Effect** - Reflections become stronger at grazing angles
-3. **Microsurface Detail** - Surface roughness affects light scattering
-
-## The PBR Workflow
-
-### Base Color Map
-The base color (albedo) represents the pure color of the material without any lighting information. This is crucial for achieving realistic results.
-
-**Best Practices:**
-- Avoid pure black or white values
-- Keep values in the 30-240 sRGB range
-- No lighting or shadow information
-
-### Metallic Map
-Defines which parts of your material are metallic vs non-metallic. This is typically a binary choice (0 or 1).
-
-**Tips:**
-- Pure metals: 1.0 (white)
-- Non-metals: 0.0 (black)
-- Avoid in-between values unless simulating oxidation
-
-### Roughness Map
-Controls how rough or smooth a surface appears. This directly affects how sharp or blurry reflections are.
-
-**Guidelines:**
-- 0.0 = Mirror-like surface
-- 1.0 = Completely rough/matte
-- Most real-world materials: 0.2-0.8
-
-### Normal Map
-Adds surface detail without additional geometry. Essential for creating the illusion of complex surfaces.
-
-**Techniques:**
-- Bake from high-poly models
-- Use procedural generators
-- Combine multiple maps for detail
-
-## Advanced Techniques
-
-### Layered Materials
-Create complex materials by layering multiple PBR materials with masks.
-
-### Procedural Texturing
-Use Substance Designer or Blender's shader nodes to create fully procedural materials.
-
-### Texture Optimization
-- Use appropriate resolutions (2K for props, 4K for hero assets)
-- Compress textures for game engines
-- Use texture atlases when possible
-
-## Common Mistakes to Avoid
-
-1. **Incorrect Value Ranges** - Always check your maps are in the correct range
-2. **Missing Maps** - Every PBR material needs at least base color, metallic, and roughness
-3. **Inconsistent Scale** - Ensure all maps are the same resolution
-4. **Ignoring Real-World References** - Always reference real materials
-
-## Tools and Resources
-
-### Software
-- **Substance Painter** - Industry standard for texture painting
-- **Substance Designer** - Procedural material creation
-- **Blender** - Free and powerful shader editor
-- **Marmoset Toolbag** - Real-time PBR preview
-
-### Resources
-- Texture libraries: Quixel Megascans, Poliigon
-- Material references: MaterialX, Substance Source
-- Learning: Artstation Learning, Udemy courses
-
-## Conclusion
-
-Mastering PBR textures takes practice, but following these principles will set you on the right path. Remember to always reference real-world materials and iterate on your work.
-
-Happy texturing! 🎨
-    `,
-    author: {
-      name: "Alex Chen",
-      avatar: "🎨",
-      role: "Senior 3D Artist",
-      verified: true,
-      bio: "10+ years creating AAA game assets. Passionate about teaching and sharing knowledge.",
-      followers: 15234,
-      posts: 89,
-    },
-    category: "tutorials",
-    publishedDate: "2024-02-15",
-    readTime: "12 min read",
-    views: 3421,
-    tags: ["PBR", "Texturing", "Materials", "Tutorial"],
+  const showNotification = (type: NotificationType, title: string, message: string) => {
+    setNotification({ isOpen: true, type, title, message });
+    setTimeout(() => setNotification(prev => ({ ...prev, isOpen: false })), 3000);
   };
 
-  const relatedPosts = [
-    {
-      id: 2,
-      title: "Advanced Normal Mapping Techniques",
-      thumbnail: "🗺️",
-      readTime: "10 min",
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-orange-400 font-semibold">Loading post...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error || !apiPost) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-red-500 mb-2">Error</h2>
+          <p className="text-gray-400">{error || "Blog post not found"}</p>
+        </div>
+      </div>
+    );
+  }
+  // Map API post to component format
+  const post = {
+    id: apiPost.id.toString(),
+    title: apiPost.title,
+    content: apiPost.content,
+    author: {
+      name: apiPost.author.username,
+      avatar: apiPost.author.avatar_url || "🎨",
+      role: "Author",
+      verified: apiPost.author.is_verified,
+      bio: apiPost.author.bio || "Content creator",
+      followers: 0,
+      posts: apiPost.author.total_models,
     },
-    {
-      id: 3,
-      title: "Substance Painter Workflow Tips",
-      thumbnail: "🎨",
-      readTime: "8 min",
-    },
-    {
-      id: 4,
-      title: "Creating Realistic Metal Materials",
-      thumbnail: "⚙️",
-      readTime: "15 min",
-    },
-  ];
+    category: apiPost.category,
+    publishedDate: apiPost.published_at || apiPost.created_at,
+    readTime: apiPost.read_time + " min read",
+    views: apiPost.views,
+    tags: apiPost.tags,
+  };
+
+  // Initialize like count from API
+  if (likeCount === 0 && apiPost.likes > 0) {
+    setLikeCount(apiPost.likes);
+  }
 
   const handleLike = () => {
     setLiked(!liked);
@@ -222,10 +115,26 @@ Happy texturing! 🎨
     showNotification("success", "Comment Posted!", "Your comment has been added successfully.");
   };
 
-  const showNotification = (type: NotificationType, title: string, message: string) => {
-    setNotification({ isOpen: true, type, title, message });
-    setTimeout(() => setNotification(prev => ({ ...prev, isOpen: false })), 3000);
-  };
+  const relatedPosts = [
+    {
+      id: 2,
+      title: "Advanced Normal Mapping Techniques",
+      thumbnail: "🗺️",
+      readTime: "10 min",
+    },
+    {
+      id: 3,
+      title: "Substance Painter Workflow Tips",
+      thumbnail: "🎨",
+      readTime: "8 min",
+    },
+    {
+      id: 4,
+      title: "Creating Realistic Metal Materials",
+      thumbnail: "⚙️",
+      readTime: "15 min",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -327,11 +236,11 @@ Happy texturing! 🎨
             <div className="flex items-center gap-3">
               <button
                 onClick={handleLike}
-                className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition ${
+                className={"flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition " + (
                   liked
                     ? 'bg-red-500 text-white'
                     : 'bg-slate-800 border border-slate-700 text-gray-400 hover:bg-slate-700 hover:text-white'
-                }`}
+                )}
               >
                 <span className="text-xl">{liked ? '❤️' : '🤍'}</span>
                 <span>{likeCount} Likes</span>
@@ -395,7 +304,7 @@ Happy texturing! 🎨
                 {post.tags.map((tag, index) => (
                   <Link
                     key={index}
-                    href={`/blog?tag=${tag}`}
+                    href={"/blog?tag=" + tag}
                     className="px-4 py-2 bg-slate-800 border border-slate-700 text-gray-400 hover:border-orange-500/50 hover:text-white rounded-lg text-sm font-semibold transition"
                   >
                     #{tag}
@@ -453,7 +362,7 @@ Happy texturing! 🎨
                         {/* Nested Replies */}
                         {comment.replies.length > 0 && (
                           <div className="ml-8 mt-4 space-y-4">
-                            {comment.replies.map((reply) => (
+                            {comment.replies.map((reply: any) => (
                               <div key={reply.id} className="flex items-start gap-3">
                                 <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center text-lg flex-shrink-0">
                                   {reply.avatar}
@@ -499,7 +408,7 @@ Happy texturing! 🎨
 
                 <div className="flex justify-center gap-6 mb-4 text-sm">
                   <div>
-                    <div className="text-white font-bold">{post.author.followers.toLocaleString()}</div>
+                    <div className="text-white font-bold">{post.author.followers}</div>
                     <div className="text-gray-400 text-xs">Followers</div>
                   </div>
                   <div>
@@ -521,7 +430,7 @@ Happy texturing! 🎨
                 {relatedPosts.map((related) => (
                   <Link
                     key={related.id}
-                    href={`/blog/${related.id}`}
+                    href={"/blog/" + related.id}
                     className="block p-3 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-orange-500/50 transition"
                   >
                     <div className="flex items-center gap-3">

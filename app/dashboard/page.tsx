@@ -5,6 +5,8 @@ import SalesGoalProgress from "@/components/dashboard/SalesGoalProgress";
 import ActivityStream from "@/components/dashboard/ActivityStream";
 import FeeCalculator from "@/components/dashboard/FeeCalculator";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { useModels } from "@/lib/api/hooks/useModels";
 
 // Dynamically import GlobalSalesMap with SSR disabled to avoid React Three Fiber hydration issues
 const GlobalSalesMap = dynamic(() => import("@/components/dashboard/GlobalSalesMap"), {
@@ -17,30 +19,42 @@ const GlobalSalesMap = dynamic(() => import("@/components/dashboard/GlobalSalesM
 });
 
 export default function DashboardPage() {
+  // Fetch user's models for stats
+  const { models, loading } = useModels({ limit: 100 });
+
+  // Calculate stats from API data
+  const totalSales = models.reduce((sum, m) => sum + (m.downloads * m.price), 0);
+  const totalDownloads = models.reduce((sum, m) => sum + m.downloads, 0);
+  const activeModels = models.filter(m => m.status === 'approved').length;
+  const avgRating = models.length > 0 
+    ? models.reduce((sum, m) => sum + m.rating, 0) / models.length 
+    : 0;
+
   return (
-    <DashboardLayout>
+    <ProtectedRoute>
+      <DashboardLayout>
       {/* Header Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
         <div className="bg-slate-900/50 border border-orange-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 backdrop-blur">
           <div className="text-xs sm:text-sm text-slate-400 mb-1 sm:mb-2">Total Sales</div>
           <div className="text-xl sm:text-3xl font-black bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
-            $12,450
+            ${loading ? '...' : totalSales.toFixed(2)}
           </div>
           <div className="text-xs text-green-400 mt-1 sm:mt-2">+23% this month</div>
         </div>
         <div className="bg-slate-900/50 border border-orange-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 backdrop-blur">
           <div className="text-xs sm:text-sm text-slate-400 mb-1 sm:mb-2">Models Sold</div>
-          <div className="text-xl sm:text-3xl font-black text-white">342</div>
+          <div className="text-xl sm:text-3xl font-black text-white">{loading ? '...' : totalDownloads}</div>
           <div className="text-xs text-green-400 mt-1 sm:mt-2">+18 today</div>
         </div>
         <div className="bg-slate-900/50 border border-orange-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 backdrop-blur">
           <div className="text-xs sm:text-sm text-slate-400 mb-1 sm:mb-2">Active Models</div>
-          <div className="text-xl sm:text-3xl font-black text-white">28</div>
+          <div className="text-xl sm:text-3xl font-black text-white">{loading ? '...' : activeModels}</div>
           <div className="text-xs text-slate-400 mt-1 sm:mt-2">3 pending review</div>
         </div>
         <div className="bg-slate-900/50 border border-orange-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 backdrop-blur">
           <div className="text-xs sm:text-sm text-slate-400 mb-1 sm:mb-2">Avg. Rating</div>
-          <div className="text-xl sm:text-3xl font-black text-white">4.8</div>
+          <div className="text-xl sm:text-3xl font-black text-white">{loading ? '...' : avgRating.toFixed(1)}</div>
           <div className="text-xs text-orange-400 mt-1 sm:mt-2">⭐⭐⭐⭐⭐</div>
         </div>
       </div>
@@ -90,5 +104,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </DashboardLayout>
+    </ProtectedRoute>
   );
 }

@@ -1,22 +1,12 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useAdminSlider } from "@/lib/api/hooks/useAdminSlider";
 
 export default function SliderManagerPage() {
-  const [sliderSlots, setSliderSlots] = useState([
-    { id: 1, model: { name: "Cyberpunk Mech Warrior", author: "PixelForge", image: "🤖" } },
-    { id: 2, model: { name: "Sci-Fi Vehicle", author: "3D_Wizard", image: "🚗" } },
-    { id: 3, model: { name: "Dragon Animated", author: "MeshMaster", image: "🐉" } },
-  ]);
-
-  const availableModels = [
-    { id: 4, name: "Fantasy Castle", author: "PolyPro", image: "🏰", views: 2340 },
-    { id: 5, name: "Space Station", author: "VoxelVerse", image: "🚀", views: 1890 },
-    { id: 6, name: "Robot Companion", author: "PixelForge", image: "🤖", views: 3120 },
-    { id: 7, name: "Medieval Sword", author: "3D_Wizard", image: "⚔️", views: 1560 },
-    { id: 8, name: "Racing Car", author: "MeshMaster", image: "🏎️", views: 2780 },
-  ];
+  const { sliderSlots, availableModels, loading, error, updateSlider, setSliderSlots } = useAdminSlider();
 
   const handleRemove = (slotId: number) => {
     setSliderSlots(prev => prev.map(slot => 
@@ -34,7 +24,6 @@ export default function SliderManagerPage() {
   };
 
   const handleAutoSelect = () => {
-    // Auto-select top 3 trending models
     const topModels = [...availableModels].sort((a, b) => b.views - a.views).slice(0, 3);
     setSliderSlots(prev => prev.map((slot, index) => ({
       ...slot,
@@ -43,12 +32,35 @@ export default function SliderManagerPage() {
     alert("Auto-selected top trending models!");
   };
 
-  const handleDeploy = () => {
-    // TODO: Call API to deploy slider
+  const handleDeploy = async () => {
+    await updateSlider(sliderSlots);
     alert("Slider deployed to homepage!");
   };
 
+  if (loading) {
+    return (<AdminLayout title="Homepage Slider Architect">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading slider settings...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Homepage Slider Architect">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-2xl font-bold text-red-500 mb-2">Error Loading Slider</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
+    <ProtectedRoute>
     <AdminLayout title="Homepage Slider Architect">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-white">Manage Featured Slider</h3>
@@ -139,5 +151,6 @@ export default function SliderManagerPage() {
         </div>
       </div>
     </AdminLayout>
+    </ProtectedRoute>
   );
 }

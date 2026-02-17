@@ -1,29 +1,44 @@
 "use client";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAdminStats } from "@/lib/api/hooks/useAdminStats";
 
 export default function SuperAdminPage() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(true); // In production, check auth
+  const { stats, loading, error } = useAdminStats();
+  
   const [liveStats, setLiveStats] = useState({
-    totalRevenue: 125430,
-    platformFees: 9407,
-    activeUsers: 1247,
-    pendingModels: 23,
-    totalModels: 1834,
-    serverLoad: 34,
+    totalRevenue: stats.totalRevenue,
+    platformFees: stats.platformFees,
+    activeUsers: stats.activeUsers,
+    pendingModels: stats.pendingModels,
+    totalModels: stats.totalModels,
+    serverLoad: stats.serverLoad,
   });
 
-  // Simulate live updates
+  // Update liveStats when backend data changes
+  useEffect(() => {
+    setLiveStats({
+      totalRevenue: stats.totalRevenue,
+      platformFees: stats.platformFees,
+      activeUsers: stats.activeUsers,
+      pendingModels: stats.pendingModels,
+      totalModels: stats.totalModels,
+      serverLoad: stats.serverLoad,
+    });
+  }, [stats]);
+
+  // Simulate live updates for server load
   useEffect(() => {
     const interval = setInterval(() => {
       setLiveStats(prev => ({
         ...prev,
         serverLoad: Math.max(10, Math.min(90, prev.serverLoad + (Math.random() - 0.5) * 10)),
-        activeUsers: prev.activeUsers + Math.floor(Math.random() * 3 - 1),
       }));
     }, 3000);
     return () => clearInterval(interval);
@@ -35,6 +50,29 @@ export default function SuperAdminPage() {
         <div className="text-center">
           <h1 className="text-4xl font-black text-red-500 mb-4">ACCESS DENIED</h1>
           <p className="text-gray-400">SuperAdmin credentials required</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading admin dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-red-500 mb-2">Error Loading Dashboard</h2>
+          <p className="text-gray-400">{error}</p>
         </div>
       </div>
     );
@@ -59,6 +97,7 @@ export default function SuperAdminPage() {
   ];
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black">
       {/* Animated Grid Background */}
       <div className="fixed inset-0 bg-[linear-gradient(rgba(255,215,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,215,0,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
@@ -207,6 +246,7 @@ export default function SuperAdminPage() {
         </motion.div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
 

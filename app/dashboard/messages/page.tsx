@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { useMessages } from "@/lib/api/hooks/useDashboard";
 
 interface Message {
   id: string;
@@ -16,66 +18,35 @@ interface Message {
   model?: string;
 }
 
-const mockMessages: Message[] = [
-  {
-    id: "1",
-    type: "request",
-    from: "Alex Chen",
-    subject: "Custom Model Request",
-    preview: "Hi! I'm interested in commissioning a custom cyberpunk vehicle similar to your existing work...",
-    time: "2 hours ago",
-    unread: true,
-  },
-  {
-    id: "2",
-    type: "review",
-    from: "Sarah Martinez",
-    subject: "Review on Sci-Fi Character Rig",
-    preview: "Amazing quality! The rigging is perfect and saved me hours of work.",
-    time: "5 hours ago",
-    unread: true,
-    rating: 5,
-    model: "Sci-Fi Character Rig",
-  },
-  {
-    id: "3",
-    type: "support",
-    from: "Mike Johnson",
-    subject: "Question about file formats",
-    preview: "Does the model come with FBX format? I need it for Unity...",
-    time: "1 day ago",
-    unread: false,
-    model: "Cyberpunk Vehicle",
-  },
-  {
-    id: "4",
-    type: "review",
-    from: "Emma Wilson",
-    subject: "Review on Futuristic Weapon",
-    preview: "Good model but the textures could be higher resolution.",
-    time: "2 days ago",
-    unread: false,
-    rating: 4,
-    model: "Futuristic Weapon",
-  },
-];
-
 export default function MessagesPage() {
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
+  const { messages: apiMessages, loading, error, sendReply, markAsRead } = useMessages();
+  
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [filter, setFilter] = useState<"all" | "request" | "review" | "support">("all");
   const [replyText, setReplyText] = useState("");
 
-  const filteredMessages = filter === "all" ? messages : messages.filter((m) => m.type === filter);
-  const unreadCount = messages.filter((m) => m.unread).length;
+  // Use API messages or fallback to empty array
+  const messages = apiMessages || [];
+  const filteredMessages = filter === "all" ? messages : messages.filter((m: any) => m.type === filter);
+  const unreadCount = messages.filter((m: any) => m.unread).length;
 
-  const markAsRead = (id: string) => {
-    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, unread: false } : m)));
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await markAsRead(id);
+    } catch (err) {
+      console.error('Failed to mark as read:', err);
+    }
   };
 
-  const handleReply = () => {
-    console.log("Replying:", replyText);
-    setReplyText("");
+  const handleReply = async () => {
+    if (!selectedMessage || !replyText.trim()) return;
+    
+    try {
+      await sendReply(selectedMessage.id, replyText);
+      setReplyText("");
+    } catch (err) {
+      console.error('Failed to send reply:', err);
+    }
   };
 
   const getTypeIcon = (type: string) => {
@@ -105,15 +76,22 @@ export default function MessagesPage() {
   };
 
   return (
-    <DashboardLayout>
+    <ProtectedRoute>
+      <DashboardLayout>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-white mb-1 sm:mb-2">Communication Hub</h1>
           <p className="text-sm sm:text-base text-slate-400">
-            {unreadCount} unread message{unreadCount !== 1 ? "s" : ""}
+            {loading ? 'Loading...' : `${unreadCount} unread message${unreadCount !== 1 ? "s" : ""}`}
           </p>
         </div>
       </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400">
+          {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column - Message List */}
@@ -149,14 +127,19 @@ export default function MessagesPage() {
 
             {/* Message List */}
             <div className="max-h-[400px] sm:max-h-[600px] overflow-y-auto">
-              {filteredMessages.map((message) => (
+              {loading ? (
+                <div className="p-8 text-center text-slate-400">Loading messages...</div>
+              ) : filteredMessages.length === 0 ? (
+                <div className="p-8 text-center text-slate-400">No messages found</div>
+              ) : (
+                filteredMessages.map((message: any) => (
                 <motion.div
                   key={message.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   onClick={() => {
                     setSelectedMessage(message);
-                    markAsRead(message.id);
+                    handleMarkAsRead(message.id);
                   }}
                   className={`p-3 sm:p-4 border-b border-slate-700/50 cursor-pointer transition ${
                     selectedMessage?.id === message.id
@@ -179,7 +162,8 @@ export default function MessagesPage() {
                     </div>
                   </div>
                 </motion.div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -281,5 +265,6 @@ export default function MessagesPage() {
         </div>
       </div>
     </DashboardLayout>
+    </ProtectedRoute>
   );
 }
