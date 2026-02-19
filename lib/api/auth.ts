@@ -36,12 +36,24 @@ export const authApi = {
   login: async (data: LoginData): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/auth/login', data);
     setTokens(response.data.access_token, response.data.refresh_token);
+    
+    // Store user data
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    
     return response.data;
   },
 
   // Logout
   logout: async (): Promise<void> => {
     clearTokens();
+    
+    // Clear user data
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('user');
+    }
+    
     // Optionally call backend logout endpoint
     try {
       await apiClient.post('/auth/logout');
@@ -85,22 +97,60 @@ export const authApi = {
     return response.data;
   },
 
-  // Admin login
+  // Change password
+  changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
+    await apiClient.post('/auth/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
+  },
+
+  // Admin login (uses dedicated admin endpoint with separate admin_users table)
   adminLogin: async (data: LoginData): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>('/auth/admin/login', data);
+    const response = await apiClient.post<AuthResponse>('/admin/auth/login', data);
+    
+    // Store tokens and admin data
     setTokens(response.data.access_token, response.data.refresh_token);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_user', JSON.stringify(response.data.user));
+      localStorage.setItem('user', JSON.stringify(response.data.user)); // For compatibility
+    }
+    
     return response.data;
   },
 
-  // Admin forgot password
+  // Get current admin user
+  getCurrentAdmin: async (): Promise<User> => {
+    const response = await apiClient.get<User>('/admin/auth/me');
+    return response.data;
+  },
+
+  // Admin logout
+  adminLogout: async (): Promise<void> => {
+    try {
+      await apiClient.post('/admin/auth/logout');
+    } catch (error) {
+      // Ignore errors on logout
+    }
+    
+    clearTokens();
+    
+    // Clear admin data
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('admin_user');
+      localStorage.removeItem('user');
+    }
+  },
+
+  // Admin forgot password (uses same endpoint as regular users)
   adminForgotPassword: async (email: string): Promise<ApiResponse<void>> => {
-    const response = await apiClient.post<ApiResponse<void>>('/auth/admin/forgot-password', { email });
+    const response = await apiClient.post<ApiResponse<void>>('/auth/forgot-password', { email });
     return response.data;
   },
 
-  // Admin reset password
+  // Admin reset password (uses same endpoint as regular users)
   adminResetPassword: async (token: string, newPassword: string): Promise<ApiResponse<void>> => {
-    const response = await apiClient.post<ApiResponse<void>>('/auth/admin/reset-password', {
+    const response = await apiClient.post<ApiResponse<void>>('/auth/reset-password', {
       token,
       new_password: newPassword,
     });

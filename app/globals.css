@@ -94,6 +94,33 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 107, 53, 0.8);
   }
+
+  /* Animation delay utilities */
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  /* Shimmer animation for scroll hint */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s ease-in-out infinite;
+  }
 }
 
 /* Hero background animations */

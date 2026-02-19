@@ -50,7 +50,7 @@ export default function AboutPage() {
     {
       year: "2024",
       title: "Marketplace Vision",
-      description: "Founded Nexus Models to revolutionize the 3D asset industry",
+      description: "Founded SDModels to revolutionize the 3D asset industry",
       icon: "🚀",
     },
     {
@@ -113,7 +113,7 @@ export default function AboutPage() {
               <span className="text-white font-bold text-lg sm:text-xl">3D</span>
             </div>
             <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-              NEXUS MODELS
+              SDModels
             </h1>
           </div>
         </div>
@@ -330,7 +330,7 @@ export default function AboutPage() {
               className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border-2 border-orange-500/50 rounded-2xl p-8 backdrop-blur"
             >
               <h3 className="text-3xl font-black text-white mb-6 flex items-center gap-3">
-                <span>❓</span> Why Nexus Models?
+                <span>❓</span> Why SDModels?
               </h3>
               
               <div className="space-y-4">
@@ -483,7 +483,7 @@ export default function AboutPage() {
             <div className="text-6xl mb-4">✓</div>
             <h3 className="text-2xl font-black text-white mb-2">Authenticated Identity</h3>
             <p className="text-gray-400 mb-4">
-              Verified by Nexus Models Security Protocols
+              Verified by SDModels Security Protocols
             </p>
             <div className="inline-block px-6 py-3 bg-green-500/20 border-2 border-green-500 text-green-400 rounded-lg font-bold">
               🔒 VERIFIED CEO & FOUNDER

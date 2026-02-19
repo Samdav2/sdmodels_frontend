@@ -12,6 +12,8 @@ export interface User {
   is_verified_creator: boolean;
   avatar_url: string | null;
   bio: string | null;
+  location?: string | null;
+  website?: string | null;
   total_sales: number;
   total_models: number;
   rating: number;

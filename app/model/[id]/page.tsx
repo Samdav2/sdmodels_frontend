@@ -255,14 +255,14 @@ export default function ModelPage({ params }: { params: { id: string } }) {
           if (format === 'fbx') {
             // FBX format structure (simplified)
             exportData = `; FBX 7.4.0 project file
-; Created by Nexus Models Exporter
+; Created by SDModels Exporter
 ; Animation: ${animation || 'Unnamed'}
 ; Export Date: ${new Date().toISOString()}
 
 FBXHeaderExtension:  {
     FBXHeaderVersion: 1003
     FBXVersion: 7400
-    Creator: "Nexus Models Platform"
+    Creator: "SDModels Platform"
 }
 
 Definitions:  {
@@ -317,8 +317,8 @@ Connections:  {
             const gltfData = {
               asset: {
                 version: "2.0",
-                generator: "Nexus Models Exporter",
-                copyright: "© Nexus Models Platform"
+                generator: "SDModels Exporter",
+                copyright: "© SDModels Platform"
               },
               scene: 0,
               scenes: [

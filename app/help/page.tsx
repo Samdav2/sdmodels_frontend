@@ -45,7 +45,7 @@ export default function HelpPage() {
     {
       category: "selling",
       question: "What is the platform fee?",
-      answer: "HWC3D charges 7.5% on all sales. You receive 92.5% of the sale price."
+      answer: "SDModels charges 7.5% on all sales. You receive 92.5% of the sale price."
     },
     {
       category: "selling",

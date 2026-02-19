@@ -1,51 +1,54 @@
 import { useState, useEffect } from 'react';
+import { adminApi } from '../admin';
 
 export function useAdminLearning() {
   const [tutorials, setTutorials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchTutorials = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        // TODO: Replace with actual API call
-        // const response = await api.admin.getTutorials();
-        
-        // Mock data for now
-        setTutorials([
-          { id: 1, title: "Getting Started with 3D Modeling", category: "Beginner", views: 2340, published: true },
-          { id: 2, title: "Advanced Rigging Techniques", category: "Advanced", views: 1560, published: true },
-          { id: 3, title: "PBR Texturing Masterclass", category: "Intermediate", views: 890, published: false },
-        ]);
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch tutorials');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchTutorials = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await adminApi.getLearning();
+      setTutorials(data.items || data || []);
+    } catch (err: any) {
+      console.error('Failed to fetch tutorials:', err);
+      setError(err.response?.data?.detail || err.message || 'Failed to fetch tutorials');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchTutorials();
   }, []);
 
-  const togglePublish = async (id: number) => {
-    try {
-      // TODO: Call API
-      setTutorials(prev => prev.map(t => t.id === id ? { ...t, published: !t.published } : t));
-    } catch (err: any) {
-      setError(err.message || 'Failed to toggle publish');
-    }
-  };
-
   const deleteTutorial = async (id: number) => {
     try {
-      // TODO: Call API
-      setTutorials(prev => prev.filter(t => t.id !== id));
+      await adminApi.deleteTutorial(id);
+      await fetchTutorials();
     } catch (err: any) {
-      setError(err.message || 'Failed to delete tutorial');
+      setError(err.response?.data?.detail || err.message || 'Failed to delete tutorial');
+      throw err;
     }
   };
 
-  return { tutorials, loading, error, togglePublish, deleteTutorial };
+  const togglePublish = async (id: number) => {
+    try {
+      // Toggle the published status locally first for optimistic update
+      setTutorials(prev => prev.map(t => 
+        t.id === id ? { ...t, published: !t.published } : t
+      ));
+      // In a real implementation, this would call an API endpoint
+      // await adminApi.toggleTutorialPublish(id);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message || 'Failed to toggle publish status');
+      // Revert on error
+      await fetchTutorials();
+      throw err;
+    }
+  };
+
+  return { tutorials, loading, error, deleteTutorial, togglePublish, refetch: fetchTutorials };
 }

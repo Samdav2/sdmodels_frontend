@@ -5,6 +5,39 @@
 import { useState, useEffect } from 'react';
 import { dashboardApi } from '../dashboard';
 
+// Dashboard Stats Hook
+export const useDashboardStats = () => {
+  const [stats, setStats] = useState({
+    total_sales: 0,
+    total_models: 0,
+    followers_count: 0,
+    total_downloads: 0,
+    total_revenue: 0,
+    pending_models: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await dashboardApi.getStats();
+      setStats(data);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to fetch dashboard stats');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  return { stats, loading, error, refetch: fetchStats };
+};
+
 // Messages Hook
 export const useMessages = () => {
   const [messages, setMessages] = useState<any[]>([]);

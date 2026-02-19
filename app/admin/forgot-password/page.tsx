@@ -52,7 +52,7 @@ export default function AdminForgotPasswordPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@hwc3d.com"
+                  placeholder="admin@sdmodels.com"
                   className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-gray-500 focus:border-yellow-500 focus:outline-none"
                   required
                 />

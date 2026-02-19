@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { adminApi } from '../admin';
 
 export function useAdminSlider() {
   const [sliderSlots, setSliderSlots] = useState<any[]>([]);
@@ -6,44 +7,34 @@ export function useAdminSlider() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchSlider = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        // TODO: Replace with actual API call
-        // const response = await api.admin.getSliderSettings();
-        
-        // Mock data for now
-        setSliderSlots([
-          { id: 1, model: { name: "Cyberpunk Mech Warrior", author: "PixelForge", image: "🤖" } },
-          { id: 2, model: { name: "Sci-Fi Vehicle", author: "3D_Wizard", image: "🚗" } },
-          { id: 3, model: { name: "Dragon Animated", author: "MeshMaster", image: "🐉" } },
-        ]);
-        
-        setAvailableModels([
-          { id: 4, name: "Fantasy Castle", author: "PolyPro", image: "🏰", views: 2340 },
-          { id: 5, name: "Space Station", author: "VoxelVerse", image: "🚀", views: 1890 },
-          { id: 6, name: "Robot Companion", author: "PixelForge", image: "🤖", views: 3120 },
-        ]);
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch slider settings');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchSlider = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await adminApi.getSlider();
+      setSliderSlots(data.slots || data || []);
+      setAvailableModels(data.availableModels || []);
+    } catch (err: any) {
+      console.error('Failed to fetch slider:', err);
+      setError(err.response?.data?.detail || err.message || 'Failed to fetch slider settings');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchSlider();
   }, []);
 
   const updateSlider = async (slots: any[]) => {
     try {
-      // TODO: Call API
-      setSliderSlots(slots);
+      await adminApi.updateSlider(slots);
+      await fetchSlider();
     } catch (err: any) {
-      setError(err.message || 'Failed to update slider');
+      setError(err.response?.data?.detail || err.message || 'Failed to update slider');
+      throw err;
     }
   };
 
-  return { sliderSlots, availableModels, loading, error, updateSlider, setSliderSlots };
+  return { sliderSlots, availableModels, loading, error, updateSlider, setSliderSlots, refetch: fetchSlider };
 }

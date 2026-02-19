@@ -326,7 +326,7 @@ export default function SpecsPanel({
             },
             exportInfo: {
               exportDate: new Date().toISOString(),
-              exportedBy: 'HWC3D Platform',
+              exportedBy: 'SDModels Platform',
               version: '1.0.0',
             },
           };

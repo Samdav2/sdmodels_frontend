@@ -78,12 +78,12 @@ export default function DocsPage() {
                 <div className="prose prose-invert prose-orange max-w-none">
                   <h1 className="text-4xl font-black text-white mb-6">API Documentation</h1>
                   <p className="text-gray-300 text-lg mb-6">
-                    Welcome to the HWC3D API documentation. Our RESTful API allows you to integrate 3D model marketplace features into your applications.
+                    Welcome to the SDModels API documentation. Our RESTful API allows you to integrate 3D model marketplace features into your applications.
                   </p>
 
                   <h2 className="text-2xl font-bold text-white mb-4">Base URL</h2>
                   <div className="bg-slate-800 border border-slate-700 rounded-lg p-4 mb-6">
-                    <code className="text-orange-400">https://api.hwc3d.com/v1</code>
+                    <code className="text-orange-400">https://api.sdmodels.com/v1</code>
                   </div>
 
                   <h2 className="text-2xl font-bold text-white mb-4">Rate Limits</h2>
@@ -111,7 +111,7 @@ export default function DocsPage() {
                 <div className="prose prose-invert prose-orange max-w-none">
                   <h1 className="text-4xl font-black text-white mb-6">Authentication</h1>
                   <p className="text-gray-300 text-lg mb-6">
-                    HWC3D uses JWT tokens for authentication. Include the token in the Authorization header.
+                    SDModels uses JWT tokens for authentication. Include the token in the Authorization header.
                   </p>
 
                   <h2 className="text-2xl font-bold text-white mb-4">Login</h2>

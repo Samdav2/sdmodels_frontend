@@ -214,7 +214,7 @@ export default function EmailSystemPage() {
             <label className="text-gray-400 text-sm mb-2 block">From Name</label>
             <input
               type="text"
-              defaultValue="Nexus Models"
+              defaultValue="SDModels"
               className="w-full px-4 py-2 bg-slate-800 border border-yellow-600/30 rounded-lg text-white focus:outline-none focus:border-yellow-600"
             />
           </div>

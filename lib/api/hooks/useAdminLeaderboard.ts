@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { adminApi } from '../admin';
 
 export function useAdminLeaderboard() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
@@ -11,39 +12,94 @@ export function useAdminLeaderboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        // TODO: Replace with actual API call
-        // const response = await api.admin.getLeaderboard();
-        
-        // Mock data for now
-        setLeaderboard([
-          { rank: 1, name: "PixelForge", points: 15420, badge: "🥇", verified: true },
-          { rank: 2, name: "3D_Wizard", points: 12890, badge: "🥈", verified: true },
-          { rank: 3, name: "MeshMaster", points: 10560, badge: "🥉", verified: true },
-          { rank: 4, name: "PolyPro", points: 8340, badge: "", verified: false },
-        ]);
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch leaderboard');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLeaderboard();
-  }, []);
-
-  const adjustPoints = async (rank: number, points: number) => {
+  const fetchLeaderboard = async () => {
     try {
-      // TODO: Call API
-      setLeaderboard(prev => prev.map(u => u.rank === rank ? { ...u, points } : u));
+      setLoading(true);
+      setError(null);
+      
+      const [leaderboardData, settingsData] = await Promise.all([
+        adminApi.getLeaderboard(),
+        adminApi.getLeaderboardSettings(),
+      ]);
+      
+      setLeaderboard(leaderboardData.users || leaderboardData || []);
+      
+      if (settingsData) {
+        setSeasonSettings({
+          name: settingsData.season_name || "Season 1: Genesis",
+          endDate: settingsData.season_end_date || "2024-12-31",
+          pointsPerUpload: settingsData.points_per_upload || 100,
+          pointsPerSale: settingsData.points_per_sale || 50,
+        });
+      }
     } catch (err: any) {
-      setError(err.message || 'Failed to adjust points');
+      console.error('Failed to fetch leaderboard:', err);
+      setError(err.response?.data?.detail || err.message || 'Failed to fetch leaderboard');
+    } finally {
+      setLoading(false);
     }
   };
 
-  return { leaderboard, seasonSettings, loading, error, adjustPoints, setLeaderboard, setSeasonSettings };
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
+
+  const adjustPoints = async (userId: number, points: number, reason?: string) => {
+    try {
+      await adminApi.adjustUserPoints(userId, points, reason);
+      await fetchLeaderboard(); // Refresh data
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message || 'Failed to adjust points');
+      throw err;
+    }
+  };
+
+  const resetPoints = async (userId: number) => {
+    try {
+      await adminApi.resetUserPoints(userId);
+      await fetchLeaderboard(); // Refresh data
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message || 'Failed to reset points');
+      throw err;
+    }
+  };
+
+  const saveSettings = async () => {
+    try {
+      await adminApi.updateLeaderboardSettings({
+        season_name: seasonSettings.name,
+        season_end_date: seasonSettings.endDate,
+        points_per_upload: seasonSettings.pointsPerUpload,
+        points_per_sale: seasonSettings.pointsPerSale,
+      });
+      await fetchLeaderboard(); // Refresh data
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message || 'Failed to save settings');
+      throw err;
+    }
+  };
+
+  const startNewSeason = async (seasonName: string, endDate: string) => {
+    try {
+      await adminApi.startNewSeason(seasonName, endDate);
+      await fetchLeaderboard(); // Refresh data
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message || 'Failed to start new season');
+      throw err;
+    }
+  };
+
+  return { 
+    leaderboard, 
+    seasonSettings, 
+    loading, 
+    error, 
+    adjustPoints,
+    resetPoints,
+    saveSettings,
+    startNewSeason,
+    setLeaderboard, 
+    setSeasonSettings,
+    refetch: fetchLeaderboard,
+  };
 }

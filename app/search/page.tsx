@@ -40,7 +40,7 @@ function SearchContent() {
         <div className="max-w-[2000px] mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <Link href="/" className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition group">
             <span className="text-xl group-hover:-translate-x-1 transition-transform">←</span>
-            <span className="font-semibold">HWC3D</span>
+            <span className="font-semibold">SDModels</span>
           </Link>
         </div>
       </nav>

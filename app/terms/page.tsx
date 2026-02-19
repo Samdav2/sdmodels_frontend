@@ -39,7 +39,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-bold text-white mb-4">1. Acceptance of Terms</h2>
               <p className="text-gray-300 leading-relaxed">
-                By accessing and using HWC3D ("the Platform"), you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.
+                By accessing and using SDModels ("the Platform"), you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.
               </p>
             </section>
 
@@ -60,7 +60,7 @@ export default function TermsPage() {
               <h2 className="text-2xl font-bold text-white mb-4">3. Content Ownership & Licensing</h2>
               <h3 className="text-xl font-bold text-orange-400 mb-3">3.1 Creator Content</h3>
               <p className="text-gray-300 leading-relaxed mb-3">
-                Creators retain full ownership of their 3D models and content. By uploading content, you grant HWC3D a non-exclusive license to:
+                Creators retain full ownership of their 3D models and content. By uploading content, you grant SDModels a non-exclusive license to:
               </p>
               <ul className="list-disc list-inside space-y-2 text-gray-300 ml-4 mb-4">
                 <li>Display and distribute your content on the Platform</li>
@@ -77,7 +77,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-bold text-white mb-4">4. Platform Fees</h2>
               <p className="text-gray-300 leading-relaxed mb-3">
-                HWC3D charges a 7.5% platform fee on all transactions. This fee covers:
+                SDModels charges a 7.5% platform fee on all transactions. This fee covers:
               </p>
               <ul className="list-disc list-inside space-y-2 text-gray-300 ml-4">
                 <li>Payment processing and security</li>
@@ -133,7 +133,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-bold text-white mb-4">9. Limitation of Liability</h2>
               <p className="text-gray-300 leading-relaxed">
-                HWC3D is provided "as is" without warranties. We are not liable for indirect, incidental, or consequential damages arising from your use of the Platform.
+                SDModels is provided "as is" without warranties. We are not liable for indirect, incidental, or consequential damages arising from your use of the Platform.
               </p>
             </section>
 
@@ -147,7 +147,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-bold text-white mb-4">11. Contact</h2>
               <p className="text-gray-300 leading-relaxed">
-                For questions about these terms, contact us at legal@hwc3d.com
+                For questions about these terms, contact us at legal@sdmodels.com
               </p>
             </section>
           </div>

@@ -13,24 +13,26 @@ export default function SuperAdminPage() {
   const { stats, loading, error } = useAdminStats();
   
   const [liveStats, setLiveStats] = useState({
-    totalRevenue: stats.totalRevenue,
-    platformFees: stats.platformFees,
-    activeUsers: stats.activeUsers,
-    pendingModels: stats.pendingModels,
-    totalModels: stats.totalModels,
-    serverLoad: stats.serverLoad,
+    totalRevenue: 0,
+    platformFees: 0,
+    activeUsers: 0,
+    pendingModels: 0,
+    totalModels: 0,
+    serverLoad: 45,
   });
 
   // Update liveStats when backend data changes
   useEffect(() => {
-    setLiveStats({
-      totalRevenue: stats.totalRevenue,
-      platformFees: stats.platformFees,
-      activeUsers: stats.activeUsers,
-      pendingModels: stats.pendingModels,
-      totalModels: stats.totalModels,
-      serverLoad: stats.serverLoad,
-    });
+    if (stats) {
+      setLiveStats({
+        totalRevenue: stats.totalRevenue || 0,
+        platformFees: stats.platformFees || 0,
+        activeUsers: stats.activeUsers || 0,
+        pendingModels: stats.pendingModels || 0,
+        totalModels: stats.totalModels || 0,
+        serverLoad: stats.serverLoad || 45,
+      });
+    }
   }, [stats]);
 
   // Simulate live updates for server load
@@ -153,28 +155,28 @@ export default function SuperAdminPage() {
             <MetricCard
               icon="💰"
               label="Total Revenue"
-              value={`$${liveStats.totalRevenue.toLocaleString()}`}
+              value={`$${(liveStats.totalRevenue || 0).toLocaleString()}`}
               change="+12.5%"
               color="green"
             />
             <MetricCard
               icon="🏦"
               label="Platform Fees (7.5%)"
-              value={`$${liveStats.platformFees.toLocaleString()}`}
+              value={`$${(liveStats.platformFees || 0).toLocaleString()}`}
               change="+8.3%"
               color="yellow"
             />
             <MetricCard
               icon="👥"
               label="Active Users"
-              value={liveStats.activeUsers.toLocaleString()}
+              value={(liveStats.activeUsers || 0).toLocaleString()}
               change="+5.2%"
               color="cyan"
             />
             <MetricCard
               icon="⏳"
               label="Pending Review"
-              value={liveStats.pendingModels}
+              value={liveStats.pendingModels || 0}
               change="Needs attention"
               color="orange"
             />
@@ -187,14 +189,14 @@ export default function SuperAdminPage() {
               <div>
                 <div className="flex justify-between mb-2">
                   <span className="text-gray-400">CPU Load</span>
-                  <span className="text-white font-bold">{liveStats.serverLoad.toFixed(1)}%</span>
+                  <span className="text-white font-bold">{(liveStats.serverLoad || 0).toFixed(1)}%</span>
                 </div>
                 <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
                   <motion.div
                     className={`h-full ${
-                      liveStats.serverLoad > 70 ? "bg-red-500" : liveStats.serverLoad > 40 ? "bg-yellow-500" : "bg-green-500"
+                      (liveStats.serverLoad || 0) > 70 ? "bg-red-500" : (liveStats.serverLoad || 0) > 40 ? "bg-yellow-500" : "bg-green-500"
                     }`}
-                    animate={{ width: `${liveStats.serverLoad}%` }}
+                    animate={{ width: `${liveStats.serverLoad || 0}%` }}
                     transition={{ duration: 0.5 }}
                   />
                 </div>

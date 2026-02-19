@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useEffect } from "react";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import FileDropZone from "@/components/upload/FileDropZone";
 import MeshSafetyScanner from "@/components/upload/MeshSafetyScanner";
 import AITagSuggestions from "@/components/upload/AITagSuggestions";
-import MobileNav from "@/components/MobileNav";
-import CredibilityNav from "@/components/CredibilityNav";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUpload } from "@/lib/api/hooks/useUpload";
 import { useRouter } from "next/navigation";
@@ -37,24 +37,12 @@ export default function UploadPage() {
   const [currentStep, setCurrentStep] = useState<"upload" | "scan" | "details" | "complete">("upload");
   const [optimizeMesh, setOptimizeMesh] = useState(false);
   const [generateThumbnail, setGenerateThumbnail] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     price: "",
     description: "",
     tags: [] as string[],
   });
-
-  // Check authentication status
-  useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    setIsAuthenticated(!!token);
-    
-    // If not authenticated, redirect to auth page
-    if (!token) {
-      router.push('/auth?redirect=/upload');
-    }
-  }, [router]);
 
   const handleFilesAdded = (newFiles: File[]) => {
     const uploadedFiles: UploadedFile[] = newFiles.map((file) => ({
@@ -142,105 +130,54 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Navigation - Use homepage style when not authenticated */}
-      {isAuthenticated ? (
-        <nav className="relative z-10 border-b border-orange-500/20 bg-slate-900/80 backdrop-blur-xl">
-          <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/50">
-                <span className="text-white font-bold text-xl">SD</span>
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-                UPLOAD TERMINAL
-              </h1>
-            </div>
-            <div className="flex gap-4 items-center">
-              <Link href="/dashboard" className="text-orange-400 hover:text-orange-300 transition">
-                Dashboard
-              </Link>
-              <Link href="/" className="text-slate-400 hover:text-slate-300 transition">
-                Home
-              </Link>
-            </div>
-          </div>
-        </nav>
-      ) : (
-        <nav className="sticky top-0 z-[9999] border-b border-orange-500/20 bg-slate-900/95 backdrop-blur-xl shadow-lg w-full">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center w-full">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/50">
-                <span className="text-white font-bold text-sm sm:text-lg">SD</span>
-              </div>
-              <h1 className="text-base sm:text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-                SDModels
-              </h1>
-            </div>
-            <div className="flex gap-2 sm:gap-4 items-center">
-              <Link href="/about" className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition hidden xl:block">
-                About
-              </Link>
-              <Link href="/bounties" className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition hidden lg:block">
-                Bounties
-              </Link>
-              <Link href="/leaderboard" className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition hidden lg:block">
-                Leaderboard
-              </Link>
-              <div className="hidden md:block">
-                <CredibilityNav />
-              </div>
-              <Link href="/browse" className="text-sm sm:text-base text-orange-400 hover:text-orange-300 transition hidden lg:block">
-                Browse
-              </Link>
-              <Link href="/auth" className="px-3 sm:px-6 py-1.5 sm:py-2 text-sm sm:text-base bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition font-semibold shadow-lg shadow-orange-500/50 hidden lg:block">
-                Sign In
-              </Link>
-              <MobileNav />
-            </div>
-          </div>
-        </nav>
-      )}
+    <ProtectedRoute>
+      <DashboardLayout>
+        <DashboardHeader
+          title="⬆️ Upload Portal"
+          description="Upload your 3D models and start earning"
+          showBackButton={true}
+        />
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Progress Steps */}
-        <div className="mb-8 flex items-center justify-center gap-4">
-          {["upload", "scan", "details", "complete"].map((step, index) => {
-            const isActive = currentStep === step;
-            const isComplete = ["upload", "scan", "details", "complete"].indexOf(currentStep) > index;
-            
-            return (
-              <div key={step} className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition ${
-                      isActive
-                        ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-[0_0_20px_rgba(255,107,53,0.5)]"
-                        : isComplete
-                        ? "bg-green-500 text-white"
-                        : "bg-slate-800 text-slate-500"
-                    }`}
-                  >
-                    {isComplete ? "✓" : index + 1}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center justify-between sm:justify-center gap-2 sm:gap-4 overflow-x-auto pb-2">
+            {["upload", "scan", "details", "complete"].map((step, index) => {
+              const isActive = currentStep === step;
+              const isComplete = ["upload", "scan", "details", "complete"].indexOf(currentStep) > index;
+              
+              return (
+                <div key={step} className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold transition text-sm sm:text-base ${
+                        isActive
+                          ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
+                          : isComplete
+                          ? "bg-green-500 text-white"
+                          : "bg-slate-800 text-slate-500"
+                      }`}
+                    >
+                      {isComplete ? "✓" : index + 1}
+                    </div>
+                    <span
+                      className={`text-xs sm:text-sm font-medium capitalize ${
+                        isActive ? "text-orange-400" : isComplete ? "text-green-400" : "text-slate-500"
+                      }`}
+                    >
+                      {step}
+                    </span>
                   </div>
-                  <span
-                    className={`text-sm font-medium capitalize ${
-                      isActive ? "text-orange-400" : isComplete ? "text-green-400" : "text-slate-500"
-                    }`}
-                  >
-                    {step}
-                  </span>
+                  {index < 3 && (
+                    <div
+                      className={`w-8 sm:w-16 h-0.5 ${
+                        isComplete ? "bg-green-500" : "bg-slate-800"
+                      }`}
+                    />
+                  )}
                 </div>
-                {index < 3 && (
-                  <div
-                    className={`w-16 h-0.5 ${
-                      isComplete ? "bg-green-500" : "bg-slate-800"
-                    }`}
-                  />
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* Step Content */}
@@ -562,12 +499,12 @@ export default function UploadPage() {
                   Your model has been successfully uploaded and is now live on the marketplace.
                 </p>
                 <div className="flex gap-4 justify-center">
-                  <Link
-                    href="/dashboard"
+                  <button
+                    onClick={() => router.push('/dashboard')}
                     className="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition font-semibold shadow-lg shadow-orange-500/50"
                   >
                     Go to Dashboard
-                  </Link>
+                  </button>
                   <button
                     onClick={() => {
                       setFiles([]);
@@ -583,7 +520,7 @@ export default function UploadPage() {
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
-    </div>
+      </DashboardLayout>
+    </ProtectedRoute>
   );
 }

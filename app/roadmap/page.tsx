@@ -183,7 +183,7 @@ export default function TechnicalRoadmapPage() {
               <span className="text-white font-bold text-lg sm:text-xl">3D</span>
             </div>
             <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-              NEXUS MODELS
+              SDModels
             </h1>
           </div>
         </div>

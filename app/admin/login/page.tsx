@@ -35,15 +35,15 @@ export default function AdminLoginPage() {
           password: formData.password,
         });
 
-        // If 2FA is required, show OTP input
-        // For now, redirect directly to admin dashboard
+        // Admin login successful - redirect to admin dashboard
         if (response.access_token) {
           router.push("/admin");
         } else {
+          // If 2FA is required in the future
           setShowOTP(true);
         }
       } else {
-        // Second step: verify OTP (if implemented)
+        // Second step: verify OTP (if implemented in future)
         if (formData.otpCode.length === 6) {
           // TODO: Verify OTP with backend
           router.push("/admin");
@@ -52,7 +52,8 @@ export default function AdminLoginPage() {
         }
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Login failed. Please try again.");
+      console.error("Admin login error:", err);
+      setError(err.response?.data?.detail || err.message || "Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
@@ -87,7 +88,7 @@ export default function AdminLoginPage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="admin@hwc3d.com"
+                    placeholder="admin@sdmodels.com"
                     className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-gray-500 focus:border-yellow-500 focus:outline-none"
                     required
                   />

@@ -64,53 +64,53 @@ export default function Footer() {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20">
-        {/* Main Footer Content */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-6 mb-12">
-          {/* Brand Column - Full width on mobile */}
-          <div className="col-span-2 md:col-span-3 lg:col-span-2">
-            <Link href="/" className="inline-flex items-center gap-3 mb-4 group">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/50 group-hover:scale-110 transition-transform">
-                <span className="text-white font-black text-xl">SD</span>
-              </div>
-              <span className="text-2xl font-black bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-                SDModels
-              </span>
-            </Link>
-            <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-sm">
-              The next-generation 3D marketplace for creators and developers. Buy, sell, and preview premium 3D assets in real-time.
-            </p>
-            
-            {/* Social Links */}
-            <div className="flex flex-wrap gap-3">
-              {socialLinks.map((social) => (
-                <motion.a
-                  key={social.name}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`w-10 h-10 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg flex items-center justify-center text-gray-400 ${social.color} transition-all hover:scale-110 hover:border-orange-500/50 hover:shadow-lg hover:shadow-orange-500/20`}
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  title={social.name}
-                >
-                  <span className="text-lg">{social.icon}</span>
-                </motion.a>
-              ))}
+        {/* Brand Section - Full width on all screens */}
+        <div className="mb-10 sm:mb-12">
+          <Link href="/" className="inline-flex items-center gap-3 mb-4 group">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/50 group-hover:scale-110 transition-transform">
+              <span className="text-white font-black text-xl">SD</span>
             </div>
+            <span className="text-2xl font-black bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
+              SDModels
+            </span>
+          </Link>
+          <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-2xl">
+            The next-generation 3D marketplace for creators and developers. Buy, sell, and preview premium 3D assets in real-time.
+          </p>
+          
+          {/* Social Links */}
+          <div className="flex flex-wrap gap-3">
+            {socialLinks.map((social) => (
+              <motion.a
+                key={social.name}
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`w-10 h-10 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg flex items-center justify-center text-gray-400 ${social.color} transition-all hover:scale-110 hover:border-orange-500/50 hover:shadow-lg hover:shadow-orange-500/20`}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                title={social.name}
+              >
+                <span className="text-lg">{social.icon}</span>
+              </motion.a>
+            ))}
           </div>
+        </div>
 
+        {/* Main Footer Links - 2 columns on mobile, 3 on tablet, 5 on desktop */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-8 mb-12">
           {/* Marketplace */}
-          <div className="col-span-1">
-            <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
+          <div>
+            <h3 className="text-white font-bold text-sm mb-3 sm:mb-4 flex items-center gap-2">
               <span className="text-orange-400">🛒</span>
               Marketplace
             </h3>
-            <ul className="space-y-2.5">
+            <ul className="space-y-2 sm:space-y-2.5">
               {footerLinks.marketplace.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-gray-400 hover:text-orange-400 transition text-sm block hover:translate-x-1 duration-200"
+                    className="text-gray-400 hover:text-orange-400 transition text-xs sm:text-sm block hover:translate-x-1 duration-200"
                   >
                     {link.name}
                   </Link>
@@ -120,17 +120,17 @@ export default function Footer() {
           </div>
 
           {/* Creators */}
-          <div className="col-span-1">
-            <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
+          <div>
+            <h3 className="text-white font-bold text-sm mb-3 sm:mb-4 flex items-center gap-2">
               <span className="text-orange-400">🎨</span>
               Creators
             </h3>
-            <ul className="space-y-2.5">
+            <ul className="space-y-2 sm:space-y-2.5">
               {footerLinks.creators.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-gray-400 hover:text-orange-400 transition text-sm block hover:translate-x-1 duration-200"
+                    className="text-gray-400 hover:text-orange-400 transition text-xs sm:text-sm block hover:translate-x-1 duration-200"
                   >
                     {link.name}
                   </Link>
@@ -140,17 +140,17 @@ export default function Footer() {
           </div>
 
           {/* Community */}
-          <div className="col-span-1">
-            <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
+          <div>
+            <h3 className="text-white font-bold text-sm mb-3 sm:mb-4 flex items-center gap-2">
               <span className="text-orange-400">👥</span>
               Community
             </h3>
-            <ul className="space-y-2.5">
+            <ul className="space-y-2 sm:space-y-2.5">
               {footerLinks.community.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-gray-400 hover:text-orange-400 transition text-sm block hover:translate-x-1 duration-200"
+                    className="text-gray-400 hover:text-orange-400 transition text-xs sm:text-sm block hover:translate-x-1 duration-200"
                   >
                     {link.name}
                   </Link>
@@ -159,47 +159,44 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Company & Legal - Combined on mobile */}
-          <div className="col-span-2 md:col-span-1 space-y-8 md:space-y-0">
-            {/* Company */}
-            <div className="mb-8 md:mb-0">
-              <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
-                <span className="text-orange-400">🏢</span>
-                Company
-              </h3>
-              <ul className="space-y-2.5">
-                {footerLinks.company.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      href={link.href}
-                      className="text-gray-400 hover:text-orange-400 transition text-sm block hover:translate-x-1 duration-200"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* Company */}
+          <div>
+            <h3 className="text-white font-bold text-sm mb-3 sm:mb-4 flex items-center gap-2">
+              <span className="text-orange-400">🏢</span>
+              Company
+            </h3>
+            <ul className="space-y-2 sm:space-y-2.5">
+              {footerLinks.company.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="text-gray-400 hover:text-orange-400 transition text-xs sm:text-sm block hover:translate-x-1 duration-200"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-            {/* Legal - Show on mobile */}
-            <div className="md:hidden">
-              <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
-                <span className="text-orange-400">⚖️</span>
-                Legal
-              </h3>
-              <ul className="space-y-2.5">
-                {footerLinks.legal.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      href={link.href}
-                      className="text-gray-400 hover:text-orange-400 transition text-sm block hover:translate-x-1 duration-200"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* Legal */}
+          <div>
+            <h3 className="text-white font-bold text-sm mb-3 sm:mb-4 flex items-center gap-2">
+              <span className="text-orange-400">⚖️</span>
+              Legal
+            </h3>
+            <ul className="space-y-2 sm:space-y-2.5">
+              {footerLinks.legal.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="text-gray-400 hover:text-orange-400 transition text-xs sm:text-sm block hover:translate-x-1 duration-200"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
@@ -229,26 +226,13 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-slate-800">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-gray-400 text-sm text-center md:text-left">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="text-gray-400 text-xs sm:text-sm text-center sm:text-left order-2 sm:order-1">
               © {currentYear} SDModels. All rights reserved. Made with ❤️ for creators worldwide.
-            </div>
-            
-            {/* Legal Links - Desktop only */}
-            <div className="hidden md:flex items-center gap-6 text-sm">
-              {footerLinks.legal.slice(0, 4).map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className="text-gray-400 hover:text-orange-400 transition"
-                >
-                  {link.name}
-                </Link>
-              ))}
             </div>
 
             {/* Platform Fee Badge */}
-            <div className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg backdrop-blur-sm">
+            <div className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg backdrop-blur-sm order-1 sm:order-2">
               <span className="text-green-400 text-xs font-bold">✓</span>
               <span className="text-gray-300 text-xs font-semibold">Only 7.5% Fee</span>
             </div>

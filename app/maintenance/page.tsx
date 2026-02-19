@@ -52,15 +52,15 @@ export default function MaintenancePage() {
           <div className="pt-8 border-t border-slate-700">
             <p className="text-gray-400 mb-4">Stay updated:</p>
             <div className="flex justify-center gap-4">
-              <a href="https://twitter.com/hwc3d" className="text-blue-400 hover:text-blue-300 transition">
+              <a href="https://twitter.com/sdmodels" className="text-blue-400 hover:text-blue-300 transition">
                 Twitter
               </a>
               <span className="text-gray-600">•</span>
-              <a href="https://discord.gg/hwc3d" className="text-purple-400 hover:text-purple-300 transition">
+              <a href="https://discord.gg/sdmodels" className="text-purple-400 hover:text-purple-300 transition">
                 Discord
               </a>
               <span className="text-gray-600">•</span>
-              <a href="mailto:support@hwc3d.com" className="text-orange-400 hover:text-orange-300 transition">
+              <a href="mailto:support@sdmodels.com" className="text-orange-400 hover:text-orange-300 transition">
                 Email
               </a>
             </div>

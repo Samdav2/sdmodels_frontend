@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { adminApi } from '../admin';
 
 export function useAdminHomepage() {
   const [homepage, setHomepage] = useState({
@@ -20,54 +21,33 @@ export function useAdminHomepage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchHomepage = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        // TODO: Replace with actual API call
-        // const response = await api.admin.getHomepageSettings();
-        
-        // Mock data for now
-        setHomepage({
-          heroTitle: "High-End Web Cinematic 3D Models",
-          heroSubtitle: "Premium 3D assets for game developers, animators, and digital artists",
-          featuredCategories: [
-            { id: 1, name: "Characters", icon: "🤖", enabled: true },
-            { id: 2, name: "Vehicles", icon: "🚗", enabled: true },
-            { id: 3, name: "Environments", icon: "🏰", enabled: true },
-            { id: 4, name: "Weapons", icon: "⚔️", enabled: true },
-          ],
-          stats: {
-            totalModels: 1834,
-            activeCreators: 247,
-            downloadsToday: 1523,
-          },
-          ctas: {
-            primaryText: "Browse Models",
-            primaryLink: "/marketplace",
-            secondaryText: "Start Selling",
-            secondaryLink: "/upload",
-          },
-        });
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch homepage settings');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchHomepage = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await adminApi.getHomepage();
+      setHomepage(data || homepage);
+    } catch (err: any) {
+      console.error('Failed to fetch homepage:', err);
+      setError(err.response?.data?.detail || err.message || 'Failed to fetch homepage settings');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchHomepage();
   }, []);
 
   const updateHomepage = async (data: any) => {
     try {
-      // TODO: Call API
+      await adminApi.updateHomepage(data);
       setHomepage(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to update homepage');
+      setError(err.response?.data?.detail || err.message || 'Failed to update homepage');
+      throw err;
     }
   };
 
-  return { homepage, loading, error, updateHomepage };
+  return { homepage, loading, error, updateHomepage, setHomepage, refetch: fetchHomepage };
 }
