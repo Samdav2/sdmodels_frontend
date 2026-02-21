@@ -9,7 +9,8 @@ export interface RegisterData {
   email: string;
   username: string;
   password: string;
-  full_name: string;
+  full_name?: string;
+  user_type?: string;
 }
 
 export interface LoginData {

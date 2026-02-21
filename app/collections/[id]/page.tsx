@@ -53,7 +53,9 @@ export default function CollectionDetailPage({ params }: { params: { id: string 
     thumbnail: m.thumbnail_url,
     price: m.price,
     isFree: m.is_free,
-    creator: m.creator.username,
+    creator: m.creator?.username || 
+             m.creator?.full_name || 
+             `Creator #${m.creator_id || 'Unknown'}`,
     rating: m.rating,
     downloads: m.downloads,
   }));

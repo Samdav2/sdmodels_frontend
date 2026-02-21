@@ -24,7 +24,9 @@ function SearchContent() {
     models: models.map(m => ({
       id: m.id,
       title: m.title,
-      creator: m.creator.username,
+      creator: m.creator?.username || 
+               m.creator?.full_name || 
+               `Creator #${m.creator_id || 'Unknown'}`,
       thumbnail: m.thumbnail_url,
       price: m.price,
       likes: m.likes,

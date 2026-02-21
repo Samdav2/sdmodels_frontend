@@ -44,11 +44,17 @@ export const useAuth = () => {
     }
   };
 
-  const register = async (email: string, username: string, password: string, fullName: string) => {
+  const register = async (email: string, username: string, password: string, fullName?: string, userType?: string) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await authApi.register({ email, username, password, full_name: fullName });
+      const response = await authApi.register({ 
+        email, 
+        username, 
+        password, 
+        full_name: fullName,
+        user_type: userType 
+      });
       setUser(response.user);
       return response;
     } catch (err: any) {

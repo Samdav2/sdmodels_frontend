@@ -7,6 +7,7 @@ import { useModels } from "@/lib/api/hooks/useModels";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import { Model as ApiModel } from "@/lib/api/types";
+import ModelViewer3D from "@/components/ModelViewer3D";
 
 interface Model {
   id: string;
@@ -31,33 +32,46 @@ interface Model {
   isAnimated: boolean;
   textureResolution: string;
   uploadDate: string;
+  thumbnailUrl: string;
+  fileUrl: string;
 }
 
-// Helper to map API model to display format
-const mapApiModel = (apiModel: ApiModel): Model => ({
-  id: apiModel.id.toString(),
-  name: apiModel.title,
-  price: apiModel.price,
-  polyCount: apiModel.poly_count,
-  category: apiModel.category,
-  subcategory: "Sci-Fi",
-  trending: apiModel.is_featured,
-  downloads: apiModel.downloads,
-  likes: apiModel.likes,
-  rating: apiModel.rating,
-  author: {
-    name: apiModel.creator.username,
-    avatar: apiModel.creator.avatar_url || "🎨",
-    verified: apiModel.creator.is_verified_creator,
-    level: "Gold",
-  },
-  tags: apiModel.tags,
-  formats: apiModel.file_formats,
-  isRigged: apiModel.has_rigging,
-  isAnimated: apiModel.has_animations,
-  textureResolution: apiModel.texture_resolution || "4K",
-  uploadDate: apiModel.created_at,
-});
+// Helper to map API model to display format with robust error handling
+const mapApiModel = (apiModel: ApiModel): Model => {
+  // Safely extract creator info with fallbacks
+  const creatorName = apiModel.creator?.username || 
+                      apiModel.creator?.full_name || 
+                      `Creator #${apiModel.creator_id || 'Unknown'}`;
+  const creatorAvatar = apiModel.creator?.avatar_url || "🎨";
+  const creatorVerified = apiModel.creator?.is_verified_creator || false;
+
+  return {
+    id: apiModel.id.toString(),
+    name: apiModel.title || "Untitled Model",
+    price: apiModel.price || 0,
+    polyCount: apiModel.poly_count || 0,
+    category: apiModel.category || "Uncategorized",
+    subcategory: "Sci-Fi",
+    trending: apiModel.is_featured || false,
+    downloads: apiModel.downloads || 0,
+    likes: apiModel.likes || 0,
+    rating: apiModel.rating || 0,
+    author: {
+      name: creatorName,
+      avatar: creatorAvatar,
+      verified: creatorVerified,
+      level: "Gold",
+    },
+    tags: apiModel.tags || [],
+    formats: apiModel.file_formats || [],
+    isRigged: apiModel.has_rigging || false,
+    isAnimated: apiModel.has_animations || false,
+    textureResolution: apiModel.texture_resolution || "4K",
+    uploadDate: apiModel.created_at || new Date().toISOString(),
+    thumbnailUrl: apiModel.thumbnail_url || "",
+    fileUrl: apiModel.file_url || "",
+  };
+};
 
 export default function MarketplacePage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -81,8 +95,17 @@ export default function MarketplacePage() {
     search: searchQuery || undefined,
   });
 
-  // Map API models to display format
-  const allModels = apiModels.map(mapApiModel);
+  // Map API models to display format with error handling
+  const allModels = apiModels
+    .map((apiModel) => {
+      try {
+        return mapApiModel(apiModel);
+      } catch (error) {
+        console.error('Error mapping model:', apiModel.id, error);
+        return null;
+      }
+    })
+    .filter((model): model is Model => model !== null);
   
   // Track mouse for HUD glow effect
   useEffect(() => {
@@ -442,8 +465,23 @@ export default function MarketplacePage() {
                           {/* Spotlight Effect */}
                           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-orange-500/20 blur-3xl" />
                           
+                          {/* Model Thumbnail or Fallback Icon */}
+                          {model.thumbnailUrl ? (
+                            <img 
+                              src={model.thumbnailUrl} 
+                              alt={model.name}
+                              className="w-full h-full object-cover relative z-10"
+                              onError={(e) => {
+                                // Fallback to icon if image fails to load
+                                e.currentTarget.style.display = 'none';
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'block';
+                              }}
+                            />
+                          ) : null}
                           <motion.div 
                             className="text-7xl relative z-10"
+                            style={{ display: model.thumbnailUrl ? 'none' : 'block' }}
                             animate={{ 
                               rotateY: [0, 360],
                               y: [0, -10, 0],
@@ -554,7 +592,22 @@ export default function MarketplacePage() {
                   >
                     {/* Thumbnail */}
                     <div className="relative h-48 bg-gradient-to-br from-slate-950 to-slate-900 flex items-center justify-center overflow-hidden cursor-pointer">
-                      <div className="text-6xl group-hover:scale-110 transition-transform">
+                      {model.thumbnailUrl ? (
+                        <img 
+                          src={model.thumbnailUrl} 
+                          alt={model.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'block';
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className="text-6xl group-hover:scale-110 transition-transform"
+                        style={{ display: model.thumbnailUrl ? 'none' : 'block' }}
+                      >
                         {["🤖", "🚗", "🏰", "⚔️", "🐉", "🎮"][index % 6]}
                       </div>
                       
@@ -648,14 +701,24 @@ export default function MarketplacePage() {
                     {/* Pedestal Grid */}
                     <div className="absolute inset-0 bg-[linear-gradient(rgba(255,107,53,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,107,53,0.1)_1px,transparent_1px)] bg-[size:30px_30px]" />
                     
-                    {/* Model */}
-                    <motion.div
-                      className="text-8xl md:text-9xl relative z-10"
-                      animate={{ rotateY: [0, 360] }}
-                      transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                    >
-                      {["🤖", "🚗", "🏰", "⚔️", "🐉", "🎮"][parseInt(forgeModel.id.split("-")[1]) % 6]}
-                    </motion.div>
+                    {/* Real 3D Model or Fallback */}
+                    {forgeModel.fileUrl ? (
+                      <div className="w-full h-full relative z-10">
+                        <ModelViewer3D 
+                          modelUrl={forgeModel.fileUrl}
+                          fileFormat={forgeModel.formats[0]?.toLowerCase()}
+                          autoRotate={true}
+                        />
+                      </div>
+                    ) : (
+                      <motion.div
+                        className="text-8xl md:text-9xl relative z-10"
+                        animate={{ rotateY: [0, 360] }}
+                        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                      >
+                        {["🤖", "🚗", "🏰", "⚔️", "🐉", "🎮"][parseInt(forgeModel.id) % 6]}
+                      </motion.div>
+                    )}
 
                     {/* Spotlight Effect */}
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-orange-500/20 blur-3xl" />
@@ -663,13 +726,13 @@ export default function MarketplacePage() {
 
                   {/* Lighting Controls */}
                   <div className="mt-4 space-y-2">
-                    <button className="w-full px-4 py-3 bg-purple-600/20 border border-purple-500 text-purple-400 rounded-lg hover:bg-purple-600/30 transition font-semibold text-sm">
+                    <button type="button" className="w-full px-4 py-3 bg-purple-600/20 border border-purple-500 text-purple-400 rounded-lg hover:bg-purple-600/30 transition font-semibold text-sm">
                       🌆 Cyberpunk Lighting
                     </button>
-                    <button className="w-full px-4 py-3 bg-yellow-600/20 border border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-600/30 transition font-semibold text-sm">
+                    <button type="button" className="w-full px-4 py-3 bg-yellow-600/20 border border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-600/30 transition font-semibold text-sm">
                       ☀️ Daylight Mode
                     </button>
-                    <button className="w-full px-4 py-3 bg-red-600/20 border border-red-500 text-red-400 rounded-lg hover:bg-red-600/30 transition font-semibold text-sm">
+                    <button type="button" className="w-full px-4 py-3 bg-red-600/20 border border-red-500 text-red-400 rounded-lg hover:bg-red-600/30 transition font-semibold text-sm">
                       🔴 Mars Red
                     </button>
                   </div>

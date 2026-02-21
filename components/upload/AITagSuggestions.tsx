@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface AITagSuggestionsProps {
@@ -68,9 +68,16 @@ export default function AITagSuggestions({ fileName, onTagsChange }: AITagSugges
     return () => clearTimeout(timer);
   }, [fileName]);
 
+  // Use ref to prevent infinite loops
+  const onTagsChangeRef = useRef(onTagsChange);
+  
   useEffect(() => {
-    onTagsChange(selectedTags);
-  }, [selectedTags, onTagsChange]);
+    onTagsChangeRef.current = onTagsChange;
+  }, [onTagsChange]);
+
+  useEffect(() => {
+    onTagsChangeRef.current(selectedTags);
+  }, [selectedTags]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -119,6 +126,7 @@ export default function AITagSuggestions({ fileName, onTagsChange }: AITagSugges
                 return (
                   <motion.button
                     key={tag}
+                    type="button"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.05 }}
@@ -149,6 +157,7 @@ export default function AITagSuggestions({ fileName, onTagsChange }: AITagSugges
                 className="flex-1 px-4 py-2 bg-slate-950/50 border-2 border-slate-700/50 rounded-lg text-white text-sm focus:outline-none focus:border-orange-500 transition"
               />
               <button
+                type="button"
                 onClick={addCustomTag}
                 className="px-6 py-2 bg-orange-500/20 border-2 border-orange-500 text-orange-400 rounded-lg hover:bg-orange-500/30 transition font-medium"
               >
@@ -180,6 +189,7 @@ export default function AITagSuggestions({ fileName, onTagsChange }: AITagSugges
                     >
                       <span className="text-sm text-orange-400">{tag}</span>
                       <button
+                        type="button"
                         onClick={() => toggleTag(tag)}
                         className="text-orange-400 hover:text-orange-300 transition"
                       >

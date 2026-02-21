@@ -11,7 +11,7 @@ import ErrorMessage from "@/components/ErrorMessage";
 export default function PublicViewPage({ params }: { params: { id: string } }) {
   // Fetch model from API
   const { model: apiModel, loading, error: apiError } = useModel(params.id);
-  
+
   const [viewerSettings, setViewerSettings] = useState({
     autoRotate: true,
     wireframe: false,
@@ -54,15 +54,35 @@ export default function PublicViewPage({ params }: { params: { id: string } }) {
     );
   }
 
+  // Extract file format from API data or URL
+  const getFileFormat = (): string => {
+    // Try from file_formats array first
+    if (apiModel.file_formats && apiModel.file_formats.length > 0) {
+      return apiModel.file_formats[0].toLowerCase().replace('.', '');
+    }
+    // Fallback: extract from file_url
+    if (apiModel.file_url) {
+      const urlPath = apiModel.file_url.split('?')[0];
+      const ext = urlPath.split('.').pop()?.toLowerCase() || '';
+      if (['glb', 'gltf', 'fbx', 'obj', 'stl', 'dae'].includes(ext)) {
+        return ext;
+      }
+    }
+    return 'glb'; // Safe default
+  };
+
   // Map API model to component format
   const model = {
     id: apiModel.id.toString(),
     name: apiModel.title,
-    artist: apiModel.creator.username,
-    artistVerified: apiModel.creator.is_verified,
+    artist: apiModel.creator?.username ||
+      apiModel.creator?.full_name ||
+      `Creator #${apiModel.creator_id || 'Unknown'}`,
+    artistVerified: apiModel.creator?.is_verified || false,
     views: apiModel.views,
     downloads: apiModel.downloads,
     modelUrl: apiModel.file_url,
+    fileFormat: getFileFormat(),
   };
 
   // Initialize like count from API
@@ -73,34 +93,34 @@ export default function PublicViewPage({ params }: { params: { id: string } }) {
   const handleLike = () => {
     setLiked(!liked);
     setLikeCount(liked ? likeCount - 1 : likeCount + 1);
-    
+
     setNotification({
       isOpen: true,
       type: liked ? "info" : "success",
       title: liked ? "Removed Like" : "Liked!",
       message: liked ? "Removed from your favorites" : "Added to your favorites!",
     });
-    
+
     setTimeout(() => setNotification(prev => ({ ...prev, isOpen: false })), 2000);
   };
 
   const handleShare = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url);
-    
+
     setNotification({
       isOpen: true,
       type: "success",
       title: "Link Copied!",
       message: "Share this amazing model with your friends!",
     });
-    
+
     setTimeout(() => setNotification(prev => ({ ...prev, isOpen: false })), 2000);
   };
 
   const handleComment = () => {
     if (!commentText.trim()) return;
-    
+
     const newComment = {
       id: comments.length + 1,
       user: "You",
@@ -109,17 +129,17 @@ export default function PublicViewPage({ params }: { params: { id: string } }) {
       time: "Just now",
       likes: 0,
     };
-    
+
     setComments([newComment, ...comments]);
     setCommentText("");
-    
+
     setNotification({
       isOpen: true,
       type: "success",
       title: "Comment Posted!",
       message: "Your comment has been added successfully.",
     });
-    
+
     setTimeout(() => setNotification(prev => ({ ...prev, isOpen: false })), 2000);
   };
 
@@ -136,14 +156,14 @@ export default function PublicViewPage({ params }: { params: { id: string } }) {
       {/* Top Navigation */}
       <nav className="relative z-50 border-b border-orange-500/20 bg-slate-900/80 backdrop-blur-xl">
         <div className="max-w-[2000px] mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition group"
           >
             <span className="text-xl group-hover:-translate-x-1 transition-transform">←</span>
             <span className="font-semibold">SDModels</span>
           </Link>
-          
+
           <div className="flex items-center gap-3">
             <Link
               href="/community"
@@ -164,11 +184,12 @@ export default function PublicViewPage({ params }: { params: { id: string } }) {
       {/* Main Content */}
       <div className="max-w-[2000px] mx-auto">
         <div className="grid lg:grid-cols-3 gap-0 min-h-[calc(100vh-80px)]">
-          
+
           {/* Left - Model Viewer (2/3) */}
           <div className="lg:col-span-2 relative bg-slate-950">
-            <AdvancedModelViewer 
+            <AdvancedModelViewer
               modelUrl={model.modelUrl}
+              fileFormat={model.fileFormat}
               settings={viewerSettings}
               selectedAnimation={null}
             />
@@ -190,7 +211,7 @@ export default function PublicViewPage({ params }: { params: { id: string } }) {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Stats */}
                 <div className="flex gap-4 text-xs text-gray-400">
                   <div className="flex items-center gap-1">
@@ -210,11 +231,10 @@ export default function PublicViewPage({ params }: { params: { id: string } }) {
               <div className="flex items-center gap-3 bg-slate-900/90 backdrop-blur-xl border border-orange-500/30 rounded-full px-6 py-3 shadow-2xl">
                 <button
                   onClick={handleLike}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition ${
-                    liked
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition ${liked
                       ? "bg-red-500 text-white"
                       : "bg-slate-800 text-gray-400 hover:bg-slate-700"
-                  }`}
+                    }`}
                 >
                   <span className="text-xl">{liked ? "❤️" : "🤍"}</span>
                   <span className="font-semibold">{likeCount.toLocaleString()}</span>
@@ -242,7 +262,7 @@ export default function PublicViewPage({ params }: { params: { id: string } }) {
           {/* Right - Comments & Info (1/3) */}
           <div className="lg:col-span-1 bg-slate-900/50 backdrop-blur-xl border-l border-orange-500/20 overflow-y-auto max-h-[calc(100vh-80px)]">
             <div className="p-6 space-y-6">
-              
+
               {/* Comment Input */}
               <div className="bg-slate-800/50 border border-orange-500/20 rounded-xl p-4">
                 <h3 className="text-white font-bold mb-3 flex items-center gap-2">
@@ -271,10 +291,10 @@ export default function PublicViewPage({ params }: { params: { id: string } }) {
                   <span>💭</span>
                   <span>Comments ({comments.length})</span>
                 </h3>
-                
+
                 <div className="space-y-4">
                   {comments.map((comment) => (
-                    <div 
+                    <div
                       key={comment.id}
                       className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 hover:border-orange-500/30 transition"
                     >

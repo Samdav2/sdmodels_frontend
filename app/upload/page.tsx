@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import FileDropZone from "@/components/upload/FileDropZone";
 import MeshSafetyScanner from "@/components/upload/MeshSafetyScanner";
 import AITagSuggestions from "@/components/upload/AITagSuggestions";
+import ModelPreview from "@/components/upload/ModelPreview";
+import ModelDetailsForm from "@/components/upload/ModelDetailsForm";
+import UploadModal from "@/components/upload/UploadModal";
+import ThumbnailCapture from "@/components/upload/ThumbnailCapture";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUpload } from "@/lib/api/hooks/useUpload";
 import { useRouter } from "next/navigation";
@@ -34,14 +38,27 @@ export default function UploadPage() {
   const router = useRouter();
   const { uploadModel, uploading, progress, error } = useUpload();
   const [files, setFiles] = useState<UploadedFile[]>([]);
-  const [currentStep, setCurrentStep] = useState<"upload" | "scan" | "details" | "complete">("upload");
+  const [currentStep, setCurrentStep] = useState<"upload" | "scan" | "preview" | "details" | "complete">("upload");
   const [optimizeMesh, setOptimizeMesh] = useState(false);
   const [generateThumbnail, setGenerateThumbnail] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     price: "",
     description: "",
+    category: "Characters",
     tags: [] as string[],
+    thumbnail: "" as string,
+  });
+  const [modal, setModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "error" | "warning" | "info" | "success";
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
   });
 
   const handleFilesAdded = (newFiles: File[]) => {
@@ -85,7 +102,7 @@ export default function UploadPage() {
             neuralThumbnail: generateThumbnail ? "generated" : undefined,
           }))
         );
-        setCurrentStep("details");
+        setCurrentStep("preview");
       }, 3000);
     }, 1500);
   };
@@ -106,14 +123,70 @@ export default function UploadPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Memoize the form data change handler to prevent re-renders
+  const handleFormDataChange = useCallback((data: { name: string; price: string; description: string; category: string }) => {
+    setFormData(prev => ({ ...prev, ...data }));
+  }, []);
+
+  // Memoize the tags change handler to prevent infinite loops
+  const handleTagsChange = useCallback((tags: string[]) => {
+    setFormData(prev => ({ ...prev, tags }));
+  }, []);
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     
     if (files.length === 0) return;
+    
+    // Get current form data and validate with proper trimming
+    const trimmedName = (formData.name || "").trim();
+    const trimmedDescription = (formData.description || "").trim();
+    const priceValue = formData.price ? parseFloat(formData.price) : -1;
+    
+    console.log('Validation check:', {
+      name: trimmedName,
+      nameLength: trimmedName.length,
+      description: trimmedDescription,
+      descriptionLength: trimmedDescription.length,
+      price: priceValue
+    });
+    
+    if (!trimmedName || trimmedName.length < 3) {
+      setModal({
+        isOpen: true,
+        title: "Invalid Model Name",
+        message: `Please enter a model name with at least 3 characters. Current: ${trimmedName.length}`,
+        type: "warning",
+      });
+      return;
+    }
+    
+    if (!trimmedDescription || trimmedDescription.length < 20) {
+      setModal({
+        isOpen: true,
+        title: "Invalid Description",
+        message: `Please enter a description with at least 20 characters. Current: ${trimmedDescription.length}`,
+        type: "warning",
+      });
+      return;
+    }
+    
+    if (priceValue < 0) {
+      setModal({
+        isOpen: true,
+        title: "Invalid Price",
+        message: "Please enter a valid price (0 or higher).",
+        type: "warning",
+      });
+      return;
+    }
     
     // Upload to backend API
     const metadata = {
       ...formData,
+      name: trimmedName,
+      description: trimmedDescription,
+      thumbnail: formData.thumbnail, // Pass thumbnail data
       optimizeMesh,
       generateThumbnail,
       meshData: files[0].meshData,
@@ -124,8 +197,12 @@ export default function UploadPage() {
     if (result.success) {
       setCurrentStep("complete");
     } else {
-      console.error("Upload failed:", error);
-      // Show error notification
+      setModal({
+        isOpen: true,
+        title: "Upload Failed",
+        message: result.error || error || "An error occurred during upload. Please try again.",
+        type: "error",
+      });
     }
   };
 
@@ -141,9 +218,9 @@ export default function UploadPage() {
         {/* Progress Steps */}
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center justify-between sm:justify-center gap-2 sm:gap-4 overflow-x-auto pb-2">
-            {["upload", "scan", "details", "complete"].map((step, index) => {
+            {["upload", "scan", "preview", "details", "complete"].map((step, index) => {
               const isActive = currentStep === step;
-              const isComplete = ["upload", "scan", "details", "complete"].indexOf(currentStep) > index;
+              const isComplete = ["upload", "scan", "preview", "details", "complete"].indexOf(currentStep) > index;
               
               return (
                 <div key={step} className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
@@ -167,7 +244,7 @@ export default function UploadPage() {
                       {step}
                     </span>
                   </div>
-                  {index < 3 && (
+                  {index < 4 && (
                     <div
                       className={`w-8 sm:w-16 h-0.5 ${
                         isComplete ? "bg-green-500" : "bg-slate-800"
@@ -206,6 +283,78 @@ export default function UploadPage() {
             </motion.div>
           )}
 
+          {currentStep === "preview" && (
+            <motion.div
+              key="preview"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="bg-slate-900/50 border border-orange-500/30 rounded-xl p-6 backdrop-blur mb-6">
+                <h2 className="text-2xl font-bold text-white mb-4">Preview Your Model</h2>
+                <p className="text-slate-400 mb-6">Review your 3D model before adding details. Use the controls to inspect it from different angles.</p>
+                
+                {/* 3D Viewer */}
+                <div className="aspect-video bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl border border-slate-700 overflow-hidden mb-6">
+                  <ModelPreview
+                    file={files[0]?.file || null}
+                    modelName={formData.name || "Your Model"}
+                    price={formData.price || "0.00"}
+                    description={formData.description || "Model preview"}
+                    category={formData.category}
+                    tags={formData.tags}
+                    polyCount={files[0]?.meshData?.polyCount}
+                  />
+                </div>
+
+                {/* Quick Stats */}
+                {files[0]?.meshData && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-slate-800/50 rounded-lg p-4">
+                      <div className="text-xs text-slate-500 mb-1">Poly Count</div>
+                      <div className="text-white font-bold">{files[0].meshData.polyCount.toLocaleString()}</div>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-lg p-4">
+                      <div className="text-xs text-slate-500 mb-1">Rigging Score</div>
+                      <div className={`font-bold ${
+                        files[0].meshData.riggingScore && files[0].meshData.riggingScore >= 85 ? "text-green-400" : "text-yellow-400"
+                      }`}>
+                        {files[0].meshData.riggingScore || 0}/100
+                      </div>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-lg p-4">
+                      <div className="text-xs text-slate-500 mb-1">File Format</div>
+                      <div className="text-purple-400 font-bold">{files[0].file.name.split('.').pop()?.toUpperCase()}</div>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-lg p-4">
+                      <div className="text-xs text-slate-500 mb-1">File Size</div>
+                      <div className="text-blue-400 font-bold">{(files[0].file.size / 1024 / 1024).toFixed(2)} MB</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex justify-between gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep("scan")}
+                    className="px-8 py-3 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition font-semibold"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep("details")}
+                    className="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition font-semibold shadow-lg shadow-orange-500/50"
+                  >
+                    Next: Add Details →
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {currentStep === "details" && (
             <motion.div
               key="details"
@@ -214,64 +363,57 @@ export default function UploadPage() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
+              {/* Upload Progress Overlay */}
+              {uploading && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                  <div className="bg-slate-900 border-2 border-orange-500 rounded-2xl p-8 max-w-md w-full mx-4">
+                    <div className="text-center mb-6">
+                      <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                        <span className="text-4xl">⬆️</span>
+                      </div>
+                      <h3 className="text-2xl font-bold text-white mb-2">Uploading Model...</h3>
+                      <p className="text-slate-400">Please don't close this window</p>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="text-slate-400">Progress</span>
+                          <span className="text-orange-400 font-bold">{progress.percentage}%</span>
+                        </div>
+                        <div className="h-3 bg-slate-950 rounded-full overflow-hidden">
+                          <motion.div
+                            className="h-full bg-gradient-to-r from-orange-500 to-red-600"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progress.percentage}%` }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-slate-500 space-y-1">
+                        <p className={progress.percentage >= 40 ? "text-green-400" : ""}>
+                          {progress.percentage >= 40 ? "✓" : "○"} {progress.step || 'Uploading file...'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Left Column - Form */}
                   <div className="space-y-6">
-                    <div className="bg-slate-900/50 border border-orange-500/30 rounded-xl p-6 backdrop-blur">
-                      <h2 className="text-xl font-bold text-white mb-6">Model Details</h2>
-
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">
-                            Model Name
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full px-4 py-3 bg-slate-950/50 border-2 border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-orange-500 transition"
-                            placeholder="Cyberpunk Vehicle"
-                            required
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">
-                            Price (USD)
-                          </label>
-                          <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
-                              $
-                            </span>
-                            <input
-                              type="number"
-                              value={formData.price}
-                              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                              step="0.01"
-                              min="0"
-                              className="w-full pl-10 pr-4 py-3 bg-slate-950/50 border-2 border-slate-700/50 rounded-lg text-white font-mono focus:outline-none focus:border-orange-500 transition"
-                              placeholder="29.99"
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">
-                            Description
-                          </label>
-                          <textarea
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            rows={4}
-                            className="w-full px-4 py-3 bg-slate-950/50 border-2 border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-orange-500 transition resize-none"
-                            placeholder="Describe your model..."
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
+                    <ModelDetailsForm
+                      initialData={{
+                        name: formData.name,
+                        price: formData.price,
+                        description: formData.description,
+                        category: formData.category,
+                      }}
+                      onFormDataChange={handleFormDataChange}
+                    />
 
                     {/* Mesh Info with Smart-Rig Validator */}
                     {files[0]?.meshData && (
@@ -380,25 +522,27 @@ export default function UploadPage() {
                             )}
                           </div>
                           <div className="space-y-3">
-                            <div className="aspect-video bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-lg border border-yellow-500/30 flex items-center justify-center">
-                              <span className="text-4xl">🎬</span>
-                            </div>
+                            <ThumbnailCapture 
+                              file={files[0]?.file || null}
+                              onThumbnailGenerated={(thumb) => {
+                                setFormData(prev => ({ ...prev, thumbnail: thumb }));
+                              }}
+                              onError={(message) => {
+                                setModal({
+                                  isOpen: true,
+                                  title: "Invalid Thumbnail",
+                                  message: message,
+                                  type: "warning",
+                                });
+                              }}
+                            />
                             <p className="text-xs text-slate-400">
-                              {files[0].neuralThumbnail ? (
-                                "✓ AI-generated cinematic lighting applied. Your thumbnail looks professional!"
+                              {formData.thumbnail ? (
+                                "✓ Thumbnail uploaded successfully!"
                               ) : (
-                                "AI will generate a cinematic thumbnail with professional lighting automatically."
+                                "Upload a custom thumbnail image for your model (JPG, PNG, max 5MB)"
                               )}
                             </p>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={generateThumbnail}
-                                onChange={(e) => setGenerateThumbnail(e.target.checked)}
-                                className="w-4 h-4 accent-yellow-500"
-                              />
-                              <span className="text-sm text-slate-300">Auto-generate cinematic thumbnail</span>
-                            </label>
                           </div>
                         </div>
 
@@ -452,7 +596,7 @@ export default function UploadPage() {
                   <div>
                     <AITagSuggestions
                       fileName={files[0]?.file.name || ""}
-                      onTagsChange={(tags: string[]) => setFormData({ ...formData, tags })}
+                      onTagsChange={handleTagsChange}
                     />
                   </div>
                 </div>
@@ -461,16 +605,16 @@ export default function UploadPage() {
                 <div className="flex justify-end gap-4">
                   <button
                     type="button"
-                    onClick={() => setCurrentStep("upload")}
+                    onClick={() => setCurrentStep("preview")}
                     className="px-8 py-3 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition font-semibold"
                   >
-                    Back
+                    ← Back to Preview
                   </button>
                   <button
                     type="submit"
-                    className="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition font-semibold shadow-lg shadow-orange-500/50"
+                    className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-400 hover:to-emerald-500 transition font-semibold shadow-lg shadow-green-500/50"
                   >
-                    Publish Model
+                    ✓ Publish Model
                   </button>
                 </div>
               </form>
@@ -509,7 +653,7 @@ export default function UploadPage() {
                     onClick={() => {
                       setFiles([]);
                       setCurrentStep("upload");
-                      setFormData({ name: "", price: "", description: "", tags: [] });
+                      setFormData({ name: "", price: "", description: "", category: "Characters", tags: [], thumbnail: "" });
                     }}
                     className="px-8 py-3 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition font-semibold"
                   >
@@ -520,6 +664,15 @@ export default function UploadPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Custom Modal */}
+        <UploadModal
+          isOpen={modal.isOpen}
+          onClose={() => setModal({ ...modal, isOpen: false })}
+          title={modal.title}
+          message={modal.message}
+          type={modal.type}
+        />
       </DashboardLayout>
     </ProtectedRoute>
   );

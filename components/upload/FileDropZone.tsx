@@ -7,7 +7,7 @@ interface FileDropZoneProps {
   onFilesAdded: (files: File[]) => void;
 }
 
-const SUPPORTED_FORMATS = [".glb", ".gltf", ".fbx", ".obj", ".blend", ".max"];
+const SUPPORTED_FORMATS = [".glb", ".gltf", ".fbx", ".obj", ".stl", ".dae"];
 
 export default function FileDropZone({ onFilesAdded }: FileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -197,10 +197,10 @@ export default function FileDropZone({ onFilesAdded }: FileDropZoneProps) {
             <span className="text-2xl">⚡</span>
             <div className="flex-1">
               <h4 className="text-sm font-semibold text-orange-400 mb-1">
-                Multi-Format Processing
+                Multi-Format Support
               </h4>
               <p className="text-xs text-slate-300">
-                Upload .blend or .max files and we'll automatically convert them to .glb, .fbx, and .obj formats using headless Blender.
+                Upload 3D models in GLB, GLTF, FBX, OBJ, STL, or DAE (Collada) format. All formats are viewable with real-time 3D preview.
               </p>
             </div>
           </div>

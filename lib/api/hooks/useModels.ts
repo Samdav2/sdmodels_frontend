@@ -38,9 +38,11 @@ export function useModels(options: UseModelsOptions = {}) {
         // Make actual API call
         const data = await api.models.getModels(filters);
         
-        setModels(data.items || []);
+        // Backend returns 'models' not 'items'
+        const modelsArray = (data as any).models || data.items || [];
+        setModels(modelsArray);
         setTotal(data.total || 0);
-        setPages(data.pages || 0);
+        setPages(data.pages || Math.ceil((data.total || 0) / (filters.limit || 20)));
       } catch (err: any) {
         setError(err.message || 'Failed to fetch models');
         setModels([]);

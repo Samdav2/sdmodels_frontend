@@ -73,11 +73,15 @@ export default function AuthTerminal({ initialMode = 'login' }: AuthTerminalProp
         // Generate username from email if not provided
         const username = formData.email.split('@')[0];
         
+        // Map selectedPath to user_type for backend
+        const userType = selectedPath === 'modeller' ? 'seller' : selectedPath === 'buyer' ? 'buyer' : 'buyer';
+        
         await register(
           formData.email,
           username,
           formData.password,
-          formData.name || ''
+          formData.name || '',
+          userType
         );
         setAuthState('success');
         

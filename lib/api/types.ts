@@ -41,7 +41,8 @@ export interface Model {
   has_rigging: boolean;
   has_materials: boolean;
   has_textures: boolean;
-  creator: User;
+  creator?: User;
+  creator_id?: number;
   views: number;
   likes: number;
   downloads: number;
@@ -49,6 +50,7 @@ export interface Model {
   rating_count: number;
   status: 'pending' | 'approved' | 'rejected';
   is_featured: boolean;
+  is_published?: boolean;
   created_at: string;
   updated_at: string;
 }

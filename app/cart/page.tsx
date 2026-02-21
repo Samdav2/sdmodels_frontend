@@ -30,7 +30,9 @@ export default function CartPage() {
     id: item.id,
     modelId: item.model.id,
     title: item.model.title,
-    creator: item.model.creator.username,
+    creator: item.model.creator?.username || 
+             item.model.creator?.full_name || 
+             `Creator #${item.model.creator_id || 'Unknown'}`,
     thumbnail: item.model.thumbnail_url,
     price: item.model.price,
     formats: item.model.file_formats,
