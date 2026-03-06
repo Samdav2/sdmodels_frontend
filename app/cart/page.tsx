@@ -9,7 +9,7 @@ import ErrorMessage from "@/components/ErrorMessage";
 
 export default function CartPage() {
   const { items: apiItems, loading, error, removeItem } = useCart();
-  
+
   const [notification, setNotification] = useState<{
     isOpen: boolean;
     type: NotificationType;
@@ -30,9 +30,9 @@ export default function CartPage() {
     id: item.id,
     modelId: item.model.id,
     title: item.model.title,
-    creator: item.model.creator?.username || 
-             item.model.creator?.full_name || 
-             `Creator #${item.model.creator_id || 'Unknown'}`,
+    creator: item.model.creator?.username ||
+      item.model.creator?.full_name ||
+      `Creator #${item.model.creator_id || 'Unknown'}`,
     thumbnail: item.model.thumbnail_url,
     price: item.model.price,
     formats: item.model.file_formats,
@@ -44,7 +44,7 @@ export default function CartPage() {
   const discount = appliedCoupon ? subtotal * 0.1 : 0; // 10% discount
   const total = subtotal + platformFee - discount;
 
-  const handleRemoveItem = (id: number) => {
+  const handleRemoveItem = (id: string | number) => {
     setCartItems(cartItems.filter(item => item.id !== id));
     showNotification("info", "Item Removed", "Item has been removed from your cart.");
   };
@@ -74,14 +74,14 @@ export default function CartPage() {
       {/* Top Navigation */}
       <nav className="relative z-50 border-b border-orange-500/20 bg-slate-900/80 backdrop-blur-xl">
         <div className="max-w-[2000px] mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-          <Link 
-            href="/marketplace" 
+          <Link
+            href="/marketplace"
             className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition group"
           >
             <span className="text-xl group-hover:-translate-x-1 transition-transform">←</span>
             <span className="font-semibold">Continue Shopping</span>
           </Link>
-          
+
           <div className="flex items-center gap-3">
             <span className="text-white font-semibold">{cartItems.length} Items</span>
           </div>
@@ -105,12 +105,12 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="grid lg:grid-cols-3 gap-8">
-            
+
             {/* Left - Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               <div className="bg-slate-900/50 border border-orange-500/20 rounded-xl p-6">
                 <h1 className="text-3xl font-black text-white mb-6">Shopping Cart</h1>
-                
+
                 <div className="space-y-4">
                   {cartItems.map((item) => (
                     <div
@@ -132,7 +132,7 @@ export default function CartPage() {
                             {item.title}
                           </Link>
                           <p className="text-gray-400 text-sm mb-2">by {item.creator}</p>
-                          
+
                           <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-3">
                             <span>📦 {item.formats.join(", ")}</span>
                             <span>•</span>
@@ -197,13 +197,13 @@ export default function CartPage() {
             <div className="lg:col-span-1">
               <div className="bg-slate-900/50 border border-orange-500/20 rounded-xl p-6 sticky top-6">
                 <h2 className="text-2xl font-black text-white mb-6">Order Summary</h2>
-                
+
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-gray-400">
                     <span>Subtotal ({cartItems.length} items)</span>
                     <span className="text-white font-semibold">${subtotal.toFixed(2)}</span>
                   </div>
-                  
+
                   <div className="flex justify-between text-gray-400">
                     <span>Platform Fee (7.5%)</span>
                     <span className="text-white font-semibold">${platformFee.toFixed(2)}</span>

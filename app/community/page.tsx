@@ -13,7 +13,7 @@ export default function CommunityPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCommunity, setSelectedCommunity] = useState<number | null>(null);
   const [messageText, setMessageText] = useState("");
-  
+
   // Create community form state
   const [communityName, setCommunityName] = useState("");
   const [communityDescription, setCommunityDescription] = useState("");
@@ -46,7 +46,7 @@ export default function CommunityPage() {
     search: searchQuery || undefined,
     limit: 20,
     _refresh: refreshKey, // Force refetch when this changes
-  });
+  } as any);
 
   const communities = apiCommunities.map(c => ({
     id: c.id,
@@ -68,7 +68,7 @@ export default function CommunityPage() {
     try {
       setCreating(true);
       setCreateError(null);
-      
+
       await communitiesApi.createCommunity({
         name: communityName,
         description: communityDescription,
@@ -90,13 +90,13 @@ export default function CommunityPage() {
       setCommunityDescription("");
       setCommunityCategory("Gaming");
       setCommunityIcon("🎮");
-      
+
       // Switch to discover tab
       setActiveTab('discover');
-      
+
       // Show success message
       showNotification("success", "Community Created!", "Your community has been created successfully.");
-      
+
       // Trigger refresh
       setRefreshKey(prev => prev + 1);
     } catch (err: any) {
@@ -148,14 +148,14 @@ export default function CommunityPage() {
       {/* Top Navigation */}
       <nav className="relative z-50 border-b border-orange-500/20 bg-slate-900/80 backdrop-blur-xl">
         <div className="max-w-[2000px] mx-auto px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition group"
           >
             <span className="text-lg sm:text-xl group-hover:-translate-x-1 transition-transform">←</span>
             <span className="font-semibold text-sm sm:text-base">SDModels Community</span>
           </Link>
-          
+
           <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <Link
               href="/support"
@@ -182,7 +182,7 @@ export default function CommunityPage() {
           <p className="text-base sm:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
             Connect with 50,000+ 3D artists, share your work, and learn from the best
           </p>
-          
+
           {/* Search Bar */}
           <div className="max-w-2xl mx-auto px-4">
             <div className="relative">
@@ -204,38 +204,35 @@ export default function CommunityPage() {
       {/* Main Content */}
       <div className="max-w-[2000px] mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
-          
+
           {/* Left - Communities List */}
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Tabs */}
             <div className="flex gap-1 sm:gap-2 bg-slate-900/50 p-1 sm:p-2 rounded-xl border border-orange-500/20">
               <button
                 onClick={() => setActiveTab('discover')}
-                className={`flex-1 py-2 sm:py-3 rounded-lg font-semibold text-xs sm:text-base transition ${
-                  activeTab === 'discover'
+                className={`flex-1 py-2 sm:py-3 rounded-lg font-semibold text-xs sm:text-base transition ${activeTab === 'discover'
                     ? 'bg-purple-500 text-white'
                     : 'text-gray-400 hover:text-white'
-                }`}
+                  }`}
               >
                 🌟 <span className="hidden sm:inline">Discover</span>
               </button>
               <button
                 onClick={() => setActiveTab('my-communities')}
-                className={`flex-1 py-2 sm:py-3 rounded-lg font-semibold text-xs sm:text-base transition ${
-                  activeTab === 'my-communities'
+                className={`flex-1 py-2 sm:py-3 rounded-lg font-semibold text-xs sm:text-base transition ${activeTab === 'my-communities'
                     ? 'bg-purple-500 text-white'
                     : 'text-gray-400 hover:text-white'
-                }`}
+                  }`}
               >
                 👥 <span className="hidden sm:inline">My Communities</span>
               </button>
               <button
                 onClick={() => setActiveTab('create')}
-                className={`flex-1 py-2 sm:py-3 rounded-lg font-semibold text-xs sm:text-base transition ${
-                  activeTab === 'create'
+                className={`flex-1 py-2 sm:py-3 rounded-lg font-semibold text-xs sm:text-base transition ${activeTab === 'create'
                     ? 'bg-purple-500 text-white'
                     : 'text-gray-400 hover:text-white'
-                }`}
+                  }`}
               >
                 ➕ <span className="hidden sm:inline">Create</span>
               </button>
@@ -257,10 +254,10 @@ export default function CommunityPage() {
                       {activeTab === 'my-communities' ? 'No Communities Yet' : 'No Communities Found'}
                     </h3>
                     <p className="text-gray-400 mb-6">
-                      {activeTab === 'my-communities' 
-                        ? 'Join some communities to see them here!' 
-                        : searchQuery 
-                          ? 'Try a different search term' 
+                      {activeTab === 'my-communities'
+                        ? 'Join some communities to see them here!'
+                        : searchQuery
+                          ? 'Try a different search term'
                           : 'Be the first to create a community!'}
                     </p>
                     {activeTab === 'discover' && (
@@ -291,7 +288,7 @@ export default function CommunityPage() {
                               <p className="text-gray-400 text-sm line-clamp-2">{community.description}</p>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4 text-sm text-gray-400">
                               <span className="flex items-center gap-1">
@@ -302,12 +299,12 @@ export default function CommunityPage() {
                                 {community.category}
                               </span>
                             </div>
-                            
+
                             <button
                               onClick={async (e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                
+
                                 try {
                                   if (community.isJoined) {
                                     // Leave community
@@ -318,7 +315,7 @@ export default function CommunityPage() {
                                     await communitiesApi.joinCommunity(community.id);
                                     showNotification("success", "Joined Community", `Welcome to ${community.name}!`);
                                   }
-                                  
+
                                   // Refresh communities list
                                   setRefreshKey(prev => prev + 1);
                                 } catch (error: any) {
@@ -326,11 +323,10 @@ export default function CommunityPage() {
                                   showNotification("error", "Error", errorMsg);
                                 }
                               }}
-                              className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${
-                                community.isJoined
+                              className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${community.isJoined
                                   ? 'bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-400'
                                   : 'bg-purple-500 text-white hover:bg-purple-600'
-                              }`}
+                                }`}
                             >
                               {community.isJoined ? '✓ Joined' : 'Join'}
                             </button>
@@ -347,13 +343,13 @@ export default function CommunityPage() {
             {activeTab === 'create' && (
               <div className="bg-slate-900/50 border border-orange-500/20 rounded-xl p-8">
                 <h2 className="text-2xl font-black text-white mb-6">Create New Community</h2>
-                
+
                 {createError && (
                   <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400">
                     {createError}
                   </div>
                 )}
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-white font-semibold mb-2">Community Name *</label>
@@ -365,7 +361,7 @@ export default function CommunityPage() {
                       className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-white font-semibold mb-2">Description *</label>
                     <textarea
@@ -376,10 +372,10 @@ export default function CommunityPage() {
                       rows={4}
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-white font-semibold mb-2">Category</label>
-                    <select 
+                    <select
                       value={communityCategory}
                       onChange={(e) => setCommunityCategory(e.target.value)}
                       className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white focus:border-purple-500 focus:outline-none"
@@ -392,7 +388,7 @@ export default function CommunityPage() {
                       <option>Animation</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-white font-semibold mb-2">Icon</label>
                     <div className="grid grid-cols-8 gap-2">
@@ -401,17 +397,16 @@ export default function CommunityPage() {
                           key={icon}
                           type="button"
                           onClick={() => setCommunityIcon(icon)}
-                          className={`w-12 h-12 bg-slate-800 border rounded-lg hover:border-purple-500 transition text-2xl ${
-                            communityIcon === icon ? 'border-purple-500 bg-purple-500/20' : 'border-slate-700'
-                          }`}
+                          className={`w-12 h-12 bg-slate-800 border rounded-lg hover:border-purple-500 transition text-2xl ${communityIcon === icon ? 'border-purple-500 bg-purple-500/20' : 'border-slate-700'
+                            }`}
                         >
                           {icon}
                         </button>
                       ))}
                     </div>
                   </div>
-                  
-                  <button 
+
+                  <button
                     onClick={handleCreateCommunity}
                     disabled={creating || !communityName.trim() || !communityDescription.trim()}
                     className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -432,7 +427,7 @@ export default function CommunityPage() {
                   <span>Community Chat</span>
                 </h3>
               </div>
-              
+
               {/* Messages */}
               <div className="p-4 space-y-3 max-h-[500px] overflow-y-auto">
                 {messages.map((message) => (
@@ -456,7 +451,7 @@ export default function CommunityPage() {
                   </div>
                 ))}
               </div>
-              
+
               {/* Message Input */}
               <div className="p-4 border-t border-slate-700">
                 <div className="flex gap-2">

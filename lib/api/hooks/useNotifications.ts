@@ -29,11 +29,11 @@ export function useNotifications() {
     fetchNotifications();
   }, []);
 
-  const markAsRead = async (id: number) => {
+  const markAsRead = async (id: string | number) => {
     try {
       // TODO: Implement notifications API endpoint
       // await api.notifications.markAsRead(id);
-      setNotifications(prev => 
+      setNotifications(prev =>
         prev.map(n => n.id === id ? { ...n, is_read: true } : n)
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
@@ -53,13 +53,13 @@ export function useNotifications() {
     }
   };
 
-  return { 
-    notifications, 
-    loading, 
-    error, 
+  return {
+    notifications,
+    loading,
+    error,
     unreadCount,
-    markAsRead, 
+    markAsRead,
     markAllAsRead,
-    refetch: fetchNotifications 
+    refetch: fetchNotifications
   };
 }

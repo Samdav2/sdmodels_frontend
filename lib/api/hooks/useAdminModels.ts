@@ -11,7 +11,7 @@ export function useAdminModels() {
     try {
       setLoading(true);
       setError(null);
-      const data = await api.admin.getPendingModels(1, 100);
+      const data = await api.admin.getPendingModels(1, 100) as any;
       // Backend returns { models: [...], total, page, limit }
       setModels(data.models || data.items || []);
     } catch (err: any) {

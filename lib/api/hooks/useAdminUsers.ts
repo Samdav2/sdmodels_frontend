@@ -11,7 +11,7 @@ export function useAdminUsers(searchQuery = '') {
     try {
       setLoading(true);
       setError(null);
-      const data = await api.admin.getUsers(1, 100, searchQuery);
+      const data = await api.admin.getUsers(1, 100, searchQuery) as any;
       // Backend returns { users: [...], total, page, limit }
       setUsers(data.users || data.items || []);
       setTotal(data.total || 0);

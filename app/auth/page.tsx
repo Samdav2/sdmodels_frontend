@@ -1,11 +1,12 @@
 "use client";
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import ParticleBackground from '@/components/auth/ParticleBackground';
 import AuthTerminal from '@/components/auth/AuthTerminal';
 
-export default function AuthPage() {
+function AuthPageContent() {
   const searchParams = useSearchParams();
   const [showExpiredMessage, setShowExpiredMessage] = useState(false);
 
@@ -36,7 +37,7 @@ export default function AuthPage() {
       </div>
 
       {/* Decorative Grid Overlay */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none opacity-10"
         style={{
           backgroundImage: `
@@ -49,7 +50,7 @@ export default function AuthPage() {
       />
 
       {/* Radial Gradient Spotlight */}
-      <div 
+      <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] pointer-events-none"
         style={{
           background: 'radial-gradient(circle, rgba(255, 107, 53, 0.15) 0%, transparent 70%)',
@@ -57,5 +58,17 @@ export default function AuthPage() {
         aria-hidden="true"
       />
     </main>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        <div className="text-orange-400 text-xl">Loading...</div>
+      </div>
+    }>
+      <AuthPageContent />
+    </Suspense>
   );
 }
