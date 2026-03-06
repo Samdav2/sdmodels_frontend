@@ -1,11 +1,34 @@
+"use client";
+
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import ParticleBackground from '@/components/auth/ParticleBackground';
 import AuthTerminal from '@/components/auth/AuthTerminal';
 
 export default function AuthPage() {
+  const searchParams = useSearchParams();
+  const [showExpiredMessage, setShowExpiredMessage] = useState(false);
+
+  useEffect(() => {
+    const session = searchParams.get('session');
+    if (session === 'expired') {
+      setShowExpiredMessage(true);
+      // Hide message after 5 seconds
+      setTimeout(() => setShowExpiredMessage(false), 5000);
+    }
+  }, [searchParams]);
+
   return (
     <main className="relative min-h-screen w-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden">
       {/* Particle Background */}
       <ParticleBackground variant="starfield" />
+
+      {/* Session Expired Message */}
+      {showExpiredMessage && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-500/90 backdrop-blur-sm text-white px-6 py-3 rounded-lg shadow-lg border border-red-400">
+          <p className="font-semibold">⚠️ Your session has expired. Please login again.</p>
+        </div>
+      )}
 
       {/* Auth Terminal Container */}
       <div className="relative z-10 flex items-center justify-center min-h-screen px-4 py-12">

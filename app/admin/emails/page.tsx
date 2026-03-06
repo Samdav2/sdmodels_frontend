@@ -43,7 +43,7 @@ export default function EmailSystemPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
     <AdminLayout title="Email System Management">
       {/* Quick Send */}
       <div className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-2xl p-6">
@@ -68,7 +68,7 @@ export default function EmailSystemPage() {
               <label className="text-gray-400 text-sm mb-2 block">Email Template</label>
               <select className="w-full px-4 py-2 bg-slate-800 border border-yellow-600/30 rounded-lg text-white focus:outline-none focus:border-yellow-600">
                 <option>Custom Email</option>
-                {emailTemplates.map(t => (
+                {emailTemplates.map((t: any) => (
                   <option key={t.id}>{t.name}</option>
                 ))}
               </select>
@@ -116,7 +116,7 @@ export default function EmailSystemPage() {
           </button>
         </div>
         <div className="space-y-3">
-          {emailTemplates.map((template) => (
+          {emailTemplates.map((template: any) => (
             <div key={template.id} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl">
               <div className="flex-1">
                 <h4 className="text-white font-bold">{template.name}</h4>
@@ -152,7 +152,7 @@ export default function EmailSystemPage() {
           </button>
         </div>
         <div className="space-y-3">
-          {campaigns.map((campaign) => (
+          {campaigns.map((campaign: any) => (
             <div key={campaign.id} className="p-4 bg-slate-800/50 rounded-xl">
               <div className="flex items-start justify-between mb-3">
                 <div>

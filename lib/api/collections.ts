@@ -65,7 +65,7 @@ export const collectionsApi = {
   },
 
   // Add model to collection
-  addModel: async (collectionId: number, modelId: number): Promise<ApiResponse<void>> => {
+  addModel: async (collectionId: string, modelId: string): Promise<ApiResponse<void>> => {
     const response = await apiClient.post<ApiResponse<void>>(`/collections/${collectionId}/add-model`, {
       model_id: modelId,
     });

@@ -30,10 +30,32 @@ export default function RevenueVaultPage() {
     );
   }
 
-  const { stats, transactions } = revenue;
+  // Handle case where revenue data is not yet loaded
+  if (!revenue) {
+    return (
+      <AdminLayout title="The 7.5% Vault Tracker">
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading revenue data...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // Backend returns data directly, not nested in stats
+  const stats = {
+    platformFees: revenue.platform_fees || 0,
+    totalRevenue: revenue.total_revenue || 0,
+    monthlyRevenue: revenue.total_deposits || 0, // Using deposits as monthly revenue
+    avgTransaction: revenue.total_transactions > 0 
+      ? (revenue.total_revenue / revenue.total_transactions) 
+      : 0
+  };
+  
+  const transactions = revenue.transactions || [];
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
     <AdminLayout title="The 7.5% Vault Tracker">
       {/* Vault Stats */}
       <div className="grid md:grid-cols-3 gap-6 mb-6">
@@ -68,7 +90,7 @@ export default function RevenueVaultPage() {
           </button>
         </div>
         <div className="space-y-3">
-          {transactions.map((tx) => (
+          {transactions.map((tx: any) => (
             <div key={tx.id} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl">
               <div className="flex-1">
                 <div className="text-white font-bold">{tx.model}</div>

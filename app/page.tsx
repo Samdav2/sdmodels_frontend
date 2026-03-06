@@ -19,7 +19,7 @@ import { usePerformanceMode } from "@/lib/hooks/usePerformanceMode";
 
 // Helper function to map API Model to ModelCard props
 const mapModelToCard = (model: Model) => ({
-  id: model.id.toString(),
+  id: model.id, // Already a UUID string
   name: model.title,
   price: model.price,
   polyCount: model.poly_count,
@@ -112,7 +112,7 @@ export default function Home() {
   const displayModels = models.map(mapModelToCard);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-x-hidden w-full">
+    <div data-page="home" className="min-h-screen overflow-x-hidden w-full">
       {/* Live Stats Ticker */}
       <LiveStatsTicker />
       

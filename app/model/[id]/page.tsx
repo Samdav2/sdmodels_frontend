@@ -506,7 +506,7 @@ Connections:  {
 
   // Map API model to component format with safe fallbacks
   const model = {
-    id: apiModel.id.toString(),
+    id: apiModel.id, // Already a UUID string
     name: apiModel.title || "Untitled Model",
     artist: apiModel.creator?.username ||
       apiModel.creator?.full_name ||

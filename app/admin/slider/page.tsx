@@ -6,26 +6,32 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminSlider } from "@/lib/api/hooks/useAdminSlider";
 
 export default function SliderManagerPage() {
-  const { sliderSlots, availableModels, loading, error, updateSlider, setSliderSlots } = useAdminSlider();
+  const { slides, loading, error, updateSlider } = useAdminSlider();
+  const [sliderSlots, setSliderSlots] = useState(slides);
+  const [availableModels] = useState([
+    { id: 1, name: "Cyberpunk Character", author: "Alex Chen", image: "🤖", views: 15234 },
+    { id: 2, name: "Fantasy Sword", author: "Sarah Miller", image: "⚔️", views: 12890 },
+    { id: 3, name: "Sci-Fi Vehicle", author: "Mike Johnson", image: "🚀", views: 11456 },
+  ]);
 
   const handleRemove = (slotId: number) => {
-    setSliderSlots(prev => prev.map(slot => 
+    setSliderSlots((prev: any) => prev.map((slot: any) => 
       slot.id === slotId ? { ...slot, model: null as any } : slot
     ));
   };
 
   const handleAddToSlot = (modelId: number, slotId: number) => {
-    const model = availableModels.find(m => m.id === modelId);
+    const model = availableModels.find((m: any) => m.id === modelId);
     if (model) {
-      setSliderSlots(prev => prev.map(slot =>
+      setSliderSlots((prev: any) => prev.map((slot: any) =>
         slot.id === slotId ? { ...slot, model: { name: model.name, author: model.author, image: model.image } } : slot
       ));
     }
   };
 
   const handleAutoSelect = () => {
-    const topModels = [...availableModels].sort((a, b) => b.views - a.views).slice(0, 3);
-    setSliderSlots(prev => prev.map((slot, index) => ({
+    const topModels = [...availableModels].sort((a: any, b: any) => b.views - a.views).slice(0, 3);
+    setSliderSlots((prev: any) => prev.map((slot: any, index: number) => ({
       ...slot,
       model: topModels[index] ? { name: topModels[index].name, author: topModels[index].author, image: topModels[index].image } : slot.model
     })));
@@ -60,7 +66,7 @@ export default function SliderManagerPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
     <AdminLayout title="Homepage Slider Architect">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-white">Manage Featured Slider</h3>
@@ -76,7 +82,7 @@ export default function SliderManagerPage() {
         {/* Current Slider Slots */}
         <div className="space-y-4">
           <h3 className="text-xl font-bold text-white mb-4">Current Slider (Live)</h3>
-          {sliderSlots.map((slot, index) => (
+          {sliderSlots.map((slot: any, index: number) => (
             <div key={slot.id} className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-yellow-400 font-bold">Slot {index + 1}</span>
@@ -119,7 +125,7 @@ export default function SliderManagerPage() {
         <div>
           <h3 className="text-xl font-bold text-white mb-4">Available Models</h3>
           <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
-            {availableModels.map((model) => (
+            {availableModels.map((model: any) => (
               <div
                 key={model.id}
                 className="bg-slate-900/70 backdrop-blur-xl border border-yellow-600/20 rounded-xl p-4 hover:border-yellow-600 transition"
@@ -134,7 +140,7 @@ export default function SliderManagerPage() {
                     <p className="text-cyan-400 text-xs mt-1">👁️ {model.views.toLocaleString()} views</p>
                   </div>
                   <div className="flex flex-col gap-1">
-                    {sliderSlots.map((slot, idx) => (
+                    {sliderSlots.map((slot: any, idx: number) => (
                       <button 
                         key={slot.id}
                         onClick={() => handleAddToSlot(model.id, slot.id)}

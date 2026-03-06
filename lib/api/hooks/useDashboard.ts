@@ -8,12 +8,12 @@ import { dashboardApi } from '../dashboard';
 // Dashboard Stats Hook
 export const useDashboardStats = () => {
   const [stats, setStats] = useState({
-    total_sales: 0,
-    total_models: 0,
-    followers_count: 0,
+    total_views: 0,
+    total_likes: 0,
     total_downloads: 0,
     total_revenue: 0,
-    pending_models: 0,
+    models_count: 0,
+    followers_count: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -142,15 +142,20 @@ export const useFinancials = () => {
     const fetchFinancialData = async () => {
       try {
         setLoading(true);
+        console.log('Fetching financial data...');
         const [balanceData, transactionsData, earningsData] = await Promise.all([
           dashboardApi.getBalance(),
           dashboardApi.getTransactions(),
           dashboardApi.getEarnings(),
         ]);
+        console.log('Balance data:', balanceData);
+        console.log('Transactions data:', transactionsData);
+        console.log('Earnings data:', earningsData);
         setBalance(balanceData);
         setTransactions(transactionsData);
         setEarnings(earningsData);
       } catch (err: any) {
+        console.error('Financial data fetch error:', err);
         setError(err.response?.data?.detail || 'Failed to fetch financial data');
       } finally {
         setLoading(false);

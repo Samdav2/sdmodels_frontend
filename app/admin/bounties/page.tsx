@@ -6,6 +6,9 @@ import Link from "next/link";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { adminApi } from "@/lib/api/admin";
+import InputModal from "@/components/InputModal";
+import ConfirmModal from "@/components/ConfirmModal";
+import AlertModal from "@/components/AlertModal";
 
 export default function AdminBountiesPage() {
   const router = useRouter();
@@ -15,6 +18,12 @@ export default function AdminBountiesPage() {
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [processing, setProcessing] = useState<number | null>(null);
+
+  // Modal states
+  const [closeModal, setCloseModal] = useState<{ isOpen: boolean; bountyId: number | null }>({ isOpen: false, bountyId: null });
+  const [refundReasonModal, setRefundReasonModal] = useState<{ isOpen: boolean; bountyId: number | null }>({ isOpen: false, bountyId: null });
+  const [refundConfirmModal, setRefundConfirmModal] = useState<{ isOpen: boolean; bountyId: number | null; reason: string }>({ isOpen: false, bountyId: null, reason: "" });
+  const [alertModal, setAlertModal] = useState<{ isOpen: boolean; title: string; message: string; type: "success" | "error" }>({ isOpen: false, title: "", message: "", type: "success" });
 
   useEffect(() => {
     fetchData();
@@ -39,35 +48,43 @@ export default function AdminBountiesPage() {
     }
   };
 
-  const handleForceClose = async (id: number) => {
-    const reason = prompt("Enter reason for closing this bounty:");
-    if (!reason) return;
+  const handleForceClose = async (reason: string) => {
+    if (!closeModal.bountyId) return;
 
     try {
-      setProcessing(id);
-      await adminApi.forceCloseBounty(id, reason);
+      setProcessing(closeModal.bountyId);
+      await adminApi.forceCloseBounty(closeModal.bountyId, reason);
       fetchData();
+      setAlertModal({ isOpen: true, title: "Success", message: "Bounty closed successfully", type: "success" });
     } catch (err) {
-      alert("Failed to close bounty");
+      setAlertModal({ isOpen: true, title: "Error", message: "Failed to close bounty", type: "error" });
     } finally {
       setProcessing(null);
+      setCloseModal({ isOpen: false, bountyId: null });
     }
   };
 
-  const handleRefund = async (id: number) => {
-    const reason = prompt("Enter reason for refund:");
-    if (!reason) return;
+  const handleRefund = async (reason: string) => {
+    if (!refundReasonModal.bountyId) return;
+    
+    // Show confirmation modal
+    setRefundReasonModal({ isOpen: false, bountyId: null });
+    setRefundConfirmModal({ isOpen: true, bountyId: refundReasonModal.bountyId, reason });
+  };
 
-    if (!confirm("Issue full refund to buyer?")) return;
+  const confirmRefund = async () => {
+    if (!refundConfirmModal.bountyId) return;
 
     try {
-      setProcessing(id);
-      await adminApi.refundBounty(id, reason);
+      setProcessing(refundConfirmModal.bountyId);
+      await adminApi.refundBounty(refundConfirmModal.bountyId, refundConfirmModal.reason);
       fetchData();
+      setAlertModal({ isOpen: true, title: "Success", message: "Refund issued successfully", type: "success" });
     } catch (err) {
-      alert("Failed to refund bounty");
+      setAlertModal({ isOpen: true, title: "Error", message: "Failed to refund bounty", type: "error" });
     } finally {
       setProcessing(null);
+      setRefundConfirmModal({ isOpen: false, bountyId: null, reason: "" });
     }
   };
 
@@ -93,7 +110,7 @@ export default function AdminBountiesPage() {
 
   if (loading) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAdmin={true}>
         <AdminLayout title="Bounty Management">
           <div className="text-center py-20">
             <div className="text-6xl mb-4">⏳</div>
@@ -105,7 +122,7 @@ export default function AdminBountiesPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
       <AdminLayout title="Bounty Management">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
@@ -270,7 +287,7 @@ export default function AdminBountiesPage() {
 
                     {(bounty.status === "open" || bounty.status === "claimed" || bounty.status === "in_progress") && (
                       <button
-                        onClick={() => handleForceClose(bounty.id)}
+                        onClick={() => setCloseModal({ isOpen: true, bountyId: bounty.id })}
                         disabled={processing === bounty.id}
                         className="px-4 py-2 bg-orange-600/20 border border-orange-600/50 text-orange-400 rounded-lg hover:bg-orange-600/30 transition font-semibold text-sm disabled:opacity-50"
                       >
@@ -280,7 +297,7 @@ export default function AdminBountiesPage() {
 
                     {bounty.status !== "completed" && bounty.status !== "cancelled" && (
                       <button
-                        onClick={() => handleRefund(bounty.id)}
+                        onClick={() => setRefundReasonModal({ isOpen: true, bountyId: bounty.id })}
                         disabled={processing === bounty.id}
                         className="px-4 py-2 bg-red-600/20 border border-red-600/50 text-red-400 rounded-lg hover:bg-red-600/30 transition font-semibold text-sm disabled:opacity-50"
                       >
@@ -294,6 +311,45 @@ export default function AdminBountiesPage() {
           </div>
         )}
       </AdminLayout>
+
+      {/* Modals */}
+      <InputModal
+        isOpen={closeModal.isOpen}
+        onClose={() => setCloseModal({ isOpen: false, bountyId: null })}
+        onConfirm={handleForceClose}
+        title="Force Close Bounty"
+        message="Enter the reason for closing this bounty:"
+        placeholder="e.g., Violates terms of service"
+        confirmText="Close Bounty"
+      />
+
+      <InputModal
+        isOpen={refundReasonModal.isOpen}
+        onClose={() => setRefundReasonModal({ isOpen: false, bountyId: null })}
+        onConfirm={handleRefund}
+        title="Issue Refund"
+        message="Enter the reason for issuing a refund:"
+        placeholder="e.g., Buyer requested cancellation"
+        confirmText="Continue"
+      />
+
+      <ConfirmModal
+        isOpen={refundConfirmModal.isOpen}
+        onClose={() => setRefundConfirmModal({ isOpen: false, bountyId: null, reason: "" })}
+        onConfirm={confirmRefund}
+        title="Confirm Refund"
+        message="Are you sure you want to issue a full refund to the buyer? This action cannot be undone."
+        confirmText="Issue Refund"
+        type="danger"
+      />
+
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+      />
     </ProtectedRoute>
   );
 }

@@ -1,22 +1,8 @@
 import { useState, useEffect } from 'react';
-import { adminApi } from '../admin';
+import { api } from '../index';
 
 export function useAdminSettings() {
-  const [general, setGeneral] = useState({
-    platformName: "SDModels",
-    platformFee: 7.5,
-    maintenanceMode: false,
-  });
-  const [security, setSecurity] = useState({
-    require2FA: true,
-    apiRateLimit: 100,
-  });
-  const [notifications, setNotifications] = useState({
-    newModels: true,
-    userRegistrations: true,
-    payments: true,
-    securityAlerts: true,
-  });
+  const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,16 +10,22 @@ export function useAdminSettings() {
     try {
       setLoading(true);
       setError(null);
-      const data = await adminApi.getSettings();
-      
-      if (data.general) setGeneral(data.general);
-      if (data.security) setSecurity(data.security);
-      if (data.notifications) setNotifications(data.notifications);
+      const data = await api.admin.getSettings();
+      setSettings(data);
     } catch (err: any) {
-      console.error('Failed to fetch settings:', err);
-      setError(err.response?.data?.detail || err.message || 'Failed to fetch settings');
+      setError(err.message || 'Failed to fetch settings');
+      setSettings(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateSettings = async (newSettings: any) => {
+    try {
+      await api.admin.updateSettings(newSettings);
+      await fetchSettings();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update settings');
     }
   };
 
@@ -41,26 +33,11 @@ export function useAdminSettings() {
     fetchSettings();
   }, []);
 
-  const saveSettings = async () => {
-    try {
-      await adminApi.updateSettings({ general, security, notifications });
-      return true;
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to save settings');
-      return false;
-    }
-  };
-
   return { 
-    general, 
-    security, 
-    notifications, 
+    settings, 
     loading, 
     error, 
-    setGeneral, 
-    setSecurity, 
-    setNotifications, 
-    saveSettings,
-    refetch: fetchSettings,
+    updateSettings,
+    refetch: fetchSettings 
   };
 }

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { adminApi } from '../admin';
+import { api } from '../index';
 
 export function useAdminSlider() {
-  const [sliderSlots, setSliderSlots] = useState<any[]>([]);
-  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [slides, setSlides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -11,14 +10,22 @@ export function useAdminSlider() {
     try {
       setLoading(true);
       setError(null);
-      const data = await adminApi.getSlider();
-      setSliderSlots(data.slots || data || []);
-      setAvailableModels(data.availableModels || []);
+      const data = await api.admin.getSlider();
+      setSlides(data.slides || []);
     } catch (err: any) {
-      console.error('Failed to fetch slider:', err);
-      setError(err.response?.data?.detail || err.message || 'Failed to fetch slider settings');
+      setError(err.message || 'Failed to fetch slider');
+      setSlides([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateSlider = async (newSlides: any[]) => {
+    try {
+      await api.admin.updateSlider(newSlides);
+      await fetchSlider();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update slider');
     }
   };
 
@@ -26,15 +33,11 @@ export function useAdminSlider() {
     fetchSlider();
   }, []);
 
-  const updateSlider = async (slots: any[]) => {
-    try {
-      await adminApi.updateSlider(slots);
-      await fetchSlider();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to update slider');
-      throw err;
-    }
+  return { 
+    slides, 
+    loading, 
+    error, 
+    updateSlider,
+    refetch: fetchSlider 
   };
-
-  return { sliderSlots, availableModels, loading, error, updateSlider, setSliderSlots, refetch: fetchSlider };
 }

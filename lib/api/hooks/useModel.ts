@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../index';
 import { Model } from '../types';
 
-export function useModel(id: string | number) {
+export function useModel(id: string) {
   const [model, setModel] = useState<Model | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -12,7 +12,7 @@ export function useModel(id: string | number) {
       try {
         setLoading(true);
         setError(null);
-        const data = await api.models.getModel(Number(id));
+        const data = await api.models.getModel(id); // ID is already a UUID string
         setModel(data);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch model');

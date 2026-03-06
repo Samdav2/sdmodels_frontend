@@ -12,7 +12,8 @@ export function useAdminUsers(searchQuery = '') {
       setLoading(true);
       setError(null);
       const data = await api.admin.getUsers(1, 100, searchQuery);
-      setUsers(data.items || []);
+      // Backend returns { users: [...], total, page, limit }
+      setUsers(data.users || data.items || []);
       setTotal(data.total || 0);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch users');

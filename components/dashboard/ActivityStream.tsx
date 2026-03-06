@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
+import { Model } from "@/lib/api/types";
 
 interface Activity {
   id: number;
@@ -12,87 +13,143 @@ interface Activity {
   color: string;
 }
 
-const mockActivities: Activity[] = [
-  {
-    id: 1,
-    type: "sale",
-    message: "Cyberpunk Vehicle sold for $29.99",
-    time: "2 min ago",
-    icon: "💰",
-    color: "text-green-400",
-  },
-  {
-    id: 2,
-    type: "review",
-    message: "New 5-star review on Sci-Fi Character",
-    time: "15 min ago",
-    icon: "⭐",
-    color: "text-yellow-400",
-  },
-  {
-    id: 3,
-    type: "sale",
-    message: "Low Poly Tree Pack sold for $14.99",
-    time: "32 min ago",
-    icon: "💰",
-    color: "text-green-400",
-  },
-  {
-    id: 4,
-    type: "upload",
-    message: "Futuristic Weapon approved",
-    time: "1 hour ago",
-    icon: "✅",
-    color: "text-blue-400",
-  },
-  {
-    id: 5,
-    type: "milestone",
-    message: "Reached 300 total sales!",
-    time: "2 hours ago",
-    icon: "🎉",
-    color: "text-orange-400",
-  },
-  {
-    id: 6,
-    type: "sale",
-    message: "Neon City Props sold for $39.99",
-    time: "3 hours ago",
-    icon: "💰",
-    color: "text-green-400",
-  },
-  {
-    id: 7,
-    type: "review",
-    message: "New 4-star review on Mech Warrior",
-    time: "4 hours ago",
-    icon: "⭐",
-    color: "text-yellow-400",
-  },
-];
+interface ActivityStreamProps {
+  models: Model[];
+}
 
-export default function ActivityStream() {
-  const [activities, setActivities] = useState<Activity[]>(mockActivities.slice(0, 5));
+export default function ActivityStream({ models }: ActivityStreamProps) {
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [isLive, setIsLive] = useState(true);
+
+  // Generate initial activities from real model data
+  useEffect(() => {
+    const initialActivities: Activity[] = [];
+    
+    // Add activities for recent models
+    models.slice(0, 3).forEach((model, index) => {
+      if (model.downloads > 0) {
+        initialActivities.push({
+          id: Date.now() + index,
+          type: "sale",
+          message: `${model.title} sold for $${model.price.toFixed(2)}`,
+          time: getRelativeTime(model.created_at),
+          icon: "💰",
+          color: "text-green-400",
+        });
+      }
+      
+      if (model.rating > 4) {
+        initialActivities.push({
+          id: Date.now() + index + 100,
+          type: "review",
+          message: `New ${model.rating.toFixed(1)}-star review on ${model.title}`,
+          time: getRelativeTime(model.updated_at),
+          icon: "⭐",
+          color: "text-yellow-400",
+        });
+      }
+      
+      if (model.status === 'approved') {
+        initialActivities.push({
+          id: Date.now() + index + 200,
+          type: "upload",
+          message: `${model.title} approved`,
+          time: getRelativeTime(model.created_at),
+          icon: "✅",
+          color: "text-blue-400",
+        });
+      }
+    });
+
+    // Add milestone if user has many models
+    if (models.length >= 10) {
+      initialActivities.push({
+        id: Date.now() + 1000,
+        type: "milestone",
+        message: `Reached ${models.length} total models!`,
+        time: "Recently",
+        icon: "🎉",
+        color: "text-orange-400",
+      });
+    }
+
+    setActivities(initialActivities.slice(0, 5));
+  }, [models]);
+
+  // Helper to get relative time
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  };
 
   // Simulate real-time activity updates
   useEffect(() => {
-    if (!isLive) return;
+    if (!isLive || models.length === 0) return;
 
     const interval = setInterval(() => {
-      // Add a random activity from the mock list
-      const randomActivity = mockActivities[Math.floor(Math.random() * mockActivities.length)];
-      const newActivity = {
-        ...randomActivity,
-        id: Date.now(),
-        time: "Just now",
-      };
+      // Pick a random model
+      const randomModel = models[Math.floor(Math.random() * models.length)];
+      const activityTypes = ["sale", "review", "upload", "milestone"];
+      const randomType = activityTypes[Math.floor(Math.random() * activityTypes.length)] as Activity["type"];
 
-      setActivities((prev) => [newActivity, ...prev.slice(0, 6)]);
+      let newActivity: Activity;
+      
+      switch (randomType) {
+        case "sale":
+          newActivity = {
+            id: Date.now(),
+            type: "sale",
+            message: `${randomModel.title} sold for $${randomModel.price.toFixed(2)}`,
+            time: "Just now",
+            icon: "💰",
+            color: "text-green-400",
+          };
+          break;
+        case "review":
+          newActivity = {
+            id: Date.now(),
+            type: "review",
+            message: `New ${(Math.random() * 2 + 3).toFixed(1)}-star review on ${randomModel.title}`,
+            time: "Just now",
+            icon: "⭐",
+            color: "text-yellow-400",
+          };
+          break;
+        case "upload":
+          newActivity = {
+            id: Date.now(),
+            type: "upload",
+            message: `${randomModel.title} approved`,
+            time: "Just now",
+            icon: "✅",
+            color: "text-blue-400",
+          };
+          break;
+        default:
+          newActivity = {
+            id: Date.now(),
+            type: "milestone",
+            message: `Reached ${models.length} total models!`,
+            time: "Just now",
+            icon: "🎉",
+            color: "text-orange-400",
+          };
+      }
+
+      setActivities((prev) => [newActivity, ...prev].slice(0, 7));
     }, 8000); // New activity every 8 seconds
 
     return () => clearInterval(interval);
-  }, [isLive]);
+  }, [isLive, models]);
 
   return (
     <div className="space-y-4">

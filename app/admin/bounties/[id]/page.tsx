@@ -6,11 +6,14 @@ import Link from "next/link";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { adminApi } from "@/lib/api/admin";
+import ConfirmModal from "@/components/ConfirmModal";
+import InputModal from "@/components/InputModal";
+import AlertModal from "@/components/AlertModal";
 
 export default function AdminBountyDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const bountyId = parseInt(params.id as string);
+  const bountyId = params.id as string; // UUID string, not integer
   
   const [loading, setLoading] = useState(true);
   const [bounty, setBounty] = useState<any>(null);
@@ -18,6 +21,13 @@ export default function AdminBountyDetailsPage() {
   const [submission, setSubmission] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [processing, setProcessing] = useState(false);
+
+  // Modal states
+  const [statusModal, setStatusModal] = useState<{ isOpen: boolean; status: string }>({ isOpen: false, status: "" });
+  const [payoutModal, setPayoutModal] = useState(false);
+  const [banReasonModal, setBanReasonModal] = useState<{ isOpen: boolean; userId: number | null; username: string }>({ isOpen: false, userId: null, username: "" });
+  const [banDurationModal, setBanDurationModal] = useState<{ isOpen: boolean; userId: number | null; username: string; reason: string }>({ isOpen: false, userId: null, username: "", reason: "" });
+  const [alertModal, setAlertModal] = useState<{ isOpen: boolean; title: string; message: string; type: "success" | "error" }>({ isOpen: false, title: "", message: "", type: "success" });
 
   useEffect(() => {
     fetchData();
@@ -40,58 +50,71 @@ export default function AdminBountyDetailsPage() {
     }
   };
 
-  const handleStatusChange = async (newStatus: string) => {
-    if (!confirm(`Change bounty status to "${newStatus}"?`)) return;
+  const handleStatusChange = async () => {
+    if (!statusModal.status) return;
 
     try {
       setProcessing(true);
-      await adminApi.updateBountyStatus(bountyId, newStatus);
+      await adminApi.updateBountyStatus(bountyId, statusModal.status);
       fetchData();
+      setAlertModal({ isOpen: true, title: "Success", message: "Status updated successfully", type: "success" });
     } catch (err) {
-      alert("Failed to update status");
+      setAlertModal({ isOpen: true, title: "Error", message: "Failed to update status", type: "error" });
     } finally {
       setProcessing(false);
+      setStatusModal({ isOpen: false, status: "" });
     }
   };
 
   const handleApprovePayout = async () => {
-    if (!confirm("Manually approve payout and release escrow?")) return;
-
     try {
       setProcessing(true);
       await adminApi.approveBountyPayout(bountyId);
       fetchData();
+      setAlertModal({ isOpen: true, title: "Success", message: "Payout approved successfully", type: "success" });
     } catch (err) {
-      alert("Failed to approve payout");
+      setAlertModal({ isOpen: true, title: "Error", message: "Failed to approve payout", type: "error" });
     } finally {
       setProcessing(false);
+      setPayoutModal(false);
     }
   };
 
-  const handleBanUser = async (userId: number, username: string) => {
-    const reason = prompt(`Enter reason for banning ${username} from bounties:`);
-    if (!reason) return;
+  const handleBanReason = async (reason: string) => {
+    if (!banReasonModal.userId) return;
+    
+    // Move to duration modal
+    setBanReasonModal({ isOpen: false, userId: null, username: "" });
+    setBanDurationModal({ 
+      isOpen: true, 
+      userId: banReasonModal.userId, 
+      username: banReasonModal.username, 
+      reason 
+    });
+  };
 
-    const duration = prompt("Ban duration in days (leave empty for permanent):");
+  const handleBanDuration = async (duration: string) => {
+    if (!banDurationModal.userId) return;
 
     try {
       setProcessing(true);
       await adminApi.banUserFromBounties(
-        userId, 
-        reason, 
+        banDurationModal.userId, 
+        banDurationModal.reason, 
         duration ? parseInt(duration) : undefined
       );
-      alert("User banned from bounties");
+      setAlertModal({ isOpen: true, title: "Success", message: "User banned from bounties", type: "success" });
     } catch (err) {
-      alert("Failed to ban user");
+      setAlertModal({ isOpen: true, title: "Error", message: "Failed to ban user", type: "error" });
     } finally {
       setProcessing(false);
+      setBanDurationModal({ isOpen: false, userId: null, username: "", reason: "" });
     }
   };
 
   if (loading) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAdmin={true}>
         <AdminLayout title="Bounty Details">
           <div className="text-center py-20">
             <div className="text-6xl mb-4">⏳</div>
@@ -104,7 +127,7 @@ export default function AdminBountyDetailsPage() {
 
   if (!bounty) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAdmin={true}>
         <AdminLayout title="Bounty Details">
           <div className="text-center py-20">
             <div className="text-6xl mb-4">❌</div>
@@ -119,7 +142,7 @@ export default function AdminBountyDetailsPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
       <AdminLayout title={`Bounty #${bountyId}`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -172,7 +195,7 @@ export default function AdminBountyDetailsPage() {
               <div className="text-xs text-gray-400">Poster</div>
               <div className="text-white font-medium">{bounty.poster_username}</div>
               <button
-                onClick={() => handleBanUser(bounty.poster_id, bounty.poster_username)}
+                onClick={() => setBanReasonModal({ isOpen: true, userId: bounty.poster_id, username: bounty.poster_username })}
                 className="text-xs text-red-400 hover:text-red-300 mt-1"
               >
                 Ban user
@@ -183,7 +206,7 @@ export default function AdminBountyDetailsPage() {
                 <div className="text-xs text-gray-400">Artist</div>
                 <div className="text-white font-medium">{bounty.claimed_by_username}</div>
                 <button
-                  onClick={() => handleBanUser(bounty.claimed_by_id, bounty.claimed_by_username)}
+                  onClick={() => setBanReasonModal({ isOpen: true, userId: bounty.claimed_by_id, username: bounty.claimed_by_username })}
                   className="text-xs text-red-400 hover:text-red-300 mt-1"
                 >
                   Ban user
@@ -261,15 +284,28 @@ export default function AdminBountyDetailsPage() {
             <h3 className="text-xl font-bold text-white mb-4">Submission</h3>
             <div className="space-y-4">
               <div>
-                <div className="text-sm text-gray-400 mb-2">Model File</div>
-                <a
-                  href={submission.model_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition font-semibold text-sm"
-                >
-                  Download Model →
-                </a>
+                <div className="text-sm text-gray-400 mb-2">
+                  {submission.submission_type === 'upload' ? 'Uploaded Model' : 'External Model Link'}
+                </div>
+                {submission.submission_type === 'upload' ? (
+                  <a
+                    href={submission.model_file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition font-semibold text-sm"
+                  >
+                    Download Model →
+                  </a>
+                ) : (
+                  <a
+                    href={submission.external_model_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition font-semibold text-sm"
+                  >
+                    Open External Link →
+                  </a>
+                )}
               </div>
               {submission.notes && (
                 <div>
@@ -319,28 +355,28 @@ export default function AdminBountyDetailsPage() {
           <h3 className="text-xl font-bold text-white mb-4">Admin Actions</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <button
-              onClick={() => handleStatusChange("open")}
+              onClick={() => setStatusModal({ isOpen: true, status: "open" })}
               disabled={processing}
               className="px-4 py-3 bg-green-600/20 border border-green-600/50 text-green-400 rounded-lg hover:bg-green-600/30 transition font-semibold disabled:opacity-50"
             >
               Set to Open
             </button>
             <button
-              onClick={() => handleStatusChange("in_progress")}
+              onClick={() => setStatusModal({ isOpen: true, status: "in_progress" })}
               disabled={processing}
               className="px-4 py-3 bg-yellow-600/20 border border-yellow-600/50 text-yellow-400 rounded-lg hover:bg-yellow-600/30 transition font-semibold disabled:opacity-50"
             >
               Set to In Progress
             </button>
             <button
-              onClick={() => handleStatusChange("completed")}
+              onClick={() => setStatusModal({ isOpen: true, status: "completed" })}
               disabled={processing}
               className="px-4 py-3 bg-purple-600/20 border border-purple-600/50 text-purple-400 rounded-lg hover:bg-purple-600/30 transition font-semibold disabled:opacity-50"
             >
               Mark Completed
             </button>
             <button
-              onClick={handleApprovePayout}
+              onClick={() => setPayoutModal(true)}
               disabled={processing}
               className="px-4 py-3 bg-blue-600/20 border border-blue-600/50 text-blue-400 rounded-lg hover:bg-blue-600/30 transition font-semibold disabled:opacity-50"
             >
@@ -354,7 +390,7 @@ export default function AdminBountyDetailsPage() {
               Resolve Dispute
             </button>
             <button
-              onClick={() => handleStatusChange("cancelled")}
+              onClick={() => setStatusModal({ isOpen: true, status: "cancelled" })}
               disabled={processing}
               className="px-4 py-3 bg-gray-600/20 border border-gray-600/50 text-gray-400 rounded-lg hover:bg-gray-600/30 transition font-semibold disabled:opacity-50"
             >
@@ -363,6 +399,57 @@ export default function AdminBountyDetailsPage() {
           </div>
         </div>
       </AdminLayout>
+
+      {/* Modals */}
+      <ConfirmModal
+        isOpen={statusModal.isOpen}
+        onClose={() => setStatusModal({ isOpen: false, status: "" })}
+        onConfirm={handleStatusChange}
+        title="Change Bounty Status"
+        message={`Are you sure you want to change the bounty status to "${statusModal.status}"?`}
+        confirmText="Change Status"
+        type="warning"
+      />
+
+      <ConfirmModal
+        isOpen={payoutModal}
+        onClose={() => setPayoutModal(false)}
+        onConfirm={handleApprovePayout}
+        title="Approve Payout"
+        message="Manually approve payout and release escrow? This action cannot be undone."
+        confirmText="Approve Payout"
+        type="warning"
+      />
+
+      <InputModal
+        isOpen={banReasonModal.isOpen}
+        onClose={() => setBanReasonModal({ isOpen: false, userId: null, username: "" })}
+        onConfirm={handleBanReason}
+        title={`Ban ${banReasonModal.username}`}
+        message="Enter the reason for banning this user from bounties:"
+        placeholder="e.g., Violated terms of service"
+        confirmText="Continue"
+      />
+
+      <InputModal
+        isOpen={banDurationModal.isOpen}
+        onClose={() => setBanDurationModal({ isOpen: false, userId: null, username: "", reason: "" })}
+        onConfirm={handleBanDuration}
+        title="Ban Duration"
+        message="Enter ban duration in days (leave empty for permanent ban):"
+        placeholder="e.g., 30"
+        type="number"
+        required={false}
+        confirmText="Ban User"
+      />
+
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+      />
     </ProtectedRoute>
   );
 }

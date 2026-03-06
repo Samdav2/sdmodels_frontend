@@ -5,9 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Link from "next/link";
-import { useModels } from "@/lib/api/hooks/useModels";
+import { useInventory } from "@/lib/api/hooks/useModels";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import { modelsApi } from "@/lib/api/models";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/api/hooks/useAuth";
+import AlertModal from "@/components/AlertModal";
 
 interface Model {
   id: string;
@@ -24,23 +28,26 @@ interface Model {
 }
 
 export default function InventoryPage() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [filterStatus, setFilterStatus] = useState<"all" | "public" | "private" | "draft">("all");
   const [sortBy, setSortBy] = useState<"recent" | "sales" | "revenue">("recent");
+  const [deleting, setDeleting] = useState(false);
 
-  // Fetch user's models from API
-  const { models: apiModels, loading, error } = useModels({
+  // Fetch user's inventory (purchased models) from API
+  const { models: apiModels, loading, error, refetch } = useInventory({
     limit: 50,
-    sort: sortBy === 'recent' ? 'newest' : 'popular',
+    sort: sortBy === 'recent' ? 'newest' : sortBy === 'sales' ? 'purchased' : 'newest',
   });
 
   // Map API models to dashboard format
-  const mockModels: Model[] = apiModels.map(m => ({
-    id: m.id.toString(),
+  const models: Model[] = apiModels.map(m => ({
+    id: m.id, // Already a UUID string
     name: m.title,
     thumbnail: m.thumbnail_url,
     price: m.price,
     polyCount: m.poly_count,
-    status: m.status === 'approved' ? 'public' : 'draft',
+    status: m.status === 'approved' ? 'public' : m.status === 'pending' ? 'private' : 'draft',
     sales: m.downloads,
     downloads: m.downloads,
     views: m.views,
@@ -48,27 +55,39 @@ export default function InventoryPage() {
     uploadDate: m.created_at,
   }));
 
-  const [models, setModels] = useState<Model[]>(mockModels);
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const toggleStatus = (id: string) => {
-    setModels((prev) =>
-      prev.map((model) => {
-        if (model.id === id) {
-          const statuses: Array<"public" | "private" | "draft"> = ["public", "private", "draft"];
-          const currentIndex = statuses.indexOf(model.status);
-          const nextStatus = statuses[(currentIndex + 1) % statuses.length];
-          return { ...model, status: nextStatus };
-        }
-        return model;
-      })
-    );
+  const deleteModel = async (id: string) => {
+    try {
+      setDeleting(true);
+      await modelsApi.deleteModel(id);
+      setDeleteConfirm(null);
+      // Refetch models to update the list
+      await refetch();
+    } catch (err: any) {
+      console.error('Failed to delete model:', err);
+      setErrorMessage(err.message || 'Failed to delete model. Please try again.');
+      setShowErrorModal(true);
+      setDeleteConfirm(null);
+    } finally {
+      setDeleting(false);
+    }
   };
 
-  const deleteModel = (id: string) => {
-    setModels((prev) => prev.filter((model) => model.id !== id));
-    setDeleteConfirm(null);
+  const handleEdit = (id: string) => {
+    router.push(`/dashboard/inventory/${id}/edit`);
+  };
+
+  const handleViewDetails = (id: string) => {
+    router.push(`/dashboard/inventory/${id}`);
+  };
+
+  // Check if user can edit/delete a model
+  const canModify = (model: Model) => {
+    return user && model.id && user.id === model.id;
   };
 
   const getStatusColor = (status: string) => {
@@ -199,14 +218,13 @@ export default function InventoryPage() {
 
                       {/* Status */}
                       <td className="p-4">
-                        <button
-                          onClick={() => toggleStatus(model.id)}
+                        <span
                           className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
                             model.status
-                          )} hover:scale-105 transition`}
+                          )}`}
                         >
                           {model.status}
-                        </button>
+                        </span>
                       </td>
 
                       {/* Price */}
@@ -232,13 +250,20 @@ export default function InventoryPage() {
                       {/* Actions */}
                       <td className="p-4">
                         <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                          <Link
-                            href={`/upload?edit=${model.id}`}
+                          <button
+                            onClick={() => handleViewDetails(model.id)}
+                            className="p-2 bg-cyan-500/20 border border-cyan-500 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition"
+                            title="View Details"
+                          >
+                            👁️
+                          </button>
+                          <button
+                            onClick={() => handleEdit(model.id)}
                             className="p-2 bg-blue-500/20 border border-blue-500 text-blue-400 rounded-lg hover:bg-blue-500/30 transition"
                             title="Edit"
                           >
                             ✏️
-                          </Link>
+                          </button>
                           <button
                             onClick={() => setDeleteConfirm(model.id)}
                             className="p-2 bg-red-500/20 border border-red-500 text-red-400 rounded-lg hover:bg-red-500/30 transition"
@@ -271,16 +296,19 @@ export default function InventoryPage() {
               >
                 {/* Thumbnail */}
                 <div className="relative h-48 bg-gradient-to-br from-orange-500/20 to-red-500/20 flex items-center justify-center text-6xl">
-                  🎨
+                  {model.thumbnail ? (
+                    <img src={model.thumbnail} alt={model.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span>🎨</span>
+                  )}
                   <div className="absolute top-2 right-2">
-                    <button
-                      onClick={() => toggleStatus(model.id)}
+                    <span
                       className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
                         model.status
                       )}`}
                     >
                       {model.status}
-                    </button>
+                    </span>
                   </div>
                 </div>
 
@@ -308,12 +336,18 @@ export default function InventoryPage() {
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    <Link
-                      href={`/upload?edit=${model.id}`}
-                      className="flex-1 py-2 bg-blue-500/20 border border-blue-500 text-blue-400 rounded-lg hover:bg-blue-500/30 transition text-center text-sm font-medium"
+                    <button
+                      onClick={() => handleViewDetails(model.id)}
+                      className="flex-1 py-2 bg-cyan-500/20 border border-cyan-500 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition text-sm font-medium"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleEdit(model.id)}
+                      className="flex-1 py-2 bg-blue-500/20 border border-blue-500 text-blue-400 rounded-lg hover:bg-blue-500/30 transition text-sm font-medium"
                     >
                       Edit
-                    </Link>
+                    </button>
                     <button
                       onClick={() => setDeleteConfirm(model.id)}
                       className="flex-1 py-2 bg-red-500/20 border border-red-500 text-red-400 rounded-lg hover:bg-red-500/30 transition text-sm font-medium"
@@ -361,15 +395,25 @@ export default function InventoryPage() {
                 </button>
                 <button
                   onClick={() => deleteModel(deleteConfirm)}
-                  className="flex-1 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-400 hover:to-red-500 transition font-semibold"
+                  disabled={deleting}
+                  className="flex-1 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-400 hover:to-red-500 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Delete Forever
+                  {deleting ? 'Deleting...' : 'Delete Forever'}
                 </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Error Modal */}
+      <AlertModal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        title="Delete Failed"
+        message={errorMessage}
+        type="error"
+      />
     </DashboardLayout>
     </ProtectedRoute>
   );

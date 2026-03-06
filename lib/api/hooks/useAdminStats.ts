@@ -28,7 +28,17 @@ export function useAdminStats() {
           serverLoad: data.server_load,
         });
       } catch (err: any) {
-        setError(err.message || 'Failed to fetch admin stats');
+        console.error('Failed to fetch admin stats:', err);
+        // Don't set error state - just use default values
+        // This allows the page to load even if stats endpoint is not available
+        setStats({
+          totalRevenue: 0,
+          platformFees: 0,
+          activeUsers: 0,
+          pendingModels: 0,
+          totalModels: 0,
+          serverLoad: 45,
+        });
       } finally {
         setLoading(false);
       }

@@ -54,7 +54,7 @@ export default function HomepageEditorPage() {
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
     <AdminLayout title="Homepage Dynamic Editor">
       {/* Hero Section Editor */}
       <div className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-2xl p-6">
@@ -85,7 +85,7 @@ export default function HomepageEditorPage() {
       <div className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-2xl p-6">
         <h3 className="text-xl font-bold text-white mb-4">Featured Categories</h3>
         <div className="grid md:grid-cols-2 gap-4">
-          {featuredCategories.map((cat) => (
+          {featuredCategories.map((cat: any) => (
             <div key={cat.id} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl">
               <div className="flex items-center gap-3">
                 <span className="text-3xl">{cat.icon}</span>

@@ -19,9 +19,13 @@ const navItems = [
   { href: "/dashboard", icon: "📊", label: "Overview" },
   { href: "/dashboard/inventory", icon: "🗂️", label: "Inventory" },
   { href: "/upload", icon: "⬆️", label: "Upload" },
+  { href: "/dashboard/bounties", icon: "💼", label: "Bounties" },
+  { href: "/dashboard/wallet", icon: "💳", label: "Wallet" },
   { href: "/dashboard/financials", icon: "💰", label: "Financials" },
   { href: "/dashboard/social", icon: "👥", label: "Social" },
-  { href: "/dashboard/messages", icon: "💬", label: "Messages" },
+  { href: "/community", icon: "💬", label: "Community" },
+  { href: "/dashboard/messages", icon: "✉️", label: "Messages" },
+  { href: "/support", icon: "🆘", label: "Support" },
   { href: "/dashboard/settings", icon: "⚙️", label: "Settings" },
 ];
 
@@ -147,11 +151,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="grid grid-cols-3 gap-2 mt-4">
               <div className="bg-slate-800/50 rounded-lg p-2 text-center">
                 <div className="text-xs text-slate-400">Models</div>
-                <div className="text-sm font-bold text-white">{stats?.total_models || 0}</div>
+                <div className="text-sm font-bold text-white">{stats?.models_count || 0}</div>
               </div>
               <div className="bg-slate-800/50 rounded-lg p-2 text-center">
-                <div className="text-xs text-slate-400">Sales</div>
-                <div className="text-sm font-bold text-orange-400">${stats?.total_sales?.toFixed(0) || 0}</div>
+                <div className="text-xs text-slate-400">Revenue</div>
+                <div className="text-sm font-bold text-orange-400">${stats?.total_revenue?.toFixed(0) || 0}</div>
               </div>
               <div className="bg-slate-800/50 rounded-lg p-2 text-center">
                 <div className="text-xs text-slate-400">Followers</div>

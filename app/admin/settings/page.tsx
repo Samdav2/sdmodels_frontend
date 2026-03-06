@@ -7,19 +7,55 @@ import { useAdminSettings } from "@/lib/api/hooks/useAdminSettings";
 import { useAdminModal } from "@/components/admin/AdminModal";
 
 export default function SettingsPage() {
-  const { general, security, notifications, loading, error, setGeneral, setSecurity, setNotifications, saveSettings } = useAdminSettings();
+  const { settings, loading, error, updateSettings } = useAdminSettings();
   const { modal, showAlert, AdminModalComponent } = useAdminModal();
   const [saving, setSaving] = useState(false);
+
+  // Local state for settings
+  const [general, setGeneral] = useState({
+    platformName: settings?.general?.platformName || "SDModels",
+    platformFee: settings?.general?.platformFee || 10,
+    maintenanceMode: settings?.general?.maintenanceMode || false,
+  });
+
+  const [security, setSecurity] = useState({
+    require2FA: settings?.security?.require2FA || false,
+    apiRateLimit: settings?.security?.apiRateLimit || 100,
+  });
+
+  const [notifications, setNotifications] = useState({
+    newUser: settings?.notifications?.newUser || true,
+    newModel: settings?.notifications?.newModel || true,
+    newSale: settings?.notifications?.newSale || true,
+    newSupport: settings?.notifications?.newSupport || true,
+  });
+
+  // Update local state when settings load
+  useState(() => {
+    if (settings) {
+      setGeneral({
+        platformName: settings.general?.platformName || "SDModels",
+        platformFee: settings.general?.platformFee || 10,
+        maintenanceMode: settings.general?.maintenanceMode || false,
+      });
+      setSecurity({
+        require2FA: settings.security?.require2FA || false,
+        apiRateLimit: settings.security?.apiRateLimit || 100,
+      });
+      setNotifications({
+        newUser: settings.notifications?.newUser || true,
+        newModel: settings.notifications?.newModel || true,
+        newSale: settings.notifications?.newSale || true,
+        newSupport: settings.notifications?.newSupport || true,
+      });
+    }
+  });
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      const success = await saveSettings();
-      if (success) {
-        await showAlert("Success", "Settings saved successfully!", "success");
-      } else {
-        await showAlert("Error", "Failed to save settings", "danger");
-      }
+      await updateSettings({ general, security, notifications });
+      await showAlert("Success", "Settings saved successfully!", "success");
     } catch (err) {
       await showAlert("Error", "An error occurred while saving settings", "danger");
     } finally {
@@ -29,7 +65,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAdmin={true}>
         <AdminLayout title="Platform Settings">
           <div className="text-center py-20">
             <div className="text-6xl mb-4">⏳</div>
@@ -42,7 +78,7 @@ export default function SettingsPage() {
 
   if (error) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAdmin={true}>
         <AdminLayout title="Platform Settings">
           <div className="text-center py-20">
             <div className="text-6xl mb-4">⚠️</div>
@@ -55,7 +91,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
       <AdminLayout title="Platform Settings">
         {AdminModalComponent}
         
@@ -134,7 +170,7 @@ export default function SettingsPage() {
           <div className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-2xl p-6">
             <h3 className="text-xl font-bold text-white mb-4">Email Notifications</h3>
             <div className="space-y-3">
-              {Object.entries(notifications).map(([key, value]) => (
+              {Object.entries(notifications).map(([key, value]: [string, any]) => (
                 <label key={key} className="flex items-center gap-3 cursor-pointer">
                   <input 
                     type="checkbox" 

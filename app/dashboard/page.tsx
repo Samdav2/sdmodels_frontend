@@ -1,12 +1,15 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import SalesGoalProgress from "@/components/dashboard/SalesGoalProgress";
 import ActivityStream from "@/components/dashboard/ActivityStream";
 import FeeCalculator from "@/components/dashboard/FeeCalculator";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useModels } from "@/lib/api/hooks/useModels";
+import { useDashboardStats } from "@/lib/api/hooks/useDashboard";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 // Dynamically import GlobalSalesMap with SSR disabled to avoid React Three Fiber hydration issues
 const GlobalSalesMap = dynamic(() => import("@/components/dashboard/GlobalSalesMap"), {
@@ -20,12 +23,23 @@ const GlobalSalesMap = dynamic(() => import("@/components/dashboard/GlobalSalesM
 
 export default function DashboardPage() {
   // Fetch user's models for stats
-  const { models, loading } = useModels({ limit: 100 });
+  const { models, loading: modelsLoading } = useModels({ limit: 100 });
+  
+  // Fetch dashboard stats from API
+  const { stats, loading: statsLoading } = useDashboardStats();
 
-  // Calculate stats from API data
-  const totalSales = models.reduce((sum, m) => sum + (m.downloads * m.price), 0);
-  const totalDownloads = models.reduce((sum, m) => sum + m.downloads, 0);
+  const loading = modelsLoading || statsLoading;
+
+  // Use stats from API
+  const totalRevenue = stats.total_revenue || 0;
+  const totalDownloads = stats.total_downloads || 0;
+  const totalViews = stats.total_views || 0;
+  const totalLikes = stats.total_likes || 0;
+  const modelsCount = stats.models_count || 0;
+  
+  // Calculate additional stats from models
   const activeModels = models.filter(m => m.status === 'approved').length;
+  const pendingModels = models.filter(m => m.status === 'pending').length;
   const avgRating = models.length > 0 
     ? models.reduce((sum, m) => sum + m.rating, 0) / models.length 
     : 0;
@@ -33,29 +47,37 @@ export default function DashboardPage() {
   return (
     <ProtectedRoute>
       <DashboardLayout>
+      {loading && (
+        <div className="flex items-center justify-center py-20">
+          <LoadingSpinner />
+        </div>
+      )}
+      
+      {!loading && (
+        <>
       {/* Header Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
         <div className="bg-slate-900/50 border border-orange-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 backdrop-blur">
-          <div className="text-xs sm:text-sm text-slate-400 mb-1 sm:mb-2">Total Sales</div>
+          <div className="text-xs sm:text-sm text-slate-400 mb-1 sm:mb-2">Total Revenue</div>
           <div className="text-xl sm:text-3xl font-black bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
-            ${loading ? '...' : totalSales.toFixed(2)}
+            ${totalRevenue.toFixed(2)}
           </div>
-          <div className="text-xs text-green-400 mt-1 sm:mt-2">+23% this month</div>
+          <div className="text-xs text-slate-400 mt-1 sm:mt-2">{modelsCount} models</div>
         </div>
         <div className="bg-slate-900/50 border border-orange-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 backdrop-blur">
-          <div className="text-xs sm:text-sm text-slate-400 mb-1 sm:mb-2">Models Sold</div>
-          <div className="text-xl sm:text-3xl font-black text-white">{loading ? '...' : totalDownloads}</div>
-          <div className="text-xs text-green-400 mt-1 sm:mt-2">+18 today</div>
+          <div className="text-xs sm:text-sm text-slate-400 mb-1 sm:mb-2">Downloads</div>
+          <div className="text-xl sm:text-3xl font-black text-white">{totalDownloads}</div>
+          <div className="text-xs text-slate-400 mt-1 sm:mt-2">{totalViews} views</div>
         </div>
         <div className="bg-slate-900/50 border border-orange-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 backdrop-blur">
           <div className="text-xs sm:text-sm text-slate-400 mb-1 sm:mb-2">Active Models</div>
-          <div className="text-xl sm:text-3xl font-black text-white">{loading ? '...' : activeModels}</div>
-          <div className="text-xs text-slate-400 mt-1 sm:mt-2">3 pending review</div>
+          <div className="text-xl sm:text-3xl font-black text-white">{activeModels}</div>
+          <div className="text-xs text-slate-400 mt-1 sm:mt-2">{pendingModels} pending</div>
         </div>
         <div className="bg-slate-900/50 border border-orange-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 backdrop-blur">
-          <div className="text-xs sm:text-sm text-slate-400 mb-1 sm:mb-2">Avg. Rating</div>
-          <div className="text-xl sm:text-3xl font-black text-white">{loading ? '...' : avgRating.toFixed(1)}</div>
-          <div className="text-xs text-orange-400 mt-1 sm:mt-2">⭐⭐⭐⭐⭐</div>
+          <div className="text-xs sm:text-sm text-slate-400 mb-1 sm:mb-2">Total Likes</div>
+          <div className="text-xl sm:text-3xl font-black text-white">{totalLikes}</div>
+          <div className="text-xs text-orange-400 mt-1 sm:mt-2">⭐ {avgRating.toFixed(1)} avg rating</div>
         </div>
       </div>
 
@@ -78,7 +100,7 @@ export default function DashboardPage() {
               <span className="text-xl sm:text-2xl">🎯</span>
               Sales Goals
             </h2>
-            <SalesGoalProgress />
+            <SalesGoalProgress currentRevenue={totalRevenue} currentSales={totalDownloads} />
           </div>
         </div>
 
@@ -99,10 +121,12 @@ export default function DashboardPage() {
               <span className="text-xl sm:text-2xl">📡</span>
               Live Activity
             </h2>
-            <ActivityStream />
+            <ActivityStream models={models} />
           </div>
         </div>
       </div>
+      </>
+      )}
     </DashboardLayout>
     </ProtectedRoute>
   );

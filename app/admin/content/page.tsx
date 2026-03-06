@@ -50,7 +50,7 @@ export default function ContentCMSPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
     <AdminLayout title="Content Management System">
       <div className="flex items-center justify-between mb-6">
         <p className="text-gray-400">Create and manage platform updates and announcements</p>
@@ -105,32 +105,39 @@ export default function ContentCMSPage() {
       <div className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-2xl p-6">
         <h3 className="text-xl font-bold text-white mb-4">Published Content</h3>
         <div className="space-y-3">
-          {posts.map((post) => (
-            <div key={post.id} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition">
-              <div className="flex-1">
-                <div className="text-white font-bold">{post.title}</div>
-                <div className="text-gray-400 text-sm">{post.date} • {post.views} views</div>
+          {Array.isArray(posts) && posts.length > 0 ? (
+            posts.map((post: any) => (
+              <div key={post.id} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition">
+                <div className="flex-1">
+                  <div className="text-white font-bold">{post.title}</div>
+                  <div className="text-gray-400 text-sm">{post.date} • {post.views} views</div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    post.status === "Published"
+                      ? "bg-green-900/30 text-green-400"
+                      : "bg-yellow-900/30 text-yellow-400"
+                  }`}>
+                    {post.status}
+                  </span>
+                  <button className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-sm font-semibold transition">
+                    Edit
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(post.id)}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-semibold transition"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  post.status === "Published"
-                    ? "bg-green-900/30 text-green-400"
-                    : "bg-yellow-900/30 text-yellow-400"
-                }`}>
-                  {post.status}
-                </span>
-                <button className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-sm font-semibold transition">
-                  Edit
-                </button>
-                <button 
-                  onClick={() => handleDelete(post.id)}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-semibold transition"
-                >
-                  Delete
-                </button>
-              </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              <div className="text-4xl mb-2">📝</div>
+              <p>No posts yet. Create your first post above!</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </AdminLayout>

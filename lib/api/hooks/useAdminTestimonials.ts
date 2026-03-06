@@ -1,54 +1,56 @@
 import { useState, useEffect } from 'react';
-import { adminApi } from '../admin';
+import { api } from '../index';
 
-export function useAdminTestimonials() {
+export function useAdminTestimonials(status?: string) {
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [total, setTotal] = useState(0);
 
-  const fetchTestimonials = async () => {
+  const fetchTestimonials = async (page = 1, limit = 20) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await adminApi.getTestimonials();
-      setTestimonials(data.items || data || []);
+      const data = await api.admin.getTestimonials(page, limit);
+      setTestimonials(data.testimonials || []);
+      setTotal(data.total || 0);
     } catch (err: any) {
-      console.error('Failed to fetch testimonials:', err);
-      setError(err.response?.data?.detail || err.message || 'Failed to fetch testimonials');
+      setError(err.message || 'Failed to fetch testimonials');
+      setTestimonials([]);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchTestimonials();
-  }, []);
+  const approveTestimonial = async (id: number) => {
+    try {
+      await api.admin.approveTestimonial(id);
+      await fetchTestimonials();
+    } catch (err: any) {
+      setError(err.message || 'Failed to approve testimonial');
+    }
+  };
 
   const deleteTestimonial = async (id: number) => {
     try {
-      await adminApi.deleteTestimonial(id);
+      await api.admin.deleteTestimonial(id);
       await fetchTestimonials();
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to delete testimonial');
-      throw err;
+      setError(err.message || 'Failed to delete testimonial');
     }
   };
 
-  const toggleFeatured = async (id: number) => {
-    try {
-      // Toggle the featured status locally first for optimistic update
-      setTestimonials(prev => prev.map(t => 
-        t.id === id ? { ...t, featured: !t.featured } : t
-      ));
-      // In a real implementation, this would call an API endpoint
-      // await adminApi.toggleTestimonialFeatured(id);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to toggle featured status');
-      // Revert on error
-      await fetchTestimonials();
-      throw err;
-    }
-  };
+  useEffect(() => {
+    fetchTestimonials();
+  }, [status]);
 
-  return { testimonials, loading, error, deleteTestimonial, toggleFeatured, refetch: fetchTestimonials };
+  return { 
+    testimonials, 
+    loading, 
+    error, 
+    total,
+    approveTestimonial, 
+    deleteTestimonial,
+    refetch: fetchTestimonials 
+  };
 }

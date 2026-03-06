@@ -86,6 +86,7 @@ export default function SuperAdminPage() {
     { id: "slider", icon: "🎬", label: "Slider Manager", href: "/admin/slider", color: "from-cyan-600 to-blue-600" },
     { id: "models", icon: "🎨", label: "Model Review", href: "/admin/models", color: "from-purple-600 to-pink-600" },
     { id: "users", icon: "👥", label: "User Management", href: "/admin/users", color: "from-green-600 to-emerald-600" },
+    { id: "support", icon: "🆘", label: "Support Tickets", href: "/admin/support", color: "from-blue-600 to-cyan-600" },
     { id: "bounties", icon: "💼", label: "Bounty Board", href: "/admin/bounties", color: "from-indigo-600 to-purple-600" },
     { id: "leaderboard", icon: "🏆", label: "Leaderboard", href: "/admin/leaderboard", color: "from-yellow-600 to-orange-600" },
     { id: "testimonials", icon: "💬", label: "Testimonials", href: "/admin/testimonials", color: "from-pink-600 to-rose-600" },
@@ -99,7 +100,7 @@ export default function SuperAdminPage() {
   ];
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black">
       {/* Animated Grid Background */}
       <div className="fixed inset-0 bg-[linear-gradient(rgba(255,215,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,215,0,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />

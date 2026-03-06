@@ -40,7 +40,7 @@ export const communitiesApi = {
   },
 
   // Get community details
-  getCommunity: async (id: number): Promise<Community> => {
+  getCommunity: async (id: number | string): Promise<Community> => {
     const response = await apiClient.get<Community>(`/communities/${id}`);
     return response.data;
   },
@@ -64,19 +64,19 @@ export const communitiesApi = {
   },
 
   // Join community
-  joinCommunity: async (id: number): Promise<ApiResponse<void>> => {
+  joinCommunity: async (id: number | string): Promise<ApiResponse<void>> => {
     const response = await apiClient.post<ApiResponse<void>>(`/communities/${id}/join`);
     return response.data;
   },
 
   // Leave community
-  leaveCommunity: async (id: number): Promise<ApiResponse<void>> => {
+  leaveCommunity: async (id: number | string): Promise<ApiResponse<void>> => {
     const response = await apiClient.delete<ApiResponse<void>>(`/communities/${id}/leave`);
     return response.data;
   },
 
   // Get members
-  getMembers: async (id: number, page = 1, limit = 20): Promise<PaginatedResponse<any>> => {
+  getMembers: async (id: number | string, page = 1, limit = 20): Promise<PaginatedResponse<any>> => {
     const response = await apiClient.get<PaginatedResponse<any>>(`/communities/${id}/members`, {
       params: { page, limit },
     });
@@ -84,13 +84,13 @@ export const communitiesApi = {
   },
 
   // Create post
-  createPost: async (communityId: number, data: CreatePostData): Promise<CommunityPost> => {
+  createPost: async (communityId: number | string, data: CreatePostData): Promise<CommunityPost> => {
     const response = await apiClient.post<CommunityPost>(`/communities/${communityId}/posts`, data);
     return response.data;
   },
 
   // Get posts
-  getPosts: async (communityId: number, filter = 'recent', page = 1, limit = 20): Promise<PaginatedResponse<CommunityPost>> => {
+  getPosts: async (communityId: number | string, filter = 'recent', page = 1, limit = 20): Promise<PaginatedResponse<CommunityPost>> => {
     const response = await apiClient.get<PaginatedResponse<CommunityPost>>(`/communities/${communityId}/posts`, {
       params: { filter, page, limit },
     });
@@ -110,7 +110,7 @@ export const communitiesApi = {
   },
 
   // React to post
-  reactToPost: async (postId: number, reactionType: string): Promise<ApiResponse<void>> => {
+  reactToPost: async (postId: number | string, reactionType: string): Promise<ApiResponse<void>> => {
     const response = await apiClient.post<ApiResponse<void>>(`/communities/posts/${postId}/react`, {
       reaction_type: reactionType,
     });
@@ -118,13 +118,13 @@ export const communitiesApi = {
   },
 
   // Remove reaction
-  removeReaction: async (postId: number): Promise<ApiResponse<void>> => {
+  removeReaction: async (postId: number | string): Promise<ApiResponse<void>> => {
     const response = await apiClient.delete<ApiResponse<void>>(`/communities/posts/${postId}/react`);
     return response.data;
   },
 
   // Add comment
-  addComment: async (postId: number, content: string, parentId?: number): Promise<Comment> => {
+  addComment: async (postId: number | string, content: string, parentId?: string): Promise<Comment> => {
     const response = await apiClient.post<Comment>(`/communities/posts/${postId}/comments`, {
       content,
       parent_id: parentId,
@@ -133,10 +133,22 @@ export const communitiesApi = {
   },
 
   // Get comments
-  getComments: async (postId: number, page = 1, limit = 50): Promise<PaginatedResponse<Comment>> => {
+  getComments: async (postId: number | string, page = 1, limit = 50): Promise<PaginatedResponse<Comment>> => {
     const response = await apiClient.get<PaginatedResponse<Comment>>(`/communities/posts/${postId}/comments`, {
       params: { page, limit },
     });
+    return response.data;
+  },
+
+  // Like comment
+  likeComment: async (commentId: string): Promise<ApiResponse<void>> => {
+    const response = await apiClient.post<ApiResponse<void>>(`/communities/comments/${commentId}/like`);
+    return response.data;
+  },
+
+  // Unlike comment
+  unlikeComment: async (commentId: string): Promise<ApiResponse<void>> => {
+    const response = await apiClient.delete<ApiResponse<void>>(`/communities/comments/${commentId}/like`);
     return response.data;
   },
 };

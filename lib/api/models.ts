@@ -44,8 +44,14 @@ export const modelsApi = {
     return response.data;
   },
 
+  // Get user's inventory (purchased models)
+  getUserInventory: async (filters: ModelFilters = {}): Promise<PaginatedResponse<Model>> => {
+    const response = await apiClient.get<PaginatedResponse<Model>>('/models/inventory', { params: filters });
+    return response.data;
+  },
+
   // Get model by ID
-  getModel: async (id: number): Promise<Model> => {
+  getModel: async (id: string): Promise<Model> => {
     const response = await apiClient.get<Model>(`/models/${id}`);
     return response.data;
   },
@@ -57,31 +63,31 @@ export const modelsApi = {
   },
 
   // Update model
-  updateModel: async (id: number, data: Partial<CreateModelData>): Promise<Model> => {
+  updateModel: async (id: string, data: Partial<CreateModelData>): Promise<Model> => {
     const response = await apiClient.put<Model>(`/models/${id}`, data);
     return response.data;
   },
 
   // Delete model
-  deleteModel: async (id: number): Promise<ApiResponse<void>> => {
+  deleteModel: async (id: string): Promise<ApiResponse<void>> => {
     const response = await apiClient.delete<ApiResponse<void>>(`/models/${id}`);
     return response.data;
   },
 
   // Like model
-  likeModel: async (id: number): Promise<ApiResponse<void>> => {
+  likeModel: async (id: string): Promise<ApiResponse<void>> => {
     const response = await apiClient.post<ApiResponse<void>>(`/models/${id}/like`);
     return response.data;
   },
 
   // Unlike model
-  unlikeModel: async (id: number): Promise<ApiResponse<void>> => {
+  unlikeModel: async (id: string): Promise<ApiResponse<void>> => {
     const response = await apiClient.delete<ApiResponse<void>>(`/models/${id}/like`);
     return response.data;
   },
 
   // Add comment
-  addComment: async (id: number, content: string, parentId?: number): Promise<Comment> => {
+  addComment: async (id: string, content: string, parentId?: string): Promise<Comment> => {
     const response = await apiClient.post<Comment>(`/models/${id}/comments`, {
       content,
       parent_id: parentId,
@@ -90,7 +96,7 @@ export const modelsApi = {
   },
 
   // Get comments
-  getComments: async (id: number, page = 1, limit = 50): Promise<PaginatedResponse<Comment>> => {
+  getComments: async (id: string, page = 1, limit = 50): Promise<PaginatedResponse<Comment>> => {
     const response = await apiClient.get<PaginatedResponse<Comment>>(`/models/${id}/comments`, {
       params: { page, limit },
     });
@@ -98,7 +104,7 @@ export const modelsApi = {
   },
 
   // Increment view count
-  incrementView: async (id: number): Promise<void> => {
+  incrementView: async (id: string): Promise<void> => {
     await apiClient.post(`/models/${id}/view`);
   },
 };

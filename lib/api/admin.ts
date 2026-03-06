@@ -36,19 +36,23 @@ export const adminApi = {
   },
 
   verifyCreator: async (userId: number): Promise<ApiResponse<void>> => {
-    const response = await apiClient.put<ApiResponse<void>>(`/admin/users/${userId}/verify`);
+    const response = await apiClient.put<ApiResponse<void>>(`/admin/users/${userId}`, {
+      is_verified: true
+    });
     return response.data;
   },
 
   banUser: async (userId: number): Promise<ApiResponse<void>> => {
-    const response = await apiClient.put<ApiResponse<void>>(`/admin/users/${userId}/ban`);
+    const response = await apiClient.put<ApiResponse<void>>(`/admin/users/${userId}`, {
+      is_active: false
+    });
     return response.data;
   },
 
   // Model Management
   getPendingModels: async (page = 1, limit = 20): Promise<PaginatedResponse<Model>> => {
-    const response = await apiClient.get<PaginatedResponse<Model>>('/admin/models/pending', {
-      params: { page, limit },
+    const response = await apiClient.get<PaginatedResponse<Model>>('/admin/models', {
+      params: { page, limit, status: 'pending' },
     });
     return response.data;
   },
@@ -91,22 +95,22 @@ export const adminApi = {
     return response.data;
   },
 
-  getBountyDetails: async (id: number): Promise<any> => {
+  getBountyDetails: async (id: string | number): Promise<any> => {
     const response = await apiClient.get(`/admin/bounties/${id}`);
     return response.data;
   },
 
-  updateBountyStatus: async (id: number, status: string): Promise<any> => {
+  updateBountyStatus: async (id: string | number, status: string): Promise<any> => {
     const response = await apiClient.put(`/admin/bounties/${id}/status`, { status });
     return response.data;
   },
 
-  forceCloseBounty: async (id: number, reason: string): Promise<any> => {
+  forceCloseBounty: async (id: string | number, reason: string): Promise<any> => {
     const response = await apiClient.post(`/admin/bounties/${id}/force-close`, { reason });
     return response.data;
   },
 
-  resolveBountyDispute: async (id: number, resolution: {
+  resolveBountyDispute: async (id: string | number, resolution: {
     winner: 'buyer' | 'artist';
     refund_percentage?: number;
     notes: string;
@@ -125,17 +129,17 @@ export const adminApi = {
     return response.data;
   },
 
-  approveBountyPayout: async (id: number): Promise<any> => {
+  approveBountyPayout: async (id: string | number): Promise<any> => {
     const response = await apiClient.post(`/admin/bounties/${id}/approve-payout`);
     return response.data;
   },
 
-  refundBounty: async (id: number, reason: string): Promise<any> => {
+  refundBounty: async (id: string | number, reason: string): Promise<any> => {
     const response = await apiClient.post(`/admin/bounties/${id}/refund`, { reason });
     return response.data;
   },
 
-  banUserFromBounties: async (userId: number, reason: string, duration?: number): Promise<any> => {
+  banUserFromBounties: async (userId: string | number, reason: string, duration?: number): Promise<any> => {
     const response = await apiClient.post('/admin/bounties/ban-user', { 
       user_id: userId, 
       reason,
@@ -144,7 +148,7 @@ export const adminApi = {
     return response.data;
   },
 
-  getBountyTransactions: async (bountyId: number): Promise<any> => {
+  getBountyTransactions: async (bountyId: string | number): Promise<any> => {
     const response = await apiClient.get(`/admin/bounties/${bountyId}/transactions`);
     return response.data;
   },

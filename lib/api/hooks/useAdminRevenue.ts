@@ -1,23 +1,9 @@
 import { useState, useEffect } from 'react';
-import { adminApi } from '../admin';
+import { api } from '../index';
 
-export function useAdminRevenue() {
-  const [revenue, setRevenue] = useState({
-    stats: {
-      totalRevenue: 0,
-      platformFees: 0,
-      monthlyRevenue: 0,
-      avgTransaction: 0,
-    },
-    transactions: [] as Array<{
-      id: number;
-      model: string;
-      buyer: string;
-      amount: number;
-      fee: number;
-      date: string;
-    }>,
-  });
+export function useAdminRevenue(startDate?: string, endDate?: string) {
+  const [revenue, setRevenue] = useState<any>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,31 +11,37 @@ export function useAdminRevenue() {
     try {
       setLoading(true);
       setError(null);
-      const [revenueData, transactionsData] = await Promise.all([
-        adminApi.getRevenue(),
-        adminApi.getTransactions(),
-      ]);
-      
-      setRevenue({
-        stats: revenueData.stats || {
-          totalRevenue: 0,
-          platformFees: 0,
-          monthlyRevenue: 0,
-          avgTransaction: 0,
-        },
-        transactions: transactionsData.items || transactionsData || [],
-      });
+      const data = await api.admin.getRevenue();
+      setRevenue(data);
     } catch (err: any) {
-      console.error('Failed to fetch revenue:', err);
-      setError(err.response?.data?.detail || err.message || 'Failed to fetch revenue data');
+      setError(err.message || 'Failed to fetch revenue data');
+      setRevenue(null);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchTransactions = async (page = 1, limit = 20) => {
+    try {
+      const data = await api.admin.getTransactions(page, limit);
+      setTransactions(data.transactions || []);
+      return data;
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch transactions');
+      return { transactions: [], total: 0 };
+    }
+  };
+
   useEffect(() => {
     fetchRevenue();
-  }, []);
+  }, [startDate, endDate]);
 
-  return { revenue, loading, error, refetch: fetchRevenue };
+  return { 
+    revenue, 
+    transactions, 
+    loading, 
+    error, 
+    refetch: fetchRevenue,
+    fetchTransactions 
+  };
 }

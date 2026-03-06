@@ -6,11 +6,13 @@ import Link from "next/link";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { adminApi } from "@/lib/api/admin";
+import { useAdminModal } from "@/components/admin/AdminModal";
 
 export default function ResolveDisputePage() {
   const params = useParams();
   const router = useRouter();
-  const bountyId = parseInt(params.id as string);
+  const bountyId = params.id as string; // UUID string, not integer
+  const { showAlert, showConfirm, AdminModalComponent } = useAdminModal();
   
   const [loading, setLoading] = useState(true);
   const [bounty, setBounty] = useState<any>(null);
@@ -39,16 +41,22 @@ export default function ResolveDisputePage() {
 
   const handleResolve = async () => {
     if (!resolution.winner) {
-      alert("Please select a winner");
+      await showAlert("Validation Error", "Please select a winner", "warning");
       return;
     }
 
     if (!resolution.notes.trim()) {
-      alert("Please provide resolution notes");
+      await showAlert("Validation Error", "Please provide resolution notes", "warning");
       return;
     }
 
-    if (!confirm(`Resolve dispute in favor of ${resolution.winner}?`)) return;
+    const confirmed = await showConfirm(
+      "Resolve Dispute",
+      `Resolve dispute in favor of ${resolution.winner}? This action is final and cannot be undone.`,
+      "danger"
+    );
+    
+    if (!confirmed) return;
 
     try {
       setProcessing(true);
@@ -57,9 +65,10 @@ export default function ResolveDisputePage() {
         refund_percentage: resolution.winner === "buyer" ? resolution.refund_percentage : undefined,
         notes: resolution.notes,
       });
+      await showAlert("Success", "Dispute resolved successfully", "success");
       router.push("/admin/bounties/disputes");
     } catch (err) {
-      alert("Failed to resolve dispute");
+      await showAlert("Error", "Failed to resolve dispute", "danger");
     } finally {
       setProcessing(false);
     }
@@ -67,7 +76,7 @@ export default function ResolveDisputePage() {
 
   if (loading) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAdmin={true}>
         <AdminLayout title="Resolve Dispute">
           <div className="text-center py-20">
             <div className="text-6xl mb-4">⏳</div>
@@ -80,7 +89,7 @@ export default function ResolveDisputePage() {
 
   if (!bounty) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAdmin={true}>
         <AdminLayout title="Resolve Dispute">
           <div className="text-center py-20">
             <div className="text-6xl mb-4">❌</div>
@@ -92,8 +101,10 @@ export default function ResolveDisputePage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
       <AdminLayout title="Resolve Dispute">
+        {AdminModalComponent}
+        
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <Link

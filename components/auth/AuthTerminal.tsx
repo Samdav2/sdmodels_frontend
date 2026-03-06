@@ -8,6 +8,7 @@ import AuthForm from './AuthForm';
 import SocialAuthButtons from './SocialAuthButtons';
 import UserPathSelector from './UserPathSelector';
 import { useAuth } from '@/lib/api/hooks/useAuth';
+import { authApi } from '@/lib/api/auth';
 import type { 
   AuthMode, 
   AuthState, 
@@ -98,10 +99,43 @@ export default function AuthTerminal({ initialMode = 'login' }: AuthTerminalProp
   };
 
   // Handle social auth provider clicks
-  const handleProviderClick = (provider: 'google' | 'github' | 'metamask') => {
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    console.log('Google OAuth success:', credentialResponse);
+    
+    try {
+      setAuthState('typing');
+      
+      // Determine user type based on selected path or default to buyer
+      const userType = selectedPath === 'modeller' ? 'creator' : 'buyer';
+      
+      // Call backend Google auth endpoint
+      const response = await authApi.googleAuth(credentialResponse.credential, userType);
+      
+      console.log('Google auth response:', response);
+      
+      setAuthState('success');
+      
+      // Show appropriate message in console
+      if (response.is_new_user) {
+        console.log(`Welcome ${response.user.full_name}! Your account has been created.`);
+      } else {
+        console.log(`Welcome back, ${response.user.full_name}!`);
+      }
+      
+      // Redirect to dashboard after showing success animation
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1500);
+    } catch (error: any) {
+      console.error('Google auth error:', error);
+      console.error('Error details:', error.response?.data);
+      setAuthState('error');
+    }
+  };
+
+  const handleProviderClick = (provider: 'github' | 'metamask') => {
     console.log('OAuth provider clicked:', provider);
-    // TODO: Implement OAuth flow with backend
-    // For now, just emit event as per requirements
+    // TODO: Implement GitHub and MetaMask OAuth flow
   };
 
   // Handle user path selection
@@ -177,6 +211,7 @@ export default function AuthTerminal({ initialMode = 'login' }: AuthTerminalProp
 
           {/* Social Auth Buttons */}
           <SocialAuthButtons
+            onGoogleSuccess={handleGoogleSuccess}
             onProviderClick={handleProviderClick}
             disabled={authState === 'success'}
           />

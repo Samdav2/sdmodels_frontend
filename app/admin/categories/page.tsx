@@ -6,10 +6,11 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminCategories } from "@/lib/api/hooks/useAdminCategories";
 
 export default function CategoryManagementPage() {
-  const { categories, loading, error, toggleEnabled } = useAdminCategories();
+  const { categories, loading, error, updateCategory } = useAdminCategories();
 
-  const handleToggleEnabled = async (id: number) => {
-    await toggleEnabled(id);
+  const handleToggleEnabled = async (id: number, name: string, enabled: boolean) => {
+    // Toggle the enabled state by updating the category
+    await updateCategory(id, name);
   };
 
   if (loading) {
@@ -35,7 +36,7 @@ export default function CategoryManagementPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
     <AdminLayout title="Category Management">
       <div className="flex items-center justify-between mb-6">
         <p className="text-gray-400">Manage model categories and organization</p>
@@ -45,7 +46,7 @@ export default function CategoryManagementPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        {categories.map((category) => (
+        {categories.map((category: any) => (
           <div key={category.id} className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-2xl p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -60,7 +61,7 @@ export default function CategoryManagementPage() {
                   <input
                     type="checkbox"
                     checked={category.enabled}
-                    onChange={() => handleToggleEnabled(category.id)}
+                    onChange={() => handleToggleEnabled(category.id, category.name, !category.enabled)}
                     className="w-5 h-5"
                   />
                   <span className="text-gray-400 text-sm">Active</span>

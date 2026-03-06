@@ -3,26 +3,26 @@
  */
 
 import { useState, useEffect } from 'react';
-import { supportApi, SupportTicket, SupportMessage } from '../support';
+import { supportApi, SupportTicket, FAQ } from '../support';
 
 export const useSupport = () => {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        setLoading(true);
-        const data = await supportApi.getTickets();
-        setTickets(data);
-      } catch (err: any) {
-        setError(err.response?.data?.detail || 'Failed to fetch tickets');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchTickets = async () => {
+    try {
+      setLoading(true);
+      const data = await supportApi.getTickets();
+      setTickets(data.tickets || []);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to fetch tickets');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchTickets();
   }, []);
 
@@ -42,46 +42,38 @@ export const useSupport = () => {
     loading,
     error,
     createTicket,
+    refetch: fetchTickets,
   };
 };
 
 export const useSupportTicket = (ticketId: string) => {
   const [ticket, setTicket] = useState<SupportTicket | null>(null);
-  const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchTicketData = async () => {
-      try {
-        setLoading(true);
-        const [ticketData, messagesData] = await Promise.all([
-          supportApi.getTicket(ticketId),
-          supportApi.getTicketMessages(ticketId),
-        ]);
-        setTicket(ticketData);
-        setMessages(messagesData);
-      } catch (err: any) {
-        setError(err.response?.data?.detail || 'Failed to fetch ticket');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchTicket = async () => {
+    try {
+      setLoading(true);
+      const ticketData = await supportApi.getTicket(ticketId);
+      setTicket(ticketData);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to fetch ticket');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (ticketId) {
-      fetchTicketData();
+      fetchTicket();
     }
   }, [ticketId]);
 
-  const sendMessage = async (text: string, attachments?: File[]) => {
+  const sendMessage = async (content: string, attachments?: string[]) => {
     try {
-      const newMessage = await supportApi.sendMessage({
-        ticket_id: ticketId,
-        text,
-        attachments,
-      });
-      setMessages((prev) => [...prev, newMessage]);
-      return newMessage;
+      await supportApi.sendMessage(ticketId, { content, attachments });
+      // Refetch ticket to get updated messages
+      await fetchTicket();
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to send message');
       throw err;
@@ -90,15 +82,16 @@ export const useSupportTicket = (ticketId: string) => {
 
   return {
     ticket,
-    messages,
+    messages: ticket?.messages || [],
     loading,
     error,
     sendMessage,
+    refetch: fetchTicket,
   };
 };
 
-export const useFAQs = () => {
-  const [faqs, setFaqs] = useState<any[]>([]);
+export const useFAQs = (category?: string) => {
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -106,7 +99,7 @@ export const useFAQs = () => {
     const fetchFAQs = async () => {
       try {
         setLoading(true);
-        const data = await supportApi.getFAQs();
+        const data = await supportApi.getFAQs(category ? { category } : undefined);
         setFaqs(data);
       } catch (err: any) {
         setError(err.response?.data?.detail || 'Failed to fetch FAQs');
@@ -116,11 +109,26 @@ export const useFAQs = () => {
     };
 
     fetchFAQs();
-  }, []);
+  }, [category]);
+
+  const markHelpful = async (faqId: string) => {
+    try {
+      await supportApi.markFAQHelpful(faqId);
+      // Update local state
+      setFaqs((prev) =>
+        prev.map((faq) =>
+          faq.id === faqId ? { ...faq, helpful_count: faq.helpful_count + 1 } : faq
+        )
+      );
+    } catch (err: any) {
+      console.error('Failed to mark FAQ as helpful:', err);
+    }
+  };
 
   return {
     faqs,
     loading,
     error,
+    markHelpful,
   };
 };

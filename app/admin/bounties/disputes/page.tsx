@@ -28,7 +28,7 @@ export default function AdminBountyDisputesPage() {
 
   if (loading) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAdmin={true}>
         <AdminLayout title="Bounty Disputes">
           <div className="text-center py-20">
             <div className="text-6xl mb-4">⏳</div>
@@ -40,7 +40,7 @@ export default function AdminBountyDisputesPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
       <AdminLayout title="Bounty Disputes">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

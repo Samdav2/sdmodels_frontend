@@ -2,6 +2,82 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 3D Perspective for Marketplace */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+/* 3D Grid Animations */
+@keyframes grid-move-vertical {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 60px;
+  }
+}
+
+@keyframes grid-move-horizontal {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 80px 0;
+  }
+}
+
+@keyframes float-particle {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translate(20px, -30px) scale(1.5);
+    opacity: 0.6;
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+.animate-grid-move-vertical {
+  animation: grid-move-vertical 20s linear infinite;
+}
+
+.animate-grid-move-horizontal {
+  animation: grid-move-horizontal 15s linear infinite;
+}
+
+.animate-float-particle {
+  animation: float-particle 10s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s ease-in-out infinite;
+}
+
 @layer base {
   /* Smooth scrolling for all devices including mobile */
   html {
@@ -20,6 +96,9 @@
     position: relative;
     /* Enable momentum scrolling on iOS */
     -webkit-overflow-scrolling: touch;
+    /* Black background with subtle orange hint for all pages including home */
+    background: linear-gradient(to bottom, #000000 0%, #0a0604 50%, #000000 100%);
+    background-attachment: fixed;
   }
   
   /* Smooth scrolling for all scrollable elements */
@@ -51,6 +130,29 @@
   .smooth-scroll {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Subtle orange hint background for pages */
+  .page-bg-subtle {
+    background: linear-gradient(to bottom, #000000 0%, #0a0604 50%, #000000 100%);
+    background-attachment: fixed;
+  }
+  
+  /* Subtle orange glow overlay */
+  .orange-glow-overlay {
+    position: relative;
+  }
+  
+  .orange-glow-overlay::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at center, rgba(255, 107, 53, 0.03) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
   }
   
   /* Hide scrollbar for Chrome, Safari and Opera */

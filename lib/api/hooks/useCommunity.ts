@@ -12,7 +12,7 @@ export function useCommunity(id: string | number) {
       try {
         setLoading(true);
         setError(null);
-        const data = await api.communities.getCommunity(Number(id));
+        const data = await api.communities.getCommunity(id);
         setCommunity(data);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch community');

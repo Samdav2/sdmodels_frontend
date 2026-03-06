@@ -12,7 +12,7 @@ export interface CheckoutData {
 
 export const transactionsApi = {
   // Cart operations
-  addToCart: async (modelId: number): Promise<CartItem> => {
+  addToCart: async (modelId: string): Promise<CartItem> => {
     const response = await apiClient.post<CartItem>('/transactions/cart', { model_id: modelId });
     return response.data;
   },

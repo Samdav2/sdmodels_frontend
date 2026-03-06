@@ -106,15 +106,44 @@ export const authApi = {
     });
   },
 
-  // Admin login (uses dedicated admin endpoint with separate admin_users table)
+  // Admin login (uses same login endpoint but stores with admin_ prefix)
   adminLogin: async (data: LoginData): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>('/admin/auth/login', data);
+    // Use the regular login endpoint - backend determines role from user_type
+    const response = await apiClient.post<AuthResponse>('/auth/login', data);
     
-    // Store tokens and admin data
-    setTokens(response.data.access_token, response.data.refresh_token);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Auth API] Admin login response:', {
+        hasUser: !!response.data.user,
+        userType: response.data.user?.user_type,
+        hasAccessToken: !!response.data.access_token,
+        hasRefreshToken: !!response.data.refresh_token,
+      });
+    }
+    
+    // Verify user is admin
+    if (!response.data.user) {
+      throw new Error('Invalid response: user data missing');
+    }
+    
+    if (response.data.user.user_type !== 'admin') {
+      throw new Error('Access denied. Admin credentials required.');
+    }
+    
+    // Store tokens with admin_ prefix
+    setTokens(response.data.access_token, response.data.refresh_token, true);
+    
+    // Store admin user data
     if (typeof window !== 'undefined') {
-      localStorage.setItem('admin_user', JSON.stringify(response.data.user));
-      localStorage.setItem('user', JSON.stringify(response.data.user)); // For compatibility
+      localStorage.setItem('admin_data', JSON.stringify(response.data.user));
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Auth API] Admin data stored in localStorage');
+        console.log('[Auth API] Verifying storage...');
+        const stored = localStorage.getItem('admin_data');
+        const storedToken = localStorage.getItem('admin_access_token');
+        console.log('[Auth API] Stored admin_data:', stored ? JSON.parse(stored) : 'NOT FOUND');
+        console.log('[Auth API] Stored admin_access_token:', storedToken ? 'Present' : 'NOT FOUND');
+      }
     }
     
     return response.data;
@@ -129,18 +158,13 @@ export const authApi = {
   // Admin logout
   adminLogout: async (): Promise<void> => {
     try {
-      await apiClient.post('/admin/auth/logout');
+      await apiClient.post('/auth/logout');
     } catch (error) {
       // Ignore errors on logout
     }
     
-    clearTokens();
-    
-    // Clear admin data
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('admin_user');
-      localStorage.removeItem('user');
-    }
+    // Clear admin tokens
+    clearTokens(true);
   },
 
   // Admin forgot password (uses same endpoint as regular users)
@@ -155,6 +179,24 @@ export const authApi = {
       token,
       new_password: newPassword,
     });
+    return response.data;
+  },
+
+  // Google OAuth login/signup
+  googleAuth: async (googleToken: string, userType: 'buyer' | 'creator' | 'seller' = 'buyer'): Promise<AuthResponse & { is_new_user: boolean }> => {
+    const response = await apiClient.post<AuthResponse & { is_new_user: boolean }>('/auth/google', {
+      token: googleToken,
+      user_type: userType,
+    });
+    
+    // Store tokens
+    setTokens(response.data.access_token, response.data.refresh_token);
+    
+    // Store user data
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    
     return response.data;
   },
 };

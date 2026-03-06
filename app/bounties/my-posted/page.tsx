@@ -11,9 +11,20 @@ import ErrorMessage from "@/components/ErrorMessage";
 export default function MyPostedBountiesPage() {
   const router = useRouter();
   const { bounties, loading, error } = useMyPostedBounties();
-  const [cancelling, setCancelling] = useState<number | null>(null);
+  const [cancelling, setCancelling] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'pending_review' | 'active' | 'completed'>('all');
 
-  const handleCancel = async (bountyId: number) => {
+  const filteredBounties = bounties.filter((bounty: any) => {
+    if (filter === 'all') return true;
+    if (filter === 'pending_review') return bounty.status === 'submitted';
+    if (filter === 'active') return ['open', 'claimed', 'in_progress'].includes(bounty.status);
+    if (filter === 'completed') return ['completed', 'cancelled'].includes(bounty.status);
+    return true;
+  });
+
+  const pendingReviewCount = bounties.filter((b: any) => b.status === 'submitted').length;
+
+  const handleCancel = async (bountyId: string) => {
     if (!confirm("Are you sure you want to cancel this bounty?")) return;
 
     try {
@@ -78,26 +89,87 @@ export default function MyPostedBountiesPage() {
           <h2 className="text-3xl sm:text-4xl font-black text-white mb-3">
             📋 Your <span className="text-orange-500">Posted Bounties</span>
           </h2>
-          <p className="text-slate-400">
+          <p className="text-slate-400 mb-6">
             Manage your bounties, review applications, and approve submissions.
           </p>
+
+          {/* Filter Tabs */}
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition ${
+                filter === 'all'
+                  ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/50'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              All ({bounties.length})
+            </button>
+            <button
+              onClick={() => setFilter('pending_review')}
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition relative ${
+                filter === 'pending_review'
+                  ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/50'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              Pending Review ({pendingReviewCount})
+              {pendingReviewCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+              )}
+            </button>
+            <button
+              onClick={() => setFilter('active')}
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition ${
+                filter === 'active'
+                  ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/50'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              Active
+            </button>
+            <button
+              onClick={() => setFilter('completed')}
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition ${
+                filter === 'completed'
+                  ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/50'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              Completed
+            </button>
+          </div>
         </div>
 
-        {bounties.length === 0 ? (
+        {filteredBounties.length === 0 ? (
           <div className="text-center py-16 bg-slate-900/50 border-2 border-orange-500/30 rounded-2xl">
-            <div className="text-6xl mb-4">📦</div>
-            <h3 className="text-2xl font-bold text-white mb-2">No bounties yet</h3>
-            <p className="text-slate-400 mb-6">Create your first bounty to get started</p>
-            <Link
-              href="/bounties/create"
-              className="inline-block px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition font-semibold"
-            >
-              Create Bounty
-            </Link>
+            <div className="text-6xl mb-4">
+              {filter === 'pending_review' ? '🔍' : filter === 'completed' ? '✅' : '📦'}
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-2">
+              {filter === 'all' && 'No bounties yet'}
+              {filter === 'pending_review' && 'No submissions to review'}
+              {filter === 'active' && 'No active bounties'}
+              {filter === 'completed' && 'No completed bounties'}
+            </h3>
+            <p className="text-slate-400 mb-6">
+              {filter === 'all' && 'Create your first bounty to get started'}
+              {filter === 'pending_review' && 'Submissions will appear here when artists submit their work'}
+              {filter === 'active' && 'Your active bounties will appear here'}
+              {filter === 'completed' && 'Completed bounties will appear here'}
+            </p>
+            {filter === 'all' && (
+              <Link
+                href="/bounties/create"
+                className="inline-block px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition font-semibold"
+              >
+                Create Bounty
+              </Link>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
-            {bounties.map((bounty: any) => (
+            {filteredBounties.map((bounty: any) => (
               <div
                 key={bounty.id}
                 className="bg-slate-900/50 border border-orange-500/30 rounded-xl p-6 backdrop-blur hover:border-orange-500 transition"
@@ -167,12 +239,19 @@ export default function MyPostedBountiesPage() {
                     )}
 
                     {bounty.status === "submitted" && (
-                      <Link
-                        href={`/bounties/${bounty.id}/review`}
-                        className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition font-semibold text-center text-sm shadow-lg shadow-orange-500/50"
-                      >
-                        Review Submission
-                      </Link>
+                      <>
+                        <Link
+                          href={`/bounties/${bounty.id}/review`}
+                          className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-400 hover:to-red-500 transition font-semibold text-center text-sm shadow-lg shadow-orange-500/50 animate-pulse"
+                        >
+                          🔍 Review Submission
+                        </Link>
+                        {bounty.submission_type && (
+                          <div className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/50 text-purple-400 rounded-lg text-center text-xs font-medium">
+                            {bounty.submission_type === 'upload' ? '📦 Model Uploaded' : '🔗 External Link'}
+                          </div>
+                        )}
+                      </>
                     )}
 
                     {bounty.status === "completed" && (

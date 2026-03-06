@@ -48,14 +48,36 @@ export function useUpload() {
       },
     });
 
+    console.log('Model upload response:', response.data);
+
     return response.data;
+  };
+
+  // Helper function to convert OpenDrive download URL to stream URL
+  const convertToStreamUrl = (url: string): string => {
+    if (!url) return url;
+    
+    // OpenDrive download URL format: https://od.lk/d/{id}/filename
+    // Convert to stream format: https://od.lk/s/{id}/filename
+    if (url.includes('od.lk/d/')) {
+      const streamUrl = url.replace('/d/', '/s/');
+      console.log('Converted download URL to stream URL:', { original: url, stream: streamUrl });
+      return streamUrl;
+    }
+    
+    return url;
   };
 
   // Step 2: Upload thumbnail image
   const uploadThumbnailImage = async (thumbnailData: string): Promise<{ image_url: string }> => {
+    console.log('=== THUMBNAIL UPLOAD START ===');
+    console.log('Thumbnail data length:', thumbnailData.length);
+    
     // Convert base64 to blob
     const response = await fetch(thumbnailData);
     const blob = await response.blob();
+    console.log('Thumbnail blob size:', blob.size, 'bytes');
+    console.log('Thumbnail blob type:', blob.type);
     
     const formData = new FormData();
     formData.append('file', blob, 'thumbnail.png');
@@ -66,6 +88,9 @@ export function useUpload() {
       },
     });
 
+    console.log('Thumbnail upload response:', uploadResponse.data);
+    console.log('=== THUMBNAIL UPLOAD COMPLETE ===');
+    
     return uploadResponse.data;
   };
 
@@ -89,13 +114,33 @@ export function useUpload() {
       setProgress({ loaded: 40, total: 100, percentage: 40, step: 'Uploading thumbnail...' });
       let thumbnailUrl = '';
       if (metadata.thumbnail) {
+        console.log('Uploading thumbnail...');
         const thumbnailResult = await uploadThumbnailImage(metadata.thumbnail);
-        thumbnailUrl = thumbnailResult.image_url;
+        console.log('Thumbnail result:', thumbnailResult);
+        
+        // Handle different possible response formats
+        let rawThumbnailUrl = thumbnailResult.image_url || 
+                              (thumbnailResult as any).file_url || 
+                              (thumbnailResult as any).url || 
+                              '';
+        
+        console.log('Raw thumbnail URL:', rawThumbnailUrl);
+        
+        // Convert to stream URL if it's an OpenDrive download link
+        thumbnailUrl = convertToStreamUrl(rawThumbnailUrl);
+        
+        console.log('Final thumbnail URL:', thumbnailUrl);
+      } else {
+        console.warn('No thumbnail data provided');
       }
       setProgress({ loaded: 60, total: 100, percentage: 60, step: 'Thumbnail uploaded' });
 
       // Step 3: Create model record (60-100%)
       setProgress({ loaded: 60, total: 100, percentage: 60, step: 'Creating model record...' });
+      
+      console.log('=== CREATING MODEL RECORD ===');
+      console.log('Model file URL:', modelFileResult.file_url);
+      console.log('Thumbnail URL:', thumbnailUrl);
       
       const modelPayload = {
         title: metadata.name,
@@ -108,7 +153,7 @@ export function useUpload() {
         // File URLs from uploads
         file_url: modelFileResult.file_url,
         thumbnail_url: thumbnailUrl || modelFileResult.file_url, // Fallback to model URL if no thumbnail
-        preview_images: [], // Can be added later
+        preview_images: thumbnailUrl ? [thumbnailUrl] : [], // Add thumbnail to preview images
         
         // File metadata
         file_size: modelFileResult.file_size,
@@ -124,7 +169,12 @@ export function useUpload() {
         has_textures: true,
       };
 
+      console.log('Model payload:', modelPayload);
+      
       const createdModel = await createModelRecord(modelPayload);
+      console.log('Created model:', createdModel);
+      console.log('=== MODEL CREATION COMPLETE ===');
+      
       setProgress({ loaded: 100, total: 100, percentage: 100, step: 'Complete!' });
 
       return { success: true, modelId: createdModel.id, model: createdModel };

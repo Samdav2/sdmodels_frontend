@@ -9,39 +9,25 @@ export default function AdminCommunitiesPage() {
   const { communities: backendCommunities, loading: communitiesLoading, error: communitiesError } = useCommunities();
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'reported' | 'create'>('all');
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCommunity, setSelectedCommunity] = useState<number | null>(null);
+  const [selectedCommunity, setSelectedCommunity] = useState<string | null>(null);
 
   // Transform backend data to match admin interface
-  const [communities, setCommunities] = useState([
-    {
-      id: 1,
-      name: "3D Game Assets",
-      description: "Share and discuss game-ready 3D models",
-      icon: "🎮",
-      category: "Gaming",
-      members: 15234,
-      posts: 8921,
-      status: "active",
-      creator: "Alex Chen",
-      createdDate: "2024-01-15",
-      reports: 0,
-      moderators: 3,
-    },
-    {
-      id: 2,
-      name: "Character Artists",
-      description: "For character modelers and riggers",
-      icon: "👤",
-      category: "Characters",
-      members: 8921,
-      posts: 5432,
-      status: "active",
-      creator: "Sarah Miller",
-      createdDate: "2024-02-01",
-      reports: 0,
-      moderators: 2,
-    },
-  ]);
+  const communities = backendCommunities.map((c: any) => ({
+    id: c.id,
+    name: c.name,
+    description: c.description,
+    icon: c.icon || "🏘️",
+    category: c.category || "General",
+    members: c.member_count || 0,
+    posts: c.post_count || 0,
+    status: c.status || "active",
+    creator: c.creator_username || "Unknown",
+    createdDate: c.created_at,
+    reports: 0, // TODO: Add reports count from backend
+    moderators: 1, // TODO: Add moderators count from backend
+    isPrivate: c.is_private || false,
+    requireApproval: c.require_approval || false,
+  }));
 
   const [reportedPosts, setReportedPosts] = useState([
     {
@@ -77,14 +63,14 @@ export default function AdminCommunitiesPage() {
     reportedContent: reportedPosts.length,
   };
 
-  const handleApproveCommunity = (id: number) => {
-    setCommunities(communities.map(c => 
-      c.id === id ? { ...c, status: 'active' } : c
-    ));
+  const handleApproveCommunity = async (id: string) => {
+    // TODO: Call API to approve community
+    console.log("Approve community:", id);
   };
 
-  const handleDeleteCommunity = (id: number) => {
-    setCommunities(communities.filter(c => c.id !== id));
+  const handleDeleteCommunity = async (id: string) => {
+    // TODO: Call API to delete community
+    console.log("Delete community:", id);
   };
 
   const handleResolveReport = (id: number, action: 'remove' | 'dismiss') => {
@@ -102,8 +88,27 @@ export default function AdminCommunitiesPage() {
   );
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
     <AdminLayout title="Community Management">
+      {/* Loading State */}
+      {communitiesLoading && (
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-400">Loading communities...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {communitiesError && (
+        <div className="bg-red-500/10 border-2 border-red-500/30 rounded-xl p-6 mb-6">
+          <div className="text-red-400 font-bold">Error loading communities</div>
+          <div className="text-gray-400 text-sm">{communitiesError}</div>
+        </div>
+      )}
+
+      {/* Content */}
+      {!communitiesLoading && !communitiesError && (
+        <>
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <div className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-xl p-4">
@@ -575,6 +580,8 @@ export default function AdminCommunitiesPage() {
           ))}
         </div>
       </div>
+        </>
+      )}
     </AdminLayout>
     </ProtectedRoute>
   );

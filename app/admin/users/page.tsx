@@ -46,7 +46,7 @@ export default function UserManagementPage() {
 
   if (loading) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAdmin={true}>
         <AdminLayout title="User Authority Panel">
           <div className="text-center py-20">
             <div className="text-6xl mb-4">⏳</div>
@@ -59,7 +59,7 @@ export default function UserManagementPage() {
 
   if (error) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAdmin={true}>
         <AdminLayout title="User Authority Panel">
           <div className="text-center py-20">
             <div className="text-6xl mb-4">⚠️</div>
@@ -74,7 +74,7 @@ export default function UserManagementPage() {
   const filteredUsers = users;
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
       <AdminLayout title="User Authority Panel">
         {AdminModalComponent}
         

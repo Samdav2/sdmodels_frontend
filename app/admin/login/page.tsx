@@ -30,13 +30,31 @@ export default function AdminLoginPage() {
           return;
         }
 
+        console.log("[Admin Login] Attempting login...");
         const response = await authApi.adminLogin({
           email: formData.email,
           password: formData.password,
         });
 
+        console.log("[Admin Login] Login response received:", {
+          hasAccessToken: !!response.access_token,
+          hasRefreshToken: !!response.refresh_token,
+          userType: response.user?.user_type,
+          userId: response.user?.id,
+        });
+
+        // Verify admin_data was stored correctly
+        const adminData = localStorage.getItem('admin_data');
+        const adminToken = localStorage.getItem('admin_access_token');
+        console.log("[Admin Login] LocalStorage check:", {
+          hasAdminData: !!adminData,
+          hasAdminToken: !!adminToken,
+          adminDataParsed: adminData ? JSON.parse(adminData) : null,
+        });
+
         // Admin login successful - redirect to admin dashboard
         if (response.access_token) {
+          console.log("[Admin Login] Redirecting to admin dashboard...");
           router.push("/admin");
         } else {
           // If 2FA is required in the future
@@ -52,7 +70,12 @@ export default function AdminLoginPage() {
         }
       }
     } catch (err: any) {
-      console.error("Admin login error:", err);
+      console.error("[Admin Login] Login error:", err);
+      console.error("[Admin Login] Error details:", {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+      });
       setError(err.response?.data?.detail || err.message || "Login failed. Please check your credentials.");
     } finally {
       setLoading(false);

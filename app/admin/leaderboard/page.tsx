@@ -9,18 +9,34 @@ import { useAdminModal } from "@/components/admin/AdminModal";
 export default function LeaderboardManagementPage() {
   const { 
     leaderboard, 
-    seasonSettings, 
+    settings, 
     loading, 
     error, 
-    adjustPoints,
-    resetPoints,
-    saveSettings,
-    startNewSeason,
-    setSeasonSettings 
+    adjustUserPoints,
+    updateSettings,
+    refetch 
   } = useAdminLeaderboard();
   
-  const { modal, showAlert, showConfirm, showPrompt, AdminModalComponent } = useAdminModal();
+  const { showAlert, showConfirm, showPrompt, AdminModalComponent } = useAdminModal();
   const [processing, setProcessing] = useState(false);
+  const [seasonSettings, setSeasonSettings] = useState({
+    name: "",
+    end_date: "",
+    points_per_upload: 10,
+    points_per_sale: 50,
+  });
+
+  // Update local state when settings load
+  useState(() => {
+    if (settings) {
+      setSeasonSettings({
+        name: settings.season_name || "",
+        end_date: settings.season_end_date || "",
+        points_per_upload: settings.points_per_upload || 10,
+        points_per_sale: settings.points_per_sale || 50,
+      });
+    }
+  });
 
   const handleAdjustPoints = async (userId: number, username: string) => {
     const points = await showPrompt(
@@ -33,8 +49,9 @@ export default function LeaderboardManagementPage() {
     if (points && !isNaN(parseInt(points))) {
       try {
         setProcessing(true);
-        await adjustPoints(userId, parseInt(points), "Manual adjustment by admin");
+        await adjustUserPoints(userId, parseInt(points), "Manual adjustment by admin");
         await showAlert("Success", "Points adjusted successfully!", "success");
+        await refetch();
       } catch (err) {
         await showAlert("Error", "Failed to adjust points", "danger");
       } finally {
@@ -53,8 +70,9 @@ export default function LeaderboardManagementPage() {
     if (confirmed) {
       try {
         setProcessing(true);
-        await resetPoints(userId);
+        await adjustUserPoints(userId, 0, "Reset by admin");
         await showAlert("Success", "Points reset successfully!", "success");
+        await refetch();
       } catch (err) {
         await showAlert("Error", "Failed to reset points", "danger");
       } finally {
@@ -66,7 +84,12 @@ export default function LeaderboardManagementPage() {
   const handleSaveSettings = async () => {
     try {
       setProcessing(true);
-      await saveSettings();
+      await updateSettings({
+        season_name: seasonSettings.name,
+        season_end_date: seasonSettings.end_date,
+        points_per_upload: seasonSettings.points_per_upload,
+        points_per_sale: seasonSettings.points_per_sale,
+      });
       await showAlert("Success", "Settings saved successfully!", "success");
     } catch (err) {
       await showAlert("Error", "Failed to save settings", "danger");
@@ -76,39 +99,33 @@ export default function LeaderboardManagementPage() {
   };
 
   const handleStartNewSeason = async () => {
-    const confirmed = await showConfirm(
+    const seasonName = await showPrompt(
       "Start New Season",
-      "This will reset all user points and start a new season. Are you sure?",
-      "warning"
+      "Enter new season name:",
+      "",
+      "info"
     );
     
-    if (confirmed) {
-      const seasonName = await showPrompt(
-        "New Season Name",
-        "Enter the name for the new season:",
-        `Season ${new Date().getFullYear()}`,
-        "info"
-      );
-      
-      if (seasonName) {
-        try {
-          setProcessing(true);
-          const endDate = new Date();
-          endDate.setMonth(endDate.getMonth() + 3); // 3 months from now
-          await startNewSeason(seasonName, endDate.toISOString().split('T')[0]);
-          await showAlert("Success", "New season started successfully!", "success");
-        } catch (err) {
-          await showAlert("Error", "Failed to start new season", "danger");
-        } finally {
-          setProcessing(false);
-        }
+    if (seasonName) {
+      try {
+        setProcessing(true);
+        await updateSettings({
+          season_name: seasonName,
+          season_end_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        });
+        await showAlert("Success", "New season started!", "success");
+        await refetch();
+      } catch (err) {
+        await showAlert("Error", "Failed to start new season", "danger");
+      } finally {
+        setProcessing(false);
       }
     }
   };
 
   if (loading) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAdmin={true}>
         <AdminLayout title="Leaderboard Management">
           <div className="text-center py-20">
             <div className="text-6xl mb-4">⏳</div>
@@ -121,7 +138,7 @@ export default function LeaderboardManagementPage() {
 
   if (error) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAdmin={true}>
         <AdminLayout title="Leaderboard Management">
           <div className="text-center py-20">
             <div className="text-6xl mb-4">⚠️</div>
@@ -134,7 +151,7 @@ export default function LeaderboardManagementPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
       <AdminLayout title="Leaderboard Management">
         {AdminModalComponent}
         
@@ -198,8 +215,8 @@ export default function LeaderboardManagementPage() {
               <label className="text-gray-400 text-sm mb-2 block">Season End Date</label>
               <input
                 type="date"
-                value={seasonSettings.endDate}
-                onChange={(e) => setSeasonSettings({ ...seasonSettings, endDate: e.target.value })}
+                value={seasonSettings.end_date}
+                onChange={(e) => setSeasonSettings({ ...seasonSettings, end_date: e.target.value })}
                 className="w-full px-4 py-2 bg-slate-800 border border-yellow-600/30 rounded-lg text-white focus:outline-none focus:border-yellow-600"
               />
             </div>
@@ -207,8 +224,8 @@ export default function LeaderboardManagementPage() {
               <label className="text-gray-400 text-sm mb-2 block">Points per Upload</label>
               <input
                 type="number"
-                value={seasonSettings.pointsPerUpload}
-                onChange={(e) => setSeasonSettings({ ...seasonSettings, pointsPerUpload: parseInt(e.target.value) || 0 })}
+                value={seasonSettings.points_per_upload}
+                onChange={(e) => setSeasonSettings({ ...seasonSettings, points_per_upload: parseInt(e.target.value) || 0 })}
                 className="w-full px-4 py-2 bg-slate-800 border border-yellow-600/30 rounded-lg text-white focus:outline-none focus:border-yellow-600"
               />
             </div>
@@ -216,8 +233,8 @@ export default function LeaderboardManagementPage() {
               <label className="text-gray-400 text-sm mb-2 block">Points per Sale</label>
               <input
                 type="number"
-                value={seasonSettings.pointsPerSale}
-                onChange={(e) => setSeasonSettings({ ...seasonSettings, pointsPerSale: parseInt(e.target.value) || 0 })}
+                value={seasonSettings.points_per_sale}
+                onChange={(e) => setSeasonSettings({ ...seasonSettings, points_per_sale: parseInt(e.target.value) || 0 })}
                 className="w-full px-4 py-2 bg-slate-800 border border-yellow-600/30 rounded-lg text-white focus:outline-none focus:border-yellow-600"
               />
             </div>

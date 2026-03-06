@@ -2,34 +2,41 @@
 
 import { motion } from "framer-motion";
 
-const goals = [
-  {
-    label: "Monthly Revenue",
-    current: 12450,
-    target: 15000,
-    unit: "$",
-    color: "from-orange-500 to-red-600",
-    glowColor: "rgba(255, 107, 53, 0.5)",
-  },
-  {
-    label: "Models Sold",
-    current: 342,
-    target: 500,
-    unit: "",
-    color: "from-orange-400 to-orange-600",
-    glowColor: "rgba(255, 140, 66, 0.5)",
-  },
-  {
-    label: "New Followers",
-    current: 1240,
-    target: 2000,
-    unit: "",
-    color: "from-red-500 to-orange-500",
-    glowColor: "rgba(255, 190, 98, 0.5)",
-  },
-];
+interface SalesGoalProgressProps {
+  currentRevenue?: number;
+  currentSales?: number;
+}
 
-export default function SalesGoalProgress() {
+export default function SalesGoalProgress({ 
+  currentRevenue = 0, 
+  currentSales = 0 
+}: SalesGoalProgressProps) {
+  const goals = [
+    {
+      label: "Monthly Revenue",
+      current: currentRevenue,
+      target: 15000,
+      unit: "$",
+      color: "from-orange-500 to-red-600",
+      glowColor: "rgba(255, 107, 53, 0.5)",
+    },
+    {
+      label: "Models Sold",
+      current: currentSales,
+      target: 500,
+      unit: "",
+      color: "from-orange-400 to-orange-600",
+      glowColor: "rgba(255, 140, 66, 0.5)",
+    },
+    {
+      label: "New Followers",
+      current: 1240,
+      target: 2000,
+      unit: "",
+      color: "from-red-500 to-orange-500",
+      glowColor: "rgba(255, 190, 98, 0.5)",
+    },
+  ];
   return (
     <div className="space-y-6">
       {goals.map((goal, index) => {

@@ -5,10 +5,12 @@ import Link from "next/link";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { adminApi } from "@/lib/api/admin";
+import { useAdminModal } from "@/components/admin/AdminModal";
 
 export default function BountySettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const { showAlert, AdminModalComponent } = useAdminModal();
   const [settings, setSettings] = useState({
     min_bounty_amount: 10,
     max_bounty_amount: 10000,
@@ -37,9 +39,9 @@ export default function BountySettingsPage() {
     try {
       setSaving(true);
       await adminApi.updateBountySettings(settings);
-      alert("Settings saved successfully!");
+      await showAlert("Success", "Settings saved successfully!", "success");
     } catch (err) {
-      alert("Failed to save settings");
+      await showAlert("Error", "Failed to save settings", "danger");
     } finally {
       setSaving(false);
     }
@@ -47,7 +49,7 @@ export default function BountySettingsPage() {
 
   if (loading) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAdmin={true}>
         <AdminLayout title="Bounty Settings">
           <div className="text-center py-20">
             <div className="text-6xl mb-4">⏳</div>
@@ -59,8 +61,10 @@ export default function BountySettingsPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
       <AdminLayout title="Bounty Settings">
+        {AdminModalComponent}
+        
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-gray-400">Configure bounty system settings and limits</p>

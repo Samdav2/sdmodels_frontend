@@ -1,13 +1,16 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { GoogleLogin } from '@react-oauth/google';
 
 interface SocialAuthButtonsProps {
-  onProviderClick: (provider: 'google' | 'github' | 'metamask') => void;
+  onGoogleSuccess: (credentialResponse: any) => void;
+  onProviderClick: (provider: 'github' | 'metamask') => void;
   disabled?: boolean;
 }
 
 export default function SocialAuthButtons({
+  onGoogleSuccess,
   onProviderClick,
   disabled = false,
 }: SocialAuthButtonsProps) {
@@ -18,121 +21,97 @@ export default function SocialAuthButtons({
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-slate-600/50" />
         </div>
-        <div className="relative px-4 bg-transparent">
+        <div className="relative px-4 bg-slate-900/40">
           <span className="text-sm text-slate-400">Or continue with</span>
         </div>
       </div>
 
       {/* Social Buttons */}
       <div className="grid grid-cols-1 gap-3">
-        {/* Google Button */}
-        <motion.button
-          type="button"
-          onClick={() => onProviderClick('google')}
-          disabled={disabled}
-          whileHover={{ scale: disabled ? 1 : 1.02 }}
-          whileTap={{ scale: disabled ? 1 : 0.98 }}
-          className={`
-            flex items-center justify-center gap-3
-            px-6 py-3 rounded-lg
-            bg-white text-gray-700
-            border-2 border-transparent
-            font-medium text-sm
-            transition-all duration-200
-            ${disabled 
-              ? 'opacity-50 cursor-not-allowed' 
-              : 'hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:border-white/20'
-            }
-          `}
-          aria-label="Sign in with Google"
-        >
-          <GoogleIcon />
-          <span>Continue with Google</span>
-        </motion.button>
+        {/* Google Button - Custom Styled to Match Design */}
+        <div className="w-full">
+          <div className="relative">
+            <GoogleLogin
+              onSuccess={onGoogleSuccess}
+              onError={() => {
+                console.error('Google login failed');
+              }}
+              useOneTap={false}
+              theme="outline"
+              size="large"
+              text="continue_with"
+              shape="rectangular"
+              width="100%"
+              logo_alignment="left"
+            />
+            {/* Custom overlay to match our design */}
+            <style jsx global>{`
+              .nsm7Bb-HzV7m-LgbsSe {
+                width: 100% !important;
+                background: white !important;
+                border: 2px solid transparent !important;
+                border-radius: 0.5rem !important;
+                padding: 12px 24px !important;
+                font-weight: 500 !important;
+                font-size: 0.875rem !important;
+                transition: all 0.2s !important;
+              }
+              .nsm7Bb-HzV7m-LgbsSe:hover {
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.3) !important;
+                border-color: rgba(255, 255, 255, 0.2) !important;
+              }
+            `}</style>
+          </div>
+        </div>
 
-        {/* GitHub Button */}
+        {/* GitHub Button - Coming Soon */}
         <motion.button
           type="button"
-          onClick={() => onProviderClick('github')}
-          disabled={disabled}
-          whileHover={{ scale: disabled ? 1 : 1.02 }}
-          whileTap={{ scale: disabled ? 1 : 0.98 }}
-          className={`
+          disabled={true}
+          className="
+            relative
             flex items-center justify-center gap-3
             px-6 py-3 rounded-lg
-            bg-slate-800 text-white
-            border-2 border-slate-700
+            bg-slate-800/50 text-slate-500
+            border-2 border-slate-700/50
             font-medium text-sm
-            transition-all duration-200
-            ${disabled 
-              ? 'opacity-50 cursor-not-allowed' 
-              : 'hover:bg-slate-700 hover:shadow-[0_0_20px_rgba(100,116,139,0.4)] hover:border-slate-600'
-            }
-          `}
-          aria-label="Sign in with GitHub"
+            cursor-not-allowed
+            opacity-60
+          "
+          aria-label="GitHub sign in coming soon"
         >
           <GitHubIcon />
           <span>Continue with GitHub</span>
+          <span className="absolute top-1 right-1 px-2 py-0.5 bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs rounded-full font-semibold">
+            Coming Soon
+          </span>
         </motion.button>
 
-        {/* MetaMask Button */}
+        {/* MetaMask Button - Coming Soon */}
         <motion.button
           type="button"
-          onClick={() => onProviderClick('metamask')}
-          disabled={disabled}
-          whileHover={{ scale: disabled ? 1 : 1.02 }}
-          whileTap={{ scale: disabled ? 1 : 0.98 }}
-          className={`
+          disabled={true}
+          className="
+            relative
             flex items-center justify-center gap-3
             px-6 py-3 rounded-lg
-            bg-gradient-to-r from-orange-500 to-orange-600
-            text-white
-            border-2 border-transparent
+            bg-gradient-to-r from-orange-500/30 to-orange-600/30
+            text-slate-400
+            border-2 border-orange-500/20
             font-medium text-sm
-            transition-all duration-200
-            ${disabled 
-              ? 'opacity-50 cursor-not-allowed' 
-              : 'hover:from-orange-600 hover:to-orange-700 hover:shadow-[0_0_20px_rgba(249,115,22,0.5)] hover:border-orange-400/30'
-            }
-          `}
-          aria-label="Sign in with MetaMask"
+            cursor-not-allowed
+            opacity-60
+          "
+          aria-label="MetaMask sign in coming soon"
         >
           <MetaMaskIcon />
           <span>Continue with MetaMask</span>
+          <span className="absolute top-1 right-1 px-2 py-0.5 bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs rounded-full font-semibold">
+            Coming Soon
+          </span>
         </motion.button>
       </div>
     </div>
-  );
-}
-
-// Google Icon Component
-function GoogleIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path
-        d="M19.6 10.227c0-.709-.064-1.39-.182-2.045H10v3.868h5.382a4.6 4.6 0 01-1.996 3.018v2.51h3.232c1.891-1.742 2.982-4.305 2.982-7.35z"
-        fill="#4285F4"
-      />
-      <path
-        d="M10 20c2.7 0 4.964-.895 6.618-2.423l-3.232-2.509c-.895.6-2.04.955-3.386.955-2.605 0-4.81-1.76-5.595-4.123H1.064v2.59A9.996 9.996 0 0010 20z"
-        fill="#34A853"
-      />
-      <path
-        d="M4.405 11.9c-.2-.6-.314-1.24-.314-1.9 0-.66.114-1.3.314-1.9V5.51H1.064A9.996 9.996 0 000 10c0 1.614.386 3.14 1.064 4.49l3.34-2.59z"
-        fill="#FBBC05"
-      />
-      <path
-        d="M10 3.977c1.468 0 2.786.505 3.823 1.496l2.868-2.868C14.959.99 12.695 0 10 0 6.09 0 2.71 2.24 1.064 5.51l3.34 2.59C5.19 5.736 7.395 3.977 10 3.977z"
-        fill="#EA4335"
-      />
-    </svg>
   );
 }
 

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { QueryProvider } from "@/lib/providers/QueryProvider";
+import { GoogleAuthProvider } from "@/lib/providers/GoogleAuthProvider";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -132,6 +134,9 @@ export default function RootLayout({
         {/* DNS Prefetch for performance */}
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         
+        {/* Paystack Inline Script */}
+        <script src="https://js.paystack.co/v1/inline.js"></script>
+        
         {/* Structured Data for SEO */}
         <script
           type="application/ld+json"
@@ -195,7 +200,13 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} smooth-scroll`}>{children}</body>
+      <body className={`${inter.className} smooth-scroll`}>
+        <GoogleAuthProvider>
+          <QueryProvider>
+            {children}
+          </QueryProvider>
+        </GoogleAuthProvider>
+      </body>
     </html>
   );
 }

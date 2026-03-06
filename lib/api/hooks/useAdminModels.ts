@@ -12,7 +12,8 @@ export function useAdminModels() {
       setLoading(true);
       setError(null);
       const data = await api.admin.getPendingModels(1, 100);
-      setModels(data.items || []);
+      // Backend returns { models: [...], total, page, limit }
+      setModels(data.models || data.items || []);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch pending models');
       setModels([]);

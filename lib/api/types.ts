@@ -3,7 +3,7 @@
  */
 
 export interface User {
-  id: number;
+  id: string; // UUID
   email: string;
   username: string;
   full_name: string;
@@ -22,7 +22,7 @@ export interface User {
 }
 
 export interface Model {
-  id: number;
+  id: string; // UUID
   title: string;
   description: string;
   price: number;
@@ -42,7 +42,7 @@ export interface Model {
   has_materials: boolean;
   has_textures: boolean;
   creator?: User;
-  creator_id?: number;
+  creator_id?: string; // UUID
   views: number;
   likes: number;
   downloads: number;
@@ -56,7 +56,7 @@ export interface Model {
 }
 
 export interface BlogPost {
-  id: number;
+  id: string; // UUID
   author: User;
   title: string;
   content: string;
@@ -76,7 +76,7 @@ export interface BlogPost {
 }
 
 export interface Community {
-  id: number;
+  id: string; // UUID
   name: string;
   description: string;
   icon: string;
@@ -91,10 +91,15 @@ export interface Community {
   rules: string[];
   created_at: string;
   updated_at: string;
+  // Additional fields from backend
+  is_member?: boolean;
+  user_role?: string | null;
+  recent_posts?: any[];
+  top_members?: any[];
 }
 
 export interface CommunityPost {
-  id: number;
+  id: string; // UUID
   author: User;
   content: string;
   image_url: string | null;
@@ -108,7 +113,7 @@ export interface CommunityPost {
 }
 
 export interface Collection {
-  id: number;
+  id: string; // UUID
   owner: User;
   name: string;
   description: string | null;
@@ -121,7 +126,7 @@ export interface Collection {
 }
 
 export interface Transaction {
-  id: number;
+  id: string; // UUID
   buyer: User;
   seller: User;
   model: Model;
@@ -136,13 +141,13 @@ export interface Transaction {
 }
 
 export interface CartItem {
-  id: number;
+  id: string; // UUID
   model: Model;
   added_at: string;
 }
 
 export interface Notification {
-  id: number;
+  id: string; // UUID
   type: string;
   title: string;
   message: string;
@@ -152,7 +157,7 @@ export interface Notification {
 }
 
 export interface Comment {
-  id: number;
+  id: string; // UUID
   user: User;
   content: string;
   likes: number;

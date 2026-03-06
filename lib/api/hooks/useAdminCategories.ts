@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { adminApi } from '../admin';
+import { api } from '../index';
 
 export function useAdminCategories() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -10,13 +10,40 @@ export function useAdminCategories() {
     try {
       setLoading(true);
       setError(null);
-      const data = await adminApi.getCategories();
-      setCategories(data.items || data || []);
+      const data = await api.admin.getCategories();
+      setCategories(data.categories || []);
     } catch (err: any) {
-      console.error('Failed to fetch categories:', err);
-      setError(err.response?.data?.detail || err.message || 'Failed to fetch categories');
+      setError(err.message || 'Failed to fetch categories');
+      setCategories([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createCategory = async (name: string, description?: string) => {
+    try {
+      await api.admin.createCategory(name, description);
+      await fetchCategories();
+    } catch (err: any) {
+      setError(err.message || 'Failed to create category');
+    }
+  };
+
+  const updateCategory = async (id: number, name: string, description?: string) => {
+    try {
+      await api.admin.updateCategory(id, name, description);
+      await fetchCategories();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update category');
+    }
+  };
+
+  const deleteCategory = async (id: number) => {
+    try {
+      await api.admin.deleteCategory(id);
+      await fetchCategories();
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete category');
     }
   };
 
@@ -24,18 +51,13 @@ export function useAdminCategories() {
     fetchCategories();
   }, []);
 
-  const toggleEnabled = async (id: number) => {
-    try {
-      const category = categories.find(c => c.id === id);
-      if (category) {
-        await adminApi.updateCategory(id, category.name, category.description);
-        await fetchCategories();
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to toggle category');
-      throw err;
-    }
+  return { 
+    categories, 
+    loading, 
+    error, 
+    createCategory, 
+    updateCategory, 
+    deleteCategory,
+    refetch: fetchCategories 
   };
-
-  return { categories, loading, error, toggleEnabled, refetch: fetchCategories };
 }

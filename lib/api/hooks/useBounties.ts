@@ -17,7 +17,15 @@ export const useBounties = (params?: {
       try {
         setLoading(true);
         const data = await bountiesApi.getBounties(params);
-        setBounties(data.bounties || data);
+        const bountiesData = data.bounties || data;
+        
+        // Convert numeric IDs to strings if needed (backend compatibility)
+        const normalizedBounties = bountiesData.map((bounty: any) => ({
+          ...bounty,
+          id: String(bounty.id), // Ensure ID is always a string
+        }));
+        
+        setBounties(normalizedBounties);
         setError(null);
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to fetch bounties');
@@ -32,7 +40,7 @@ export const useBounties = (params?: {
   return { bounties, loading, error };
 };
 
-export const useBounty = (id: number) => {
+export const useBounty = (id: string) => {
   const [bounty, setBounty] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +53,7 @@ export const useBounty = (id: number) => {
         setBounty(data);
         setError(null);
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to fetch bounty');
+        setError(err.response?.data?.detail || err.response?.data?.message || 'Failed to fetch bounty');
       } finally {
         setLoading(false);
       }
@@ -69,10 +77,26 @@ export const useMyPostedBounties = () => {
       try {
         setLoading(true);
         const data = await bountiesApi.getMyPostedBounties();
-        setBounties(data.bounties || data);
+        const bountiesData = data.bounties || data;
+        
+        // Debug: Log what backend returns
+        console.log('[useMyPostedBounties] Backend response:', bountiesData);
+        if (bountiesData.length > 0) {
+          console.log('[useMyPostedBounties] First bounty ID type:', typeof bountiesData[0].id);
+          console.log('[useMyPostedBounties] First bounty ID value:', bountiesData[0].id);
+        }
+        
+        // Convert numeric IDs to strings if needed (backend compatibility)
+        const normalizedBounties = bountiesData.map((bounty: any) => ({
+          ...bounty,
+          id: String(bounty.id), // Ensure ID is always a string
+        }));
+        
+        setBounties(normalizedBounties);
         setError(null);
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to fetch posted bounties');
+        console.error('[useMyPostedBounties] Error:', err);
+        setError(err.response?.data?.detail || err.response?.data?.message || 'Failed to fetch posted bounties');
       } finally {
         setLoading(false);
       }
@@ -94,10 +118,18 @@ export const useMyClaimedBounties = () => {
       try {
         setLoading(true);
         const data = await bountiesApi.getMyClaimedBounties();
-        setBounties(data.bounties || data);
+        const bountiesData = data.bounties || data;
+        
+        // Convert numeric IDs to strings if needed (backend compatibility)
+        const normalizedBounties = bountiesData.map((bounty: any) => ({
+          ...bounty,
+          id: String(bounty.id), // Ensure ID is always a string
+        }));
+        
+        setBounties(normalizedBounties);
         setError(null);
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to fetch claimed bounties');
+        setError(err.response?.data?.detail || err.response?.data?.message || 'Failed to fetch claimed bounties');
       } finally {
         setLoading(false);
       }
@@ -109,7 +141,7 @@ export const useMyClaimedBounties = () => {
   return { bounties, loading, error };
 };
 
-export const useBountyApplications = (bountyId: number) => {
+export const useBountyApplications = (bountyId: string) => {
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -122,7 +154,7 @@ export const useBountyApplications = (bountyId: number) => {
         setApplications(data.applications || data);
         setError(null);
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to fetch applications');
+        setError(err.response?.data?.detail || err.response?.data?.message || 'Failed to fetch applications');
       } finally {
         setLoading(false);
       }
@@ -136,7 +168,7 @@ export const useBountyApplications = (bountyId: number) => {
   return { applications, loading, error };
 };
 
-export const useBountySubmission = (bountyId: number) => {
+export const useBountySubmission = (bountyId: string) => {
   const [submission, setSubmission] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -149,7 +181,7 @@ export const useBountySubmission = (bountyId: number) => {
         setSubmission(data);
         setError(null);
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to fetch submission');
+        setError(err.response?.data?.detail || err.response?.data?.message || 'Failed to fetch submission');
       } finally {
         setLoading(false);
       }

@@ -37,40 +37,47 @@ interface Model {
 }
 
 // Helper to map API model to display format with robust error handling
-const mapApiModel = (apiModel: ApiModel): Model => {
-  // Safely extract creator info with fallbacks
-  const creatorName = apiModel.creator?.username || 
-                      apiModel.creator?.full_name || 
-                      `Creator #${apiModel.creator_id || 'Unknown'}`;
-  const creatorAvatar = apiModel.creator?.avatar_url || "🎨";
-  const creatorVerified = apiModel.creator?.is_verified_creator || false;
+const mapApiModel = (apiModel: ApiModel): Model | null => {
+  try {
+    // Safely extract creator info with fallbacks - NEVER show UUID
+    // Backend returns creator_username at root level, not nested
+    const creatorName = (apiModel as any).creator_username || 
+                        apiModel.creator?.username || 
+                        apiModel.creator?.full_name || 
+                        'Unknown Creator';
+    const creatorAvatar = apiModel.creator?.avatar_url || "🎨";
+    const creatorVerified = apiModel.creator?.is_verified_creator || false;
 
-  return {
-    id: apiModel.id.toString(),
-    name: apiModel.title || "Untitled Model",
-    price: apiModel.price || 0,
-    polyCount: apiModel.poly_count || 0,
-    category: apiModel.category || "Uncategorized",
-    subcategory: "Sci-Fi",
-    trending: apiModel.is_featured || false,
-    downloads: apiModel.downloads || 0,
-    likes: apiModel.likes || 0,
-    rating: apiModel.rating || 0,
-    author: {
-      name: creatorName,
-      avatar: creatorAvatar,
-      verified: creatorVerified,
-      level: "Gold",
-    },
-    tags: apiModel.tags || [],
-    formats: apiModel.file_formats || [],
-    isRigged: apiModel.has_rigging || false,
-    isAnimated: apiModel.has_animations || false,
-    textureResolution: apiModel.texture_resolution || "4K",
-    uploadDate: apiModel.created_at || new Date().toISOString(),
-    thumbnailUrl: apiModel.thumbnail_url || "",
-    fileUrl: apiModel.file_url || "",
-  };
+    return {
+      id: apiModel.id, // Already a UUID string
+      name: apiModel.title || "Untitled Model",
+      price: apiModel.price || 0,
+      polyCount: apiModel.poly_count || 0,
+      category: apiModel.category || "Uncategorized",
+      subcategory: "Sci-Fi",
+      trending: apiModel.is_featured || false,
+      downloads: apiModel.downloads || 0,
+      likes: apiModel.likes || 0,
+      rating: apiModel.rating || 0,
+      author: {
+        name: creatorName,
+        avatar: creatorAvatar,
+        verified: creatorVerified,
+        level: "Gold",
+      },
+      tags: apiModel.tags || [],
+      formats: apiModel.file_formats || [],
+      isRigged: apiModel.has_rigging || false,
+      isAnimated: apiModel.has_animations || false,
+      textureResolution: apiModel.texture_resolution || "4K",
+      uploadDate: apiModel.created_at || new Date().toISOString(),
+      thumbnailUrl: apiModel.thumbnail_url || "",
+      fileUrl: apiModel.file_url || "",
+    };
+  } catch (error) {
+    console.error('Error mapping model:', apiModel.id, error);
+    return null;
+  }
 };
 
 export default function MarketplacePage() {
@@ -97,15 +104,19 @@ export default function MarketplacePage() {
 
   // Map API models to display format with error handling
   const allModels = apiModels
-    .map((apiModel) => {
-      try {
-        return mapApiModel(apiModel);
-      } catch (error) {
-        console.error('Error mapping model:', apiModel.id, error);
-        return null;
-      }
-    })
+    .map(mapApiModel)
     .filter((model): model is Model => model !== null);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Marketplace Debug:', {
+      apiModelsCount: apiModels.length,
+      mappedModelsCount: allModels.length,
+      loading,
+      error,
+      sampleModel: apiModels[0]
+    });
+  }, [apiModels, allModels, loading, error]);
   
   // Track mouse for HUD glow effect
   useEffect(() => {
@@ -157,222 +168,150 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen bg-black relative overflow-x-hidden">
+      {/* 3D Spatial Grid Background */}
+      <div className="fixed inset-0 z-0">
+        {/* Perspective container */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-slate-950 to-black">
+          {/* Animated 3D Grid Lines - Horizontal */}
+          <div className="absolute inset-0 opacity-30">
+            <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,transparent_calc(100%_-_1px),rgba(255,140,66,0.3)_calc(100%_-_1px))] bg-[length:100%_60px] animate-grid-move-vertical" />
+          </div>
+          
+          {/* Animated 3D Grid Lines - Vertical with perspective */}
+          <div className="absolute inset-0 opacity-20" style={{ transform: 'perspective(1000px) rotateX(60deg)', transformOrigin: 'center center' }}>
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,transparent_0%,transparent_calc(100%_-_1px),rgba(255,107,53,0.4)_calc(100%_-_1px))] bg-[length:80px_100%] animate-grid-move-horizontal" />
+          </div>
+          
+          {/* Glowing center spotlight */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-orange-500/5 rounded-full blur-3xl animate-pulse-slow" />
+          
+          {/* Floating particles */}
+          <div className="absolute inset-0">
+            {[...Array(20)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-orange-400/40 rounded-full animate-float-particle"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 5}s`,
+                  animationDuration: `${8 + Math.random() * 4}s`
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Loading State */}
       {loading && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center">
           <LoadingSpinner />
         </div>
       )}
 
       {/* Error State */}
       {error && !loading && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center">
           <ErrorMessage error={error} />
         </div>
       )}
-
-      {/* Animated Background Grid */}
-      <div className="fixed inset-0 bg-[linear-gradient(rgba(255,107,53,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,107,53,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
       
-      {/* 1. GLOBAL NAVIGATION HUD - Perimeter Frame */}
-      <div className="fixed inset-0 pointer-events-none z-50">
-        {/* Top Border */}
-        <motion.div 
-          className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-orange-500 to-transparent"
-          animate={{ opacity: [0.3, 0.7, 0.3] }}
-          transition={{ duration: 3, repeat: Infinity }}
-        />
-        {/* Bottom Border */}
-        <motion.div 
-          className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-orange-500 to-transparent"
-          animate={{ opacity: [0.3, 0.7, 0.3] }}
-          transition={{ duration: 3, repeat: Infinity, delay: 1.5 }}
-        />
-        {/* Left Border */}
-        <motion.div 
-          className="absolute top-0 bottom-0 left-0 w-0.5 bg-gradient-to-b from-transparent via-orange-500 to-transparent"
-          animate={{ opacity: [0.3, 0.7, 0.3] }}
-          transition={{ duration: 3, repeat: Infinity, delay: 0.75 }}
-        />
-        {/* Right Border */}
-        <motion.div 
-          className="absolute top-0 bottom-0 right-0 w-0.5 bg-gradient-to-b from-transparent via-orange-500 to-transparent"
-          animate={{ opacity: [0.3, 0.7, 0.3] }}
-          transition={{ duration: 3, repeat: Infinity, delay: 2.25 }}
-        />
-        
-        {/* Corner Navigation Icons with Eye-Tracking Glow */}
-        {/* Top Left - Home */}
-        <Link href="/" className="pointer-events-auto">
-          <motion.div 
-            className="absolute top-4 left-4 w-12 h-12 md:w-16 md:h-16 rounded-full bg-slate-900/80 backdrop-blur border border-orange-500/30 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
-            animate={{ 
-              boxShadow: activeCorner === "top-left" 
-                ? ["0 0 20px rgba(255,107,53,0.5)", "0 0 40px rgba(255,107,53,0.8)", "0 0 20px rgba(255,107,53,0.5)"]
-                : "0 0 0px rgba(255,107,53,0)"
-            }}
-            transition={{ duration: 1, repeat: Infinity }}
-          >
-            <span className="text-xl md:text-2xl">🏠</span>
-          </motion.div>
-        </Link>
-        
-        {/* Top Right - Dashboard */}
-        <Link href="/dashboard" className="pointer-events-auto">
-          <motion.div 
-            className="absolute top-4 right-4 w-12 h-12 md:w-16 md:h-16 rounded-full bg-slate-900/80 backdrop-blur border border-cyan-500/30 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
-            animate={{ 
-              boxShadow: activeCorner === "top-right" 
-                ? ["0 0 20px rgba(6,182,212,0.5)", "0 0 40px rgba(6,182,212,0.8)", "0 0 20px rgba(6,182,212,0.5)"]
-                : "0 0 0px rgba(6,182,212,0)"
-            }}
-            transition={{ duration: 1, repeat: Infinity }}
-          >
-            <span className="text-xl md:text-2xl">📊</span>
-          </motion.div>
-        </Link>
-        
-        {/* Bottom Left - Upload */}
-        <Link href="/upload" className="pointer-events-auto">
-          <motion.div 
-            className="absolute bottom-4 left-4 w-12 h-12 md:w-16 md:h-16 rounded-full bg-slate-900/80 backdrop-blur border border-purple-500/30 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
-            animate={{ 
-              boxShadow: activeCorner === "bottom-left" 
-                ? ["0 0 20px rgba(168,85,247,0.5)", "0 0 40px rgba(168,85,247,0.8)", "0 0 20px rgba(168,85,247,0.5)"]
-                : "0 0 0px rgba(168,85,247,0)"
-            }}
-            transition={{ duration: 1, repeat: Infinity }}
-          >
-            <span className="text-xl md:text-2xl">⬆️</span>
-          </motion.div>
-        </Link>
-      </div>
+      {/* Professional Header Navigation */}
+      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-orange-500/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 sm:h-20">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/50">
+                <span className="text-white font-bold text-sm sm:text-base">SD</span>
+              </div>
+              <span className="text-white font-black text-lg sm:text-xl hidden sm:inline">SDModels</span>
+            </Link>
 
-      
-      {/* 2. SINGULARITY SEARCH & FILTER - Central Glowing Orb */}
-      <div className="relative z-40 pt-20 md:pt-24 pb-8 md:pb-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <motion.div 
-            className="flex flex-col items-center justify-center mb-8 md:mb-12"
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            {/* Title */}
-            <h1 className="text-3xl md:text-5xl lg:text-7xl font-black text-center mb-6 md:mb-8 bg-gradient-to-r from-orange-400 via-red-400 to-orange-400 bg-clip-text text-transparent">
-              THE NEXUS VAULT
-            </h1>
-            
-            {/* Search Orb */}
-            <motion.div 
-              className="relative mb-8"
-              animate={{ scale: searchExpanded ? 1.1 : 1 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              {!searchExpanded ? (
-                <motion.button
-                  onClick={() => setSearchExpanded(true)}
-                  className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center cursor-pointer relative overflow-hidden group"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {/* Pulsing Rings */}
-                  <motion.div 
-                    className="absolute inset-0 rounded-full border-2 border-orange-400"
-                    animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                  <motion.div 
-                    className="absolute inset-0 rounded-full border-2 border-red-400"
-                    animate={{ scale: [1, 1.8, 1], opacity: [0.5, 0, 0.5] }}
-                    transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-                  />
-                  <span className="text-3xl md:text-4xl z-10">🔍</span>
-                </motion.button>
-              ) : (
-                <motion.div 
-                  className="relative w-full max-w-2xl"
-                  initial={{ width: 96 }}
-                  animate={{ width: "100%" }}
-                  transition={{ type: "spring", stiffness: 200 }}
-                >
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Neural Link Search: Speak your desire..."
-                    className="w-full px-6 md:px-8 py-4 md:py-6 bg-slate-900/90 backdrop-blur-xl border-2 border-orange-500 rounded-full text-white placeholder-gray-400 focus:outline-none text-base md:text-lg shadow-[0_0_30px_rgba(255,107,53,0.5)]"
-                    autoFocus
-                  />
-                  <button 
-                    onClick={() => setSearchExpanded(false)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-400 hover:text-orange-300 text-xl md:text-2xl"
-                  >
-                    ✕
-                  </button>
-                  
-                  {/* Ripple Effect */}
-                  <motion.div 
-                    className="absolute inset-0 rounded-full border-2 border-orange-400 pointer-events-none"
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0, 0.3] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  />
-                </motion.div>
-              )}
-            </motion.div>
-            
-            {/* 3D Tag Cloud - Semantic Filter */}
-            <div className="mt-8 md:mt-12 relative h-48 md:h-64 w-full max-w-4xl">
-              <div className="absolute top-0 left-0 right-0 text-center text-gray-500 text-xs md:text-sm mb-4">
-                Pull tags to filter • Click to select
-              </div>
-              <div className="relative h-full pt-8">
-                {tags3D.map((tag, i) => {
-                  const gradientColors = tag.color.includes("orange") ? "from-orange-500 to-red-500" :
-                                        tag.color.includes("cyan") ? "from-cyan-500 to-blue-500" :
-                                        tag.color.includes("purple") ? "from-purple-500 to-pink-500" :
-                                        tag.color.includes("green") ? "from-green-500 to-emerald-500" :
-                                        tag.color.includes("yellow") ? "from-yellow-500 to-orange-500" :
-                                        "from-indigo-500 to-purple-500";
-                  
-                  return (
-                    <motion.button
-                      key={tag.name}
-                      onClick={() => setSelectedTag(selectedTag === tag.name ? null : tag.name)}
-                      className={`absolute px-3 md:px-6 py-2 md:py-3 rounded-full font-bold text-white shadow-lg cursor-pointer transition-all text-xs md:text-base bg-gradient-to-r ${gradientColors} ${
-                        selectedTag === tag.name ? "ring-2 md:ring-4 ring-white" : ""
-                      }`}
-                      style={{
-                        left: `${tag.x}%`,
-                        top: `${tag.y}%`,
-                      }}
-                      animate={{
-                        y: [0, -10, 0],
-                      }}
-                      transition={{
-                        y: { duration: 3, repeat: Infinity, delay: i * 0.2 },
-                      }}
-                      whileHover={{ scale: 1.2 }}
-                      drag
-                      dragConstraints={{ left: -50, right: 50, top: -50, bottom: 50 }}
-                    >
-                      {tag.name}
-                    </motion.button>
-                  );
-                })}
-              </div>
+            {/* Navigation Links - Desktop */}
+            <nav className="hidden md:flex items-center gap-6">
+              <Link href="/" className="text-slate-300 hover:text-white transition text-sm font-medium">
+                Home
+              </Link>
+              <Link href="/marketplace" className="text-orange-400 font-semibold text-sm">
+                Marketplace
+              </Link>
+              <Link href="/bounties" className="text-slate-300 hover:text-white transition text-sm font-medium">
+                Bounties
+              </Link>
+              <Link href="/community" className="text-slate-300 hover:text-white transition text-sm font-medium">
+                Community
+              </Link>
+            </nav>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Link href="/upload" className="px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:from-purple-400 hover:to-pink-500 transition font-semibold text-xs sm:text-sm shadow-lg whitespace-nowrap">
+                <span className="hidden sm:inline">Upload Model</span>
+                <span className="sm:hidden">Upload</span>
+              </Link>
+              <Link href="/dashboard" className="px-3 sm:px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition font-semibold text-xs sm:text-sm whitespace-nowrap">
+                <span className="hidden sm:inline">Dashboard</span>
+                <span className="sm:hidden">📊</span>
+              </Link>
             </div>
-            
-            {/* Voice Command Button */}
-            <motion.button
-              className="mt-6 md:mt-8 px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-bold flex items-center gap-2 md:gap-3 hover:from-purple-500 hover:to-pink-500 transition-all shadow-lg text-sm md:text-base"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <span className="text-xl md:text-2xl">🎤</span>
-              <span className="hidden md:inline">Neural Link Voice Command</span>
-              <span className="md:hidden">Voice Search</span>
-            </motion.button>
-          </motion.div>
+          </div>
+        </div>
+      </header>
+
+      
+      {/* Search & Filter Section */}
+      <div className="relative z-40 pt-8 sm:pt-12 pb-6 sm:pb-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          {/* Title */}
+          <motion.h1 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-3xl sm:text-4xl lg:text-5xl font-black text-center mb-6 sm:mb-8 bg-gradient-to-r from-orange-400 via-red-400 to-orange-400 bg-clip-text text-transparent"
+          >
+            3D Model Marketplace
+          </motion.h1>
+          
+          {/* Search Bar */}
+          <div className="max-w-3xl mx-auto mb-6 sm:mb-8">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search models, creators, categories..."
+                className="w-full px-4 sm:px-6 py-3 sm:py-4 bg-slate-900/90 backdrop-blur-xl border-2 border-orange-500/30 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 text-sm sm:text-base pr-12"
+              />
+              <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-6 sm:h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Filter Tags */}
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-6">
+            {[
+              { name: "All", tag: null },
+              { name: "Characters", tag: "#Character" },
+              { name: "Vehicles", tag: "#Vehicle" },
+              { name: "Architecture", tag: "#Architecture" },
+              { name: "Game Ready", tag: "#GameReady" },
+              { name: "Animated", tag: "#Animated" },
+            ].map((filter) => (
+              <button
+                key={filter.name}
+                onClick={() => setSelectedTag(filter.tag)}
+                className={`px-4 sm:px-6 py-2 rounded-full font-semibold text-xs sm:text-sm transition-all ${
+                  selectedTag === filter.tag
+                    ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg"
+                    : "bg-slate-800/50 text-slate-300 hover:bg-slate-700 hover:text-white"
+                }`}
+              >
+                {filter.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -409,6 +348,30 @@ export default function MarketplacePage() {
               <span className="text-orange-400 font-bold text-xl md:text-2xl">{filteredModels.length}</span> models in the vault
             </span>
           </div>
+
+          {/* Empty State */}
+          {!loading && filteredModels.length === 0 && (
+            <div className="text-center py-20">
+              <div className="text-6xl mb-4">📦</div>
+              <h3 className="text-2xl font-bold text-white mb-2">No Models Found</h3>
+              <p className="text-gray-400 mb-6">
+                {searchQuery || selectedTag 
+                  ? "Try adjusting your search or filters" 
+                  : "No models have been uploaded yet"}
+              </p>
+              {(searchQuery || selectedTag) && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedTag(null);
+                  }}
+                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl hover:from-orange-400 hover:to-red-500 transition font-bold"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          )}
 
           <AnimatePresence mode="wait">
             {viewMode === "void" ? (
@@ -716,7 +679,7 @@ export default function MarketplacePage() {
                         animate={{ rotateY: [0, 360] }}
                         transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
                       >
-                        {["🤖", "🚗", "🏰", "⚔️", "🐉", "🎮"][parseInt(forgeModel.id) % 6]}
+                        {["🤖", "🚗", "🏰", "⚔️", "🐉", "🎮"][forgeModel.id.length % 6]}
                       </motion.div>
                     )}
 
@@ -1013,52 +976,112 @@ export default function MarketplacePage() {
         </div>
       </div>
 
-      {/* 9. CATEGORY QUICK ACCESS - Neural Navigation */}
-      <div className="relative z-30 px-4 py-16 pb-32">
+      {/* Floating 3D Category Marketplace */}
+      <div className="relative z-30 px-4 py-16 sm:py-24 pb-32 sm:pb-40">
         <div className="max-w-7xl mx-auto">
           <motion.h2 
-            initial={{ opacity: 0, y: -20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-3xl md:text-5xl font-black text-center mb-12 bg-gradient-to-r from-orange-400 via-red-400 to-orange-400 bg-clip-text text-transparent"
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-3xl sm:text-4xl lg:text-5xl font-black text-center mb-4 bg-gradient-to-r from-orange-400 via-red-400 to-orange-400 bg-clip-text text-transparent"
           >
-            NEURAL NAVIGATION
+            Explore 3D Collections
           </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-center text-slate-400 mb-12 sm:mb-16 text-sm sm:text-base"
+          >
+            Browse our curated marketplace of premium 3D models
+          </motion.p>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 perspective-1000">
             {[
-              { name: "Characters", icon: "🤖", color: "orange", tag: "#Character" },
-              { name: "Vehicles", icon: "🚗", color: "cyan", tag: "#Vehicle" },
-              { name: "Environments", icon: "🏰", color: "purple", tag: "#Architecture" },
-              { name: "Props", icon: "📦", color: "green", tag: "#GameReady" },
-              { name: "Weapons", icon: "⚔️", color: "red", tag: "#GameReady" },
-              { name: "UI Elements", icon: "🎮", color: "blue", tag: "#PBR" },
-            ].map((cat, i) => (
+              { name: "Characters", icon: "🤖", color: "from-orange-500/20 to-red-500/20", borderColor: "orange-500", tag: "#Character", delay: 0 },
+              { name: "Vehicles", icon: "🚗", color: "from-cyan-500/20 to-blue-500/20", borderColor: "cyan-500", tag: "#Vehicle", delay: 0.1 },
+              { name: "Environments", icon: "🏰", color: "from-purple-500/20 to-pink-500/20", borderColor: "purple-500", tag: "#Architecture", delay: 0.2 },
+              { name: "Props", icon: "📦", color: "from-green-500/20 to-emerald-500/20", borderColor: "green-500", tag: "#GameReady", delay: 0.3 },
+              { name: "Weapons", icon: "⚔️", color: "from-red-500/20 to-rose-500/20", borderColor: "red-500", tag: "#GameReady", delay: 0.4 },
+              { name: "UI Elements", icon: "🎮", color: "from-blue-500/20 to-indigo-500/20", borderColor: "blue-500", tag: "#PBR", delay: 0.5 },
+            ].map((cat, index) => (
               <motion.button
                 key={cat.name}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                whileHover={{ scale: 1.08, y: -5 }}
-                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, y: 50, rotateX: -15 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0,
+                  rotateX: 0,
+                }}
+                transition={{
+                  delay: cat.delay,
+                  duration: 0.6,
+                  type: "spring",
+                  stiffness: 100
+                }}
+                whileHover={{ 
+                  y: -10,
+                  rotateY: 5,
+                  scale: 1.05,
+                  transition: { duration: 0.3 }
+                }}
                 onClick={() => {
                   setSelectedTag(cat.tag);
                   window.scrollTo({ top: 400, behavior: "smooth" });
                 }}
-                className={`bg-slate-900/70 backdrop-blur-xl border-2 border-${cat.color}-500/30 hover:border-${cat.color}-500 rounded-2xl p-6 transition-all relative overflow-hidden group`}
+                className="group relative cursor-pointer"
+                style={{ transformStyle: "preserve-3d" }}
               >
-                {/* Glow Effect */}
-                <div className={`absolute inset-0 bg-gradient-to-br from-${cat.color}-500/0 to-${cat.color}-500/20 opacity-0 group-hover:opacity-100 transition-opacity`} />
-                
-                <motion.div 
-                  className="text-4xl md:text-5xl mb-3 relative z-10"
-                  animate={{ rotateY: [0, 360] }}
-                  transition={{ duration: 10, repeat: Infinity, ease: "linear", delay: i * 0.5 }}
-                >
-                  {cat.icon}
-                </motion.div>
-                <div className="text-white font-bold text-sm md:text-base relative z-10">{cat.name}</div>
+                {/* Floating card with 3D effect */}
+                <div className={`relative bg-gradient-to-br ${cat.color} backdrop-blur-xl border-2 border-${cat.borderColor}/30 group-hover:border-${cat.borderColor} rounded-2xl p-6 sm:p-8 transition-all duration-300 shadow-2xl group-hover:shadow-${cat.borderColor}/50`}>
+                  {/* Animated glow effect */}
+                  <motion.div 
+                    className={`absolute inset-0 bg-gradient-to-br ${cat.color} rounded-2xl blur-xl opacity-0 group-hover:opacity-60 transition-opacity duration-300`}
+                    animate={{
+                      scale: [1, 1.1, 1],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  
+                  {/* Floating icon with gentle rotation */}
+                  <motion.div 
+                    className="text-5xl sm:text-6xl lg:text-7xl mb-3 sm:mb-4 relative z-10"
+                    animate={{ 
+                      y: [0, -8, 0],
+                      rotateY: [0, 10, 0, -10, 0],
+                    }}
+                    transition={{ 
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: index * 0.2
+                    }}
+                  >
+                    {cat.icon}
+                  </motion.div>
+                  
+                  {/* Category name */}
+                  <div className="text-white font-bold text-sm sm:text-base lg:text-lg relative z-10">
+                    {cat.name}
+                  </div>
+                  
+                  {/* Subtle shine effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent rounded-2xl"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      repeatDelay: 2,
+                      ease: "easeInOut"
+                    }}
+                  />
+                </div>
               </motion.button>
             ))}
           </div>

@@ -6,10 +6,10 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminTestimonials } from "@/lib/api/hooks/useAdminTestimonials";
 
 export default function TestimonialManagementPage() {
-  const { testimonials, loading, error, toggleFeatured, deleteTestimonial } = useAdminTestimonials();
+  const { testimonials, loading, error, approveTestimonial, deleteTestimonial } = useAdminTestimonials();
 
   const handleToggleFeatured = async (id: number) => {
-    await toggleFeatured(id);
+    await approveTestimonial(id);
   };
 
   const handleDelete = async (id: number) => {
@@ -41,7 +41,7 @@ export default function TestimonialManagementPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
     <AdminLayout title="Testimonial Management">
       <div className="flex items-center justify-between mb-6">
         <p className="text-gray-400">Manage customer testimonials and reviews</p>
@@ -51,7 +51,7 @@ export default function TestimonialManagementPage() {
       </div>
 
       <div className="grid gap-4">
-        {testimonials.map((testimonial) => (
+        {testimonials.map((testimonial: any) => (
           <div key={testimonial.id} className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-2xl p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">

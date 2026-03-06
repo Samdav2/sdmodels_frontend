@@ -57,7 +57,7 @@ export default function BlogPostPage({ params }: { params: { id: string } }) {
   }
   // Map API post to component format
   const post = {
-    id: apiPost.id.toString(),
+    id: apiPost.id, // Already a UUID string
     title: apiPost.title,
     content: apiPost.content,
     author: {

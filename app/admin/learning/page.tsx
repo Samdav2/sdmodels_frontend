@@ -1,28 +1,23 @@
 "use client";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
-import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminLearning } from "@/lib/api/hooks/useAdminLearning";
 
 export default function LearningCenterManagementPage() {
-  const { tutorials, loading, error, togglePublish, deleteTutorial } = useAdminLearning();
+  const { courses, loading, error, deleteCourse } = useAdminLearning();
 
   const handleDelete = async (id: number) => {
-    if (confirm("Delete this tutorial?")) {
-      await deleteTutorial(id);
+    if (confirm("Delete this course?")) {
+      await deleteCourse(id);
     }
-  };
-
-  const handleTogglePublish = async (id: number) => {
-    await togglePublish(id);
   };
 
   if (loading) {
     return (<AdminLayout title="Learning Center Management">
         <div className="text-center py-20">
           <div className="text-6xl mb-4">⏳</div>
-          <p className="text-gray-400">Loading tutorials...</p>
+          <p className="text-gray-400">Loading courses...</p>
         </div>
       </AdminLayout>
     );
@@ -41,7 +36,7 @@ export default function LearningCenterManagementPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin={true}>
     <AdminLayout title="Learning Center Management">
       <div className="flex items-center justify-between mb-6">
         <p className="text-gray-400">Manage tutorials and educational content</p>
@@ -51,7 +46,7 @@ export default function LearningCenterManagementPage() {
       </div>
 
       <div className="grid gap-4">
-        {tutorials.map((tutorial) => (
+        {courses.map((tutorial: any) => (
           <div key={tutorial.id} className="bg-slate-900/70 backdrop-blur-xl border-2 border-yellow-600/30 rounded-2xl p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">

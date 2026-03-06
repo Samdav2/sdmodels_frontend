@@ -6,12 +6,12 @@ import apiClient from './client';
 import { ApiResponse } from './types';
 
 export interface DashboardStats {
-  total_sales: number;
-  total_models: number;
-  followers_count: number;
+  total_views: number;
+  total_likes: number;
   total_downloads: number;
   total_revenue: number;
-  pending_models: number;
+  models_count: number;
+  followers_count: number;
 }
 
 export const dashboardApi = {
