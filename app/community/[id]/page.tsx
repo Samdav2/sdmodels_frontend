@@ -245,15 +245,21 @@ export default function CommunityViewPage({ params }: { params: { id: string } }
       const parentId = replyingTo[postId] || undefined;
       const newComment = await communitiesApi.addComment(postId, text, parentId);
       
-      // Force reload comments by passing silent=true to bypass the check
+      // Always reload comments after posting - don't check if already loaded
       setLoadingComments({ ...loadingComments, [postId]: true });
       const response = await communitiesApi.getComments(postId);
       const commentsData = (response as any).comments || response.items || [];
+      
+      // Update comments state
       setComments({
         ...comments,
         [postId]: commentsData,
       });
-      setLoadingComments({ ...loadingComments, [postId]: false });
+      
+      // Clear loading state
+      const newLoadingState = { ...loadingComments };
+      delete newLoadingState[postId];
+      setLoadingComments(newLoadingState);
       
       // Clear input and reply state
       setCommentText({ ...commentText, [postId]: "" });
@@ -263,6 +269,7 @@ export default function CommunityViewPage({ params }: { params: { id: string } }
         parentId ? "Your reply has been posted." : "Your comment has been posted.");
     } catch (err: any) {
       showNotification("error", "Failed to Comment", err.response?.data?.detail || "Please try again.");
+      setLoadingComments({ ...loadingComments, [postId]: false });
     } finally {
       setIsSubmittingComment({ ...isSubmittingComment, [postId]: false });
     }

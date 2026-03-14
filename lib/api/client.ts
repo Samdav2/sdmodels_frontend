@@ -6,8 +6,8 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 // API Configuration
-// IMPORTANT: Use direct backend URL to ensure Authorization headers are not stripped by Next.js proxy
-// The proxy can sometimes strip or modify headers, causing authentication issues
+// IMPORTANT: In production, set NEXT_PUBLIC_API_URL to your backend URL (e.g., https://api.sdmodels.com/api/v1)
+// In development, it defaults to localhost:8000 and uses Next.js proxy to bypass CORS
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 const API_TIMEOUT = 30000; // 30 seconds
 
@@ -18,6 +18,12 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Create axios instance
+// NOTE: In production, this will make direct requests to your backend
+// Your backend MUST have proper CORS headers configured:
+// - Access-Control-Allow-Origin: https://your-vercel-domain.vercel.app
+// - Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH
+// - Access-Control-Allow-Headers: Content-Type, Authorization
+// - Access-Control-Allow-Credentials: true
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: API_TIMEOUT,

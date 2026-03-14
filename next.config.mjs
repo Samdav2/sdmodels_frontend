@@ -33,14 +33,19 @@ const nextConfig = {
     optimizePackageImports: ['framer-motion', 'three', '@react-three/fiber', '@react-three/drei'],
   },
 
-  // API Proxy for development (bypasses CORS)
+  // API Proxy for development only (bypasses CORS in dev)
+  // In production, frontend calls backend directly via NEXT_PUBLIC_API_URL
   async rewrites() {
-    return [
-      {
-        source: '/api/v1/:path*',
-        destination: 'http://localhost:8000/api/v1/:path*',
-      },
-    ];
+    // Only use rewrites in development
+    if (process.env.NODE_ENV === 'development') {
+      return [
+        {
+          source: '/api/v1/:path*',
+          destination: 'http://localhost:8000/api/v1/:path*',
+        },
+      ];
+    }
+    return [];
   },
 
   // Ensure headers are passed through the proxy
